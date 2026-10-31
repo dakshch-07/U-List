@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, Image, Platform } from 'react-native';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import * as SecureStore from 'expo-secure-store';
 import { api } from '../services/api';
@@ -10,6 +10,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { user, selectedCity } = useAuthStore();
+  const queryClient = useQueryClient();
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
@@ -22,6 +23,9 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
+  const [adCity, setAdCity] = useState(
+    selectedCity && selectedCity !== 'India' && selectedCity !== 'All India' ? selectedCity : 'Mumbai'
+  );
   const [locality, setLocality] = useState('');
   const [contactName, setContactName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
@@ -30,6 +34,18 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   // Photos
   const [images, setImages] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+
+  // Sync city & contact if user changes
+  React.useEffect(() => {
+    if (user?.name && !contactName) setContactName(user.name);
+    if (user?.phone && !phone) setPhone(user.phone);
+  }, [user]);
+
+  React.useEffect(() => {
+    if (selectedCity && selectedCity !== 'India' && selectedCity !== 'All India') {
+      setAdCity(selectedCity);
+    }
+  }, [selectedCity]);
 
   // Auto-restore draft from local storage if session expired or page reloaded
   React.useEffect(() => {
@@ -92,7 +108,12 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   const handleSubmitAd = async () => {
     if (!title.trim() || !description.trim() || !locality.trim() || !phone.trim()) {
-      Alert.alert('Missing fields', 'Please fill all mandatory fields');
+      const msg = 'Please fill all mandatory fields (Title, Description, Locality, Phone)';
+      if (typeof window !== 'undefined' && window.alert) {
+        window.alert(msg);
+      } else {
+        Alert.alert('Missing fields', msg);
+      }
       return;
     }
 
@@ -106,21 +127,39 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         formData.append('subcategory', selectedSubcategory._id);
       }
       formData.append('price', price || '0');
-      formData.append('city', selectedCity);
+      // Ad physical location must be a valid Indian city
+      const postCity = (adCity && adCity !== 'India' && adCity !== 'All India') ? adCity.trim() : 'Mumbai';
+      formData.append('city', postCity);
       formData.append('locality', locality.trim());
-      formData.append('contactName', contactName.trim());
+      formData.append('contactName', contactName.trim() || user?.name || 'Seller');
       formData.append('phone', phone.trim());
       formData.append('showPhone', String(showPhone));
       formData.append('attributes', JSON.stringify(dynamicAttrs));
 
-      images.forEach((uri, idx) => {
+      // Handle image binary conversions cross-platform (web Blob vs mobile asset)
+      for (let idx = 0; idx < images.length; idx++) {
+        const uri = images[idx];
         const ext = uri.split('.').pop() || 'jpg';
-        formData.append('images', {
-          uri,
-          name: `upload_${idx}.${ext}`,
-          type: `image/${ext === 'png' ? 'png' : 'jpeg'}`,
-        } as any);
-      });
+        const mime = `image/${ext === 'png' ? 'png' : 'jpeg'}`;
+        const filename = `photo_${idx}_${Date.now()}.${ext}`;
+
+        if (Platform.OS === 'web') {
+          try {
+            const resp = await fetch(uri);
+            const blob = await resp.blob();
+            formData.append('images', blob, filename);
+          } catch {
+            // Fallback
+            formData.append('images', { uri, name: filename, type: mime } as any);
+          }
+        } else {
+          formData.append('images', {
+            uri,
+            name: filename,
+            type: mime,
+          } as any);
+        }
+      }
 
       const res = await api.post('/ads', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -129,11 +168,26 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       // Clear draft upon successful post
       await SecureStore.deleteItemAsync('ulist_ad_draft').catch(() => {});
 
-      Alert.alert('Success', res.data.message || 'Your ad has been posted!', [
-        { text: 'OK', onPress: () => navigation.navigate('Home') },
-      ]);
+      // Invalidate queries so ads appear immediately on Home and My Ads
+      queryClient.invalidateQueries({ queryKey: ['ads'] });
+      queryClient.invalidateQueries({ queryKey: ['myAds'] });
+
+      const successMsg = res.data.message || 'Congratulations! Your ad has been posted successfully.';
+      if (typeof window !== 'undefined' && window.alert) {
+        window.alert(successMsg);
+        navigation.navigate('HomeTab');
+      } else {
+        Alert.alert('Success', successMsg, [
+          { text: 'View Home', onPress: () => navigation.navigate('HomeTab') },
+        ]);
+      }
     } catch (err: any) {
-      Alert.alert('Submission Error', err.response?.data?.message || 'Could not post ad');
+      const errMsg = err.response?.data?.message || err.message || 'Could not post ad. Please try again.';
+      if (typeof window !== 'undefined' && window.alert) {
+        window.alert(`Submission Error: ${errMsg}`);
+      } else {
+        Alert.alert('Submission Error', errMsg);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -319,8 +373,13 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>City</Text>
-              <TextInput style={[styles.input, { backgroundColor: theme.colors.surface }]} value={selectedCity} editable={false} />
+              <Text style={styles.label}>City *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter city (e.g. Mumbai, Delhi, Bengaluru)"
+                value={adCity}
+                onChangeText={setAdCity}
+              />
             </View>
 
             <View style={styles.inputGroup}>

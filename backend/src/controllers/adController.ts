@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { Ad } from '../models/Ad';
+import { Category } from '../models/Category';
 import { Setting } from '../models/Extras';
 import { AuthenticatedRequest } from '../middleware/auth';
 
@@ -224,8 +225,32 @@ export const createAd = async (req: AuthenticatedRequest, res: Response): Promis
       }
     }
 
-    // Process images
-    const processedImages = (req as any).processedImages || [];
+    // Process images (fallback to default category image if none provided)
+    let processedImages = (req as any).processedImages || [];
+    if (processedImages.length === 0) {
+      const categoryDoc = await Category.findById(category);
+      const catSlug = categoryDoc?.slug || 'cars';
+      const defaultCategoryImgs: Record<string, string> = {
+        cars: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80',
+        properties: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80',
+        mobiles: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=800&q=80',
+        jobs: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80',
+        bikes: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=800&q=80',
+        electronics: 'https://images.unsplash.com/photo-1588854337236-6889d631faa8?auto=format&fit=crop&w=800&q=80',
+        'commercial-vehicles': 'https://images.unsplash.com/photo-1519003722824-194d4455a60c?auto=format&fit=crop&w=800&q=80',
+        furniture: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80',
+        fashion: 'https://images.unsplash.com/photo-1523381294911-8d3cead13475?auto=format&fit=crop&w=800&q=80',
+        'books-sports': 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80',
+        pets: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=800&q=80',
+        services: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80',
+      };
+      processedImages = [
+        {
+          url: defaultCategoryImgs[catSlug] || defaultCategoryImgs['cars'],
+          publicId: `default_${catSlug}_img`,
+        },
+      ];
+    }
 
     // Parse attributes and salary if sent as strings (via multipart form)
     let parsedAttributes = attributes;

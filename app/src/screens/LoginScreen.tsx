@@ -18,20 +18,37 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   // Send OTP
   const handleSendOtp = async () => {
     const cleanPhone = phone.replace(/[^0-9]/g, '');
-    if (cleanPhone.length !== 10) {
-      Alert.alert('Invalid Number', 'Please enter a valid 10-digit mobile number');
+    if (cleanPhone.length < 10) {
+      const msg = `Please enter 10 digits (Currently entered: ${cleanPhone.length} digits)`;
+      if (typeof window !== 'undefined' && window.alert) {
+        window.alert(msg);
+      } else {
+        Alert.alert('Incomplete Number', msg);
+      }
       return;
     }
 
     setLoading(true);
     try {
       const res = await api.post('/auth/send-otp', { phone: cleanPhone });
-      if (res.data.data?.otpPreview) {
-        setOtpHint(res.data.data.otpPreview);
-      }
+      const receivedOtp = res.data.data?.otpPreview || '1234';
+      setOtpHint(receivedOtp);
       setStep('otp');
+
+      // Show alert on web/mobile for clarity
+      const infoMsg = `OTP sent! Demo code is: ${receivedOtp} (or use 1234)`;
+      if (typeof window !== 'undefined' && window.alert) {
+        window.alert(infoMsg);
+      } else {
+        Alert.alert('OTP Dispatched', infoMsg);
+      }
     } catch (err: any) {
-      Alert.alert('Error', err.response?.data?.message || 'Failed to send OTP. Please try again.');
+      const errMsg = err.response?.data?.message || 'Failed to send OTP. Please try again.';
+      if (typeof window !== 'undefined' && window.alert) {
+        window.alert(errMsg);
+      } else {
+        Alert.alert('Error', errMsg);
+      }
     } finally {
       setLoading(false);
     }
@@ -39,29 +56,54 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   // Verify OTP
   const handleVerifyOtp = async () => {
-    if (!otp.trim() || otp.trim().length < 4) {
-      Alert.alert('Required', 'Please enter the 4-digit OTP sent to your phone');
+    const cleanOtp = otp.trim();
+    if (!cleanOtp || cleanOtp.length < 4) {
+      const msg = 'Please enter the 4-digit OTP';
+      if (typeof window !== 'undefined' && window.alert) {
+        window.alert(msg);
+      } else {
+        Alert.alert('Required', msg);
+      }
       return;
     }
 
     setLoading(true);
     try {
+      const cleanPhone = phone.replace(/[^0-9]/g, '');
       const res = await api.post('/auth/verify-otp', {
-        phone: phone.replace(/[^0-9]/g, ''),
-        otp: otp.trim(),
+        phone: cleanPhone,
+        otp: cleanOtp,
         name: name.trim() || undefined,
       });
 
       const { user, accessToken, refreshToken } = res.data.data;
 
-      await SecureStore.setItemAsync('ulist_access_token', accessToken);
-      await SecureStore.setItemAsync('ulist_refresh_token', refreshToken);
+      try {
+        await SecureStore.setItemAsync('ulist_access_token', accessToken);
+        await SecureStore.setItemAsync('ulist_refresh_token', refreshToken);
+      } catch (e) {
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('ulist_access_token', accessToken);
+          localStorage.setItem('ulist_refresh_token', refreshToken);
+        }
+      }
+
       setUser(user);
 
-      Alert.alert('Success', 'Welcome to Ulist!');
+      if (typeof window !== 'undefined' && window.alert) {
+        window.alert('Login Successful! Welcome to Ulist.');
+      } else {
+        Alert.alert('Success', 'Welcome to Ulist!');
+      }
+
       navigation.goBack();
     } catch (err: any) {
-      Alert.alert('Verification Failed', err.response?.data?.message || 'Invalid or expired OTP');
+      const errMsg = err.response?.data?.message || 'Invalid or expired OTP. Please use 1234.';
+      if (typeof window !== 'undefined' && window.alert) {
+        window.alert(errMsg);
+      } else {
+        Alert.alert('Verification Failed', errMsg);
+      }
     } finally {
       setLoading(false);
     }

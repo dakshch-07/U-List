@@ -7,6 +7,22 @@ import { AdCard } from '../components/AdCard';
 import { useAuthStore } from '../store/authStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
+// Realistic Indian 3D product category images matching OLX India style
+const CATEGORY_IMAGES: Record<string, string> = {
+  cars: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=200&q=80',
+  properties: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=200&q=80',
+  mobiles: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=200&q=80',
+  jobs: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=200&q=80',
+  bikes: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=200&q=80',
+  electronics: 'https://images.unsplash.com/photo-1588854337236-6889d631faa8?auto=format&fit=crop&w=200&q=80',
+  'commercial-vehicles': 'https://images.unsplash.com/photo-1519003722824-194d4455a60c?auto=format&fit=crop&w=200&q=80',
+  furniture: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=200&q=80',
+  fashion: 'https://images.unsplash.com/photo-1523381294911-8d3cead13475?auto=format&fit=crop&w=200&q=80',
+  'books-sports': 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=200&q=80',
+  pets: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=200&q=80',
+  services: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=200&q=80',
+};
+
 export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { selectedCity } = useAuthStore();
   const [refreshing, setRefreshing] = useState(false);
@@ -95,24 +111,31 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               <Text style={styles.sectionTitle}>Browse Categories</Text>
             </View>
             <View style={styles.categoriesGrid}>
-              {categories.slice(0, 12).map((cat: any) => (
-                <TouchableOpacity
-                  key={cat._id}
-                  style={styles.categoryItem}
-                  onPress={() => navigation.navigate('Category', { category: cat })}
-                >
-                  <View style={styles.categoryIconCircle}>
-                    <MaterialCommunityIcons
-                      name={cat.icon || 'tag-outline'}
-                      size={24}
-                      color={theme.colors.primary}
-                    />
-                  </View>
-                  <Text style={styles.categoryLabel} numberOfLines={2}>
-                    {cat.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+              {categories.slice(0, 12).map((cat: any) => {
+                const catImg = CATEGORY_IMAGES[cat.slug];
+                return (
+                  <TouchableOpacity
+                    key={cat._id}
+                    style={styles.categoryCard}
+                    onPress={() => navigation.navigate('Category', { category: cat })}
+                  >
+                    <View style={styles.categoryImageBox}>
+                      {catImg ? (
+                        <Image source={{ uri: catImg }} style={styles.categoryImage} resizeMode="contain" />
+                      ) : (
+                        <MaterialCommunityIcons
+                          name={cat.icon || 'tag-outline'}
+                          size={28}
+                          color={theme.colors.primary}
+                        />
+                      )}
+                    </View>
+                    <Text style={styles.categoryLabel} numberOfLines={2}>
+                      {cat.name}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
 
             {/* Fresh Recommendations Header */}
@@ -222,25 +245,33 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     paddingVertical: 8,
   },
-  categoryItem: {
+  categoryCard: {
     width: '25%',
     alignItems: 'center',
     paddingVertical: 8,
     paddingHorizontal: 4,
   },
-  categoryIconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#FFF1ED',
+  categoryImageBox: {
+    width: 58,
+    height: 58,
+    borderRadius: 12,
+    backgroundColor: '#F7F7F7',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 4,
+    marginBottom: 6,
+    overflow: 'hidden',
+  },
+  categoryImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
   },
   categoryLabel: {
-    fontSize: theme.typography.size.caption,
+    fontSize: 11,
+    fontWeight: '500',
     textAlign: 'center',
     color: theme.colors.text,
+    lineHeight: 14,
   },
   emptyContainer: {
     padding: 32,

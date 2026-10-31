@@ -34,6 +34,7 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   // Photos
   const [images, setImages] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
 
   // Sync city & contact if user changes
   React.useEffect(() => {
@@ -47,11 +48,27 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     }
   }, [selectedCity]);
 
+  // Safe local storage helpers for Web & Mobile
+  const clearDraft = async () => {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('ulist_ad_draft');
+      }
+      await SecureStore.deleteItemAsync('ulist_ad_draft');
+    } catch {}
+  };
+
   // Auto-restore draft from local storage if session expired or page reloaded
   React.useEffect(() => {
     (async () => {
       try {
-        const savedDraft = await SecureStore.getItemAsync('ulist_ad_draft');
+        let savedDraft = '';
+        if (typeof localStorage !== 'undefined') {
+          savedDraft = localStorage.getItem('ulist_ad_draft') || '';
+        }
+        if (!savedDraft) {
+          savedDraft = (await SecureStore.getItemAsync('ulist_ad_draft')) || '';
+        }
         if (savedDraft) {
           const d = JSON.parse(savedDraft);
           if (d.title) setTitle(d.title);
@@ -67,10 +84,11 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   // Auto-save draft on every detail update
   React.useEffect(() => {
     if (title || description || price || locality) {
-      SecureStore.setItemAsync(
-        'ulist_ad_draft',
-        JSON.stringify({ title, description, price, locality, dynamicAttrs })
-      ).catch(() => {});
+      const draftStr = JSON.stringify({ title, description, price, locality, dynamicAttrs });
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('ulist_ad_draft', draftStr);
+      }
+      SecureStore.setItemAsync('ulist_ad_draft', draftStr).catch(() => {});
     }
   }, [title, description, price, locality, dynamicAttrs]);
 
@@ -205,26 +223,19 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         }
       }
 
-      const res = await api.post('/ads', formData, {
+      await api.post('/ads', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
       // Clear draft upon successful post
-      await SecureStore.deleteItemAsync('ulist_ad_draft').catch(() => {});
+      await clearDraft();
 
-      // Invalidate queries so ads appear immediately on Home and My Ads
+      // Invalidate queries so admin queues & listings update
       queryClient.invalidateQueries({ queryKey: ['ads'] });
       queryClient.invalidateQueries({ queryKey: ['myAds'] });
 
-      const successMsg = res.data.message || 'Congratulations! Your ad has been posted successfully.';
-      if (typeof window !== 'undefined' && window.alert) {
-        window.alert(successMsg);
-        navigation.navigate('HomeTab');
-      } else {
-        Alert.alert('Success', successMsg, [
-          { text: 'View Home', onPress: () => navigation.navigate('HomeTab') },
-        ]);
-      }
+      // Show beautiful dedicated approval notice modal like OLX
+      setIsSuccessModalVisible(true);
     } catch (err: any) {
       const errMsg = err.response?.data?.message || err.message || 'Could not post ad. Please try again.';
       if (typeof window !== 'undefined' && window.alert) {
@@ -510,6 +521,62 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           </View>
         )}
       </ScrollView>
+
+      {/* OLX-Style Success & Moderation Status Modal */}
+      {isSuccessModalVisible && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalSuccessIcon}>
+              <MaterialCommunityIcons name="clock-check-outline" size={44} color="#FFFFFF" />
+            </View>
+            <Text style={styles.modalHeading}>Ad Submitted Successfully!</Text>
+            <Text style={styles.modalSubheading}>
+              Your listing will be verified and approved by the Ulist Moderation Team within 2 to 3 hours.
+            </Text>
+
+            <View style={styles.modalInfoBox}>
+              <View style={styles.modalInfoRow}>
+                <MaterialCommunityIcons name="shield-check-outline" size={20} color={theme.colors.primary} />
+                <Text style={styles.modalInfoText}>Ensures safe & verified buyers & sellers</Text>
+              </View>
+              <View style={styles.modalInfoRow}>
+                <MaterialCommunityIcons name="bell-ring-outline" size={20} color={theme.colors.primary} />
+                <Text style={styles.modalInfoText}>Live on app immediately upon admin approval</Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={styles.modalPrimaryBtn}
+              onPress={() => {
+                setIsSuccessModalVisible(false);
+                setStep(1);
+                setTitle('');
+                setDescription('');
+                setPrice('');
+                setImages([]);
+                navigation.navigate('MyAdsTab');
+              }}
+            >
+              <Text style={styles.modalPrimaryBtnText}>Go to My Ads</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.modalSecondaryBtn}
+              onPress={() => {
+                setIsSuccessModalVisible(false);
+                setStep(1);
+                setTitle('');
+                setDescription('');
+                setPrice('');
+                setImages([]);
+                navigation.navigate('HomeTab');
+              }}
+            >
+              <Text style={styles.modalSecondaryBtnText}>Back to Home</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </View>
   );
 };
@@ -720,6 +787,98 @@ const styles = StyleSheet.create({
   backStepButtonText: {
     marginLeft: 4,
     color: theme.colors.text,
+    fontWeight: theme.typography.weight.semibold,
+    fontSize: theme.typography.size.body,
+  },
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+    zIndex: 9999,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 380,
+    backgroundColor: '#FFFFFF',
+    borderRadius: theme.borderRadius.md,
+    padding: 24,
+    alignItems: 'center',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+  },
+  modalSuccessIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#1E8E3E',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  modalHeading: {
+    fontSize: theme.typography.size.subheading,
+    fontWeight: theme.typography.weight.bold,
+    color: theme.colors.text,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  modalSubheading: {
+    fontSize: theme.typography.size.body,
+    color: theme.colors.secondaryText,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  modalInfoBox: {
+    width: '100%',
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.sm,
+    padding: 12,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  modalInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 4,
+  },
+  modalInfoText: {
+    marginLeft: 10,
+    fontSize: 12,
+    color: theme.colors.text,
+    flex: 1,
+  },
+  modalPrimaryBtn: {
+    width: '100%',
+    backgroundColor: theme.colors.primary,
+    paddingVertical: 13,
+    borderRadius: theme.borderRadius.sm,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  modalPrimaryBtnText: {
+    color: '#FFFFFF',
+    fontWeight: theme.typography.weight.bold,
+    fontSize: theme.typography.size.body,
+  },
+  modalSecondaryBtn: {
+    width: '100%',
+    backgroundColor: 'transparent',
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  modalSecondaryBtnText: {
+    color: theme.colors.secondaryText,
     fontWeight: theme.typography.weight.semibold,
     fontSize: theme.typography.size.body,
   },

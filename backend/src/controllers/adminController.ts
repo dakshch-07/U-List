@@ -6,12 +6,28 @@ import { Report, City, Banner, Setting } from '../models/Extras';
 
 export const getDashboardStats = async (_req: Request, res: Response): Promise<void> => {
   try {
-    const [totalUsers, activeAds, pendingAds, openReports] = await Promise.all([
+    const [
+      totalUsers,
+      activeAds,
+      pendingAds,
+      openReports,
+      highlightedAds,
+      paidAds,
+      totalRevenueResult,
+    ] = await Promise.all([
       User.countDocuments({ role: 'user' }),
       Ad.countDocuments({ status: 'active' }),
       Ad.countDocuments({ status: 'pending' }),
       Report.countDocuments({ status: 'open' }),
+      Ad.countDocuments({ isFeatured: true, status: 'active' }),
+      Ad.countDocuments({ isPaid: true }),
+      Ad.aggregate([
+        { $match: { isPaid: true } },
+        { $group: { _id: null, total: { $sum: '$paidAmount' } } },
+      ]),
     ]);
+
+    const totalRevenue = totalRevenueResult[0]?.total || 0;
 
     const latestPending = await Ad.find({ status: 'pending' })
       .populate('user', 'name email phone')
@@ -27,6 +43,9 @@ export const getDashboardStats = async (_req: Request, res: Response): Promise<v
           activeAds,
           pendingAds,
           openReports,
+          highlightedAds,
+          paidAds,
+          totalRevenue,
         },
         latestPending,
       },
@@ -38,12 +57,14 @@ export const getDashboardStats = async (_req: Request, res: Response): Promise<v
 
 export const getAdminAds = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { status, category, city, search, page = '1', limit = '15' } = req.query;
+    const { status, category, city, search, isFeatured, isPaid, page = '1', limit = '15' } = req.query;
     const query: any = {};
 
     if (status && status !== 'all') query.status = status;
     if (category) query.category = category;
     if (city) query.city = city;
+    if (isFeatured === 'true') query.isFeatured = true;
+    if (isPaid === 'true') query.isPaid = true;
     if (search) {
       query.title = { $regex: search as string, $options: 'i' };
     }

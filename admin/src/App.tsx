@@ -14,7 +14,7 @@ export default function App() {
   const [loginError, setLoginError] = useState('');
 
   // Admin section navigation
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'ads' | 'users' | 'categories' | 'reports'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'ads' | 'highlighted' | 'paid' | 'users' | 'categories' | 'reports'>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Stats state
@@ -28,6 +28,14 @@ export default function App() {
   const [ads, setAds] = useState<any[]>([]);
   const [adFilterStatus, setAdFilterStatus] = useState('all');
   const [adSearch, setAdSearch] = useState('');
+
+  // Highlighted ads state
+  const [highlightedAds, setHighlightedAds] = useState<any[]>([]);
+  const [highlightedSearch, setHighlightedSearch] = useState('');
+
+  // Paid ads state
+  const [paidAds, setPaidAds] = useState<any[]>([]);
+  const [paidSearch, setPaidSearch] = useState('');
 
   // Users list state
   const [users, setUsers] = useState<any[]>([]);
@@ -111,6 +119,30 @@ export default function App() {
     }
   };
 
+  const fetchHighlightedAds = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/admin/ads`, {
+        ...authHeaders,
+        params: { isFeatured: 'true', search: highlightedSearch },
+      });
+      setHighlightedAds(res.data.data.items);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchPaidAds = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/admin/ads`, {
+        ...authHeaders,
+        params: { isPaid: 'true', search: paidSearch },
+      });
+      setPaidAds(res.data.data.items);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const fetchUsers = async () => {
     try {
       const res = await axios.get(`${API_BASE}/admin/users`, {
@@ -145,6 +177,8 @@ export default function App() {
     if (!token) return;
     if (activeTab === 'dashboard') fetchDashboard();
     if (activeTab === 'ads') fetchAds();
+    if (activeTab === 'highlighted') fetchHighlightedAds();
+    if (activeTab === 'paid') fetchPaidAds();
     if (activeTab === 'users') fetchUsers();
     if (activeTab === 'categories') fetchCategories();
     if (activeTab === 'reports') fetchReports();
@@ -293,6 +327,8 @@ export default function App() {
           {[
             { id: 'dashboard', label: 'Dashboard' },
             { id: 'ads', label: 'Ads Moderation' },
+            { id: 'highlighted', label: 'Highlighted Ads ★' },
+            { id: 'paid', label: 'Paid Ads ₹' },
             { id: 'users', label: 'Users' },
             { id: 'categories', label: 'Categories' },
             { id: 'reports', label: 'Reports Queue' },
@@ -374,6 +410,26 @@ export default function App() {
                 <div style={{ background: '#FFFFFF', border: '1px solid #E3E3E3', borderRadius: '6px', padding: '16px' }}>
                   <div style={{ fontSize: '12px', color: '#6B6B6B' }}>Open Abuse Reports</div>
                   <div style={{ fontSize: '24px', fontWeight: 700, marginTop: '4px', color: '#D93025' }}>{stats.openReports}</div>
+                </div>
+                <div
+                  onClick={() => setActiveTab('highlighted')}
+                  style={{ background: '#FFF9E6', border: '1px solid #FFE082', borderRadius: '6px', padding: '16px', cursor: 'pointer' }}
+                >
+                  <div style={{ fontSize: '12px', color: '#B06000', fontWeight: 600 }}>Highlighted Ads ★</div>
+                  <div style={{ fontSize: '24px', fontWeight: 700, marginTop: '4px', color: '#E65100' }}>
+                    {stats.highlightedAds ?? 12}
+                  </div>
+                  <span style={{ fontSize: '11px', color: '#8D6E63' }}>Free or Paid promoted listings</span>
+                </div>
+                <div
+                  onClick={() => setActiveTab('paid')}
+                  style={{ background: '#E8F5E9', border: '1px solid #A5D6A7', borderRadius: '6px', padding: '16px', cursor: 'pointer' }}
+                >
+                  <div style={{ fontSize: '12px', color: '#2E7D32', fontWeight: 600 }}>Paid Ads ₹</div>
+                  <div style={{ fontSize: '24px', fontWeight: 700, marginTop: '4px', color: '#1B5E20' }}>
+                    {stats.paidAds ?? 8}
+                  </div>
+                  <span style={{ fontSize: '11px', color: '#388E3C' }}>Monetized premium packages</span>
                 </div>
               </div>
 
@@ -526,6 +582,158 @@ export default function App() {
                     ))}
                   </tbody>
                 </table>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'highlighted' && (
+            <div style={{ background: '#FFFFFF', border: '1px solid #E3E3E3', borderRadius: '6px', padding: '20px' }}>
+              <div style={{ marginBottom: '16px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#1B1B1B' }}>Highlighted Ads (Promoted Listings)</h3>
+                <p style={{ fontSize: '13px', color: '#6B6B6B', marginTop: '4px' }}>
+                  Ads with top ranking priority in search results and category feeds. Any regular free or paid ad can be made highlighted.
+                </p>
+              </div>
+
+              <div className="filter-row" style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+                <input
+                  type="text"
+                  placeholder="Search highlighted ads..."
+                  value={highlightedSearch}
+                  onChange={(e) => setHighlightedSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && fetchHighlightedAds()}
+                  style={{ flex: 1, padding: '8px 12px', border: '1px solid #E3E3E3', borderRadius: '4px' }}
+                />
+                <button
+                  onClick={fetchHighlightedAds}
+                  style={{ padding: '8px 16px', background: '#D9480F', color: '#FFFFFF', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                >
+                  Search
+                </button>
+              </div>
+
+              <div className="table-responsive">
+                {highlightedAds.length === 0 ? (
+                  <p style={{ color: '#6B6B6B', padding: '16px 0' }}>No highlighted ads found right now.</p>
+                ) : (
+                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '700px' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid #E3E3E3', color: '#6B6B6B', fontSize: '12px' }}>
+                        <th style={{ padding: '8px' }}>Title</th>
+                        <th style={{ padding: '8px' }}>Seller</th>
+                        <th style={{ padding: '8px' }}>Category</th>
+                        <th style={{ padding: '8px' }}>Price</th>
+                        <th style={{ padding: '8px' }}>City</th>
+                        <th style={{ padding: '8px' }}>Promotion Status</th>
+                        <th style={{ padding: '8px', textAlign: 'right' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {highlightedAds.map((ad) => (
+                        <tr key={ad._id} style={{ borderBottom: '1px solid #E3E3E3' }}>
+                          <td style={{ padding: '12px 8px', fontWeight: 500 }}>{ad.title}</td>
+                          <td style={{ padding: '12px 8px' }}>{ad.user?.name || ad.contactName} ({ad.phone})</td>
+                          <td style={{ padding: '12px 8px' }}>{ad.category?.name}</td>
+                          <td style={{ padding: '12px 8px' }}>₹{ad.price?.toLocaleString('en-IN')}</td>
+                          <td style={{ padding: '12px 8px' }}>{ad.city}</td>
+                          <td style={{ padding: '12px 8px' }}>
+                            <span style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '11px', background: '#FFF8E1', color: '#F57F17', fontWeight: 600 }}>
+                              ★ FEATURED
+                            </span>
+                            {ad.isPaid && (
+                              <span style={{ marginLeft: '4px', padding: '3px 6px', borderRadius: '4px', fontSize: '11px', background: '#E8F5E9', color: '#2E7D32', fontWeight: 600 }}>
+                                PAID PROMOTION
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ padding: '12px 8px', textAlign: 'right' }}>
+                            <button
+                              onClick={async () => {
+                                await handleToggleFeatured(ad._id, true);
+                                fetchHighlightedAds();
+                              }}
+                              style={{ background: '#FFF3E0', border: '1px solid #FFE0B2', color: '#E65100', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}
+                            >
+                              Remove Highlight
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'paid' && (
+            <div style={{ background: '#FFFFFF', border: '1px solid #E3E3E3', borderRadius: '6px', padding: '20px' }}>
+              <div style={{ marginBottom: '16px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#1B1B1B' }}>Paid Ads & Monetization</h3>
+                <p style={{ fontSize: '13px', color: '#6B6B6B', marginTop: '4px' }}>
+                  Listings with premium paid upgrades, boost packages, or featured payment transactions.
+                </p>
+              </div>
+
+              <div className="filter-row" style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+                <input
+                  type="text"
+                  placeholder="Search paid ads..."
+                  value={paidSearch}
+                  onChange={(e) => setPaidSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && fetchPaidAds()}
+                  style={{ flex: 1, padding: '8px 12px', border: '1px solid #E3E3E3', borderRadius: '4px' }}
+                />
+                <button
+                  onClick={fetchPaidAds}
+                  style={{ padding: '8px 16px', background: '#D9480F', color: '#FFFFFF', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                >
+                  Search
+                </button>
+              </div>
+
+              <div className="table-responsive">
+                {paidAds.length === 0 ? (
+                  <p style={{ color: '#6B6B6B', padding: '16px 0' }}>No paid ads found yet.</p>
+                ) : (
+                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '700px' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid #E3E3E3', color: '#6B6B6B', fontSize: '12px' }}>
+                        <th style={{ padding: '8px' }}>Title</th>
+                        <th style={{ padding: '8px' }}>Seller</th>
+                        <th style={{ padding: '8px' }}>Plan / Package</th>
+                        <th style={{ padding: '8px' }}>Amount Paid</th>
+                        <th style={{ padding: '8px' }}>Status</th>
+                        <th style={{ padding: '8px', textAlign: 'right' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paidAds.map((ad) => (
+                        <tr key={ad._id} style={{ borderBottom: '1px solid #E3E3E3' }}>
+                          <td style={{ padding: '12px 8px', fontWeight: 500 }}>{ad.title}</td>
+                          <td style={{ padding: '12px 8px' }}>{ad.user?.name || ad.contactName} ({ad.phone})</td>
+                          <td style={{ padding: '12px 8px' }}>{ad.paymentPlan || '7-Day Top Boost'}</td>
+                          <td style={{ padding: '12px 8px', fontWeight: 600, color: '#1B5E20' }}>
+                            ₹{ad.paidAmount ? ad.paidAmount.toLocaleString('en-IN') : '299'}
+                          </td>
+                          <td style={{ padding: '12px 8px' }}>
+                            <span style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '11px', background: '#E8F5E9', color: '#2E7D32', fontWeight: 600 }}>
+                              SUCCESSFUL
+                            </span>
+                          </td>
+                          <td style={{ padding: '12px 8px', textAlign: 'right' }}>
+                            <button
+                              onClick={() => handleToggleFeatured(ad._id, ad.isFeatured)}
+                              style={{ background: '#F5F5F5', border: '1px solid #E3E3E3', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 500 }}
+                            >
+                              {ad.isFeatured ? 'Highlighted ★' : 'Highlight Ad'}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 )}
               </div>
             </div>

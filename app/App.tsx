@@ -35,9 +35,9 @@ function BottomTabs() {
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.secondaryText,
         tabBarStyle: {
-          height: 60,
-          paddingTop: 6,
-          paddingBottom: 6,
+          height: 64,
+          paddingTop: 8,
+          paddingBottom: 8,
           backgroundColor: theme.colors.background,
           borderTopWidth: 1,
           borderTopColor: theme.colors.border,
@@ -52,6 +52,7 @@ function BottomTabs() {
           fontSize: 12,
           fontWeight: '600',
           lineHeight: 14,
+          paddingTop: 4,
           paddingBottom: 2,
         },
       }}
@@ -83,7 +84,7 @@ function BottomTabs() {
           tabBarLabel: 'Sell',
           tabBarIcon: () => (
             <View style={styles.sellButton}>
-              <MaterialCommunityIcons name="plus" color="#FFFFFF" size={26} />
+              <MaterialCommunityIcons name="currency-inr" color="#FFFFFF" size={26} />
             </View>
           ),
         }}
@@ -184,17 +185,20 @@ export default function App() {
 
 const styles = StyleSheet.create({
   sellButton: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: -16,
-    elevation: 4,
+    marginTop: -26,
+    marginBottom: 6,
+    elevation: 6,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
   },
 });

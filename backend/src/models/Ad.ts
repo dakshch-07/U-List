@@ -34,6 +34,9 @@ export interface IAd extends Document {
   rejectReason?: string;
   isFeatured: boolean;
   featuredUntil?: Date;
+  isPaid: boolean;
+  paidAmount?: number;
+  paymentPlan?: string;
   views: number;
   viewedBy: string[];
   expiresAt: Date;
@@ -79,6 +82,9 @@ const AdSchema = new Schema<IAd>(
     rejectReason: { type: String, default: '' },
     isFeatured: { type: Boolean, default: false, index: true },
     featuredUntil: { type: Date },
+    isPaid: { type: Boolean, default: false, index: true },
+    paidAmount: { type: Number, default: 0 },
+    paymentPlan: { type: String, default: '' },
     views: { type: Number, default: 0 },
     viewedBy: [{ type: String }],
     expiresAt: { type: Date, required: true, index: true },

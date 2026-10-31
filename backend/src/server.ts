@@ -5,6 +5,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 import { connectDB } from './config/db';
 import apiRoutes from './routes/api';
 import { runSeed } from './scripts/seed';
@@ -33,9 +34,13 @@ app.use('/api', generalApiLimiter);
 const uploadsDir = path.join(__dirname, '../uploads');
 app.use('/uploads', express.static(uploadsDir));
 
-// Serve Admin Web Panel build if exists
+// Serve Admin Web Panel build
 const adminDistDir = path.join(__dirname, '../../admin/dist');
 app.use('/admin', express.static(adminDistDir));
+
+// Serve Main Marketplace Web App directly from backend
+const appPublicDir = path.join(__dirname, '../public');
+app.use(express.static(appPublicDir));
 
 // API version 1 routing
 app.use('/api/v1', apiRoutes);
@@ -85,6 +90,16 @@ app.get('/delete-account', (_req, res) => {
     </body>
     </html>
   `);
+});
+
+// Fallback for single page app routing
+app.get('*', (_req, res) => {
+  const indexHtml = path.join(appPublicDir, 'index.html');
+  if (fs.existsSync(indexHtml)) {
+    res.sendFile(indexHtml);
+  } else {
+    res.status(404).send('Not Found');
+  }
 });
 
 // Socket.io for Realtime Chat

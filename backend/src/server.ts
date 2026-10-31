@@ -30,22 +30,42 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api', generalApiLimiter);
 
-// Root paths relative to project root or compiled dist
-const projectRoot = path.join(__dirname, '..');
+// Robust static folder resolution whether running via tsx in root/backend or node in dist
+const findFolder = (folderName: string): string => {
+  const candidates = [
+    path.join(process.cwd(), folderName),
+    path.join(process.cwd(), 'backend', folderName),
+    path.join(__dirname, '..', folderName),
+    path.join(__dirname, '../..', folderName),
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) {
+      return c;
+    }
+  }
+  return path.join(process.cwd(), folderName);
+};
+
+const adminDistDir = findFolder('admin-dist');
+const appPublicDir = findFolder('public');
+const uploadsDir = findFolder('uploads');
+
+console.log('[Server Paths] adminDistDir:', adminDistDir, 'exists:', fs.existsSync(adminDistDir));
+console.log('[Server Paths] appPublicDir:', appPublicDir, 'exists:', fs.existsSync(appPublicDir));
 
 // Serve uploaded static assets
-const uploadsDir = path.join(projectRoot, 'uploads');
 app.use('/uploads', express.static(uploadsDir));
 
 // Serve Admin Web Panel build
-const adminDistDir = path.join(projectRoot, 'admin-dist');
 app.use('/admin', express.static(adminDistDir));
+app.get('/admin', (_req, res) => {
+  res.sendFile(path.join(adminDistDir, 'index.html'));
+});
 app.get('/admin/*', (_req, res) => {
   res.sendFile(path.join(adminDistDir, 'index.html'));
 });
 
 // Serve Main Marketplace Web App directly from backend
-const appPublicDir = path.join(projectRoot, 'public');
 app.use(express.static(appPublicDir));
 
 // API version 1 routing

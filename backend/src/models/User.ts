@@ -16,10 +16,10 @@ export interface IUser extends Document {
 
 const UserSchema = new Schema<IUser>(
   {
-    name: { type: String, required: true, trim: true, maxlength: 60 },
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true, index: true },
-    phone: { type: String, required: true, trim: true },
-    passwordHash: { type: String, required: true },
+    name: { type: String, default: 'Ulist User', trim: true, maxlength: 60 },
+    email: { type: String, sparse: true, lowercase: true, trim: true, index: true },
+    phone: { type: String, required: true, unique: true, trim: true, index: true },
+    passwordHash: { type: String, default: '' },
     avatar: { type: String, default: '' },
     role: { type: String, enum: ['user', 'admin'], default: 'user', index: true },
     status: { type: String, enum: ['active', 'blocked'], default: 'active', index: true },

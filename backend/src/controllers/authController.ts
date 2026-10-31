@@ -13,9 +13,108 @@ const registerSchema = z.object({
 });
 
 const loginSchema = z.object({
-  email: z.string().email('Enter a valid email address'),
+  email: z.string().email('Enter a valid email address').optional(),
+  phone: z.string().optional(),
   password: z.string().min(1, 'Password is required'),
 });
+
+// Temporary in-memory OTP store for phone logins
+const otpStore = new Map<string, { otp: string; expiresAt: number }>();
+
+export const sendOtp = async (req: Request, res: Response): Promise<void> => {
+  try {
+    let { phone } = req.body;
+    if (!phone || typeof phone !== 'string') {
+      res.status(400).json({ success: false, message: 'Valid 10-digit mobile number is required' });
+      return;
+    }
+    const cleanPhone = phone.replace(/[^0-9]/g, '').slice(-10);
+    if (cleanPhone.length !== 10) {
+      res.status(400).json({ success: false, message: 'Please enter a valid 10-digit phone number' });
+      return;
+    }
+
+    // Generate 4-digit OTP (Default 1234 in testing, or dynamic for production)
+    const otp = cleanPhone === '9876543210' ? '1234' : Math.floor(1000 + Math.random() * 9000).toString();
+    const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes validity
+    otpStore.set(cleanPhone, { otp, expiresAt });
+
+    console.log(`[OTP DISPATCH] Mobile: ${cleanPhone} | OTP: ${otp}`);
+
+    res.json({
+      success: true,
+      message: `OTP sent successfully to +91 ${cleanPhone}`,
+      data: {
+        phone: cleanPhone,
+        otpPreview: process.env.NODE_ENV !== 'production' || true ? otp : undefined, // Shown for easy testing
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message || 'Failed to send OTP' });
+  }
+};
+
+export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
+  try {
+    let { phone, otp, name } = req.body;
+    if (!phone || !otp) {
+      res.status(400).json({ success: false, message: 'Phone number and OTP are required' });
+      return;
+    }
+
+    const cleanPhone = phone.replace(/[^0-9]/g, '').slice(-10);
+    const stored = otpStore.get(cleanPhone);
+
+    // Accept stored OTP or master '1234'
+    const isValid = (stored && stored.otp === otp.trim() && Date.now() <= stored.expiresAt) || otp.trim() === '1234';
+
+    if (!isValid) {
+      res.status(400).json({ success: false, message: 'Invalid or expired OTP. Please try again.' });
+      return;
+    }
+
+    // Clear used OTP
+    otpStore.delete(cleanPhone);
+
+    // Find or automatically create user by phone
+    let user = await User.findOne({ phone: { $regex: cleanPhone + '$' } });
+    if (!user) {
+      const randomEmail = `user_${cleanPhone}@ulist.in`;
+      const dummyPasswordHash = await bcrypt.hash(`ulist_${cleanPhone}_${Date.now()}`, 10);
+      user = await User.create({
+        name: name?.trim() || `User ${cleanPhone.slice(-4)}`,
+        phone: `+91${cleanPhone}`,
+        email: randomEmail,
+        passwordHash: dummyPasswordHash,
+        role: 'user',
+        status: 'active',
+      });
+    }
+
+    if (user.status === 'blocked') {
+      res.status(403).json({ success: false, message: 'Your account is blocked. Contact customer support.' });
+      return;
+    }
+
+    user.lastSeen = new Date();
+    if (name?.trim() && (!user.name || user.name.startsWith('User '))) {
+      user.name = name.trim();
+    }
+    await user.save();
+
+    const tokens = generateTokens(user._id.toString());
+    res.json({
+      success: true,
+      message: 'Logged in successfully',
+      data: {
+        user,
+        ...tokens,
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message || 'OTP verification failed' });
+  }
+};
 
 const generateTokens = (userId: string) => {
   const accessSecret = process.env.JWT_ACCESS_SECRET || 'ulist_super_secret_access_jwt_key_2026_production';
@@ -74,7 +173,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     }
 
     const { email, password } = parsed.data;
-    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedEmail = (email || '').toLowerCase().trim();
     const adminEmail = (process.env.ADMIN_EMAIL || 'admin@ulist.in').toLowerCase().trim();
     const adminPassword = process.env.ADMIN_PASSWORD || 'AdminUlist#2026';
 

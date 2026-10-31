@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, refresh, forgotPassword, changePassword, deleteAccount } from '../controllers/authController';
+import { register, login, refresh, forgotPassword, changePassword, deleteAccount, sendOtp, verifyOtp } from '../controllers/authController';
 import { getMe, updateMe, getPublicUser, blockUser, unblockUser, savePushToken } from '../controllers/userController';
 import { getCategories, getCities, getBanners, getPage, getPublicSettings } from '../controllers/metaController';
 import { getAds, suggestAds, getAdById, getSimilarAds, createAd, updateAd, markAsSold, renewAd, deleteAd, getMyAds } from '../controllers/adController';
@@ -36,6 +36,8 @@ import { authLimiter, postAdLimiter } from '../middleware/rateLimiters';
 const router = Router();
 
 // Auth routes
+router.post('/auth/send-otp', authLimiter, sendOtp);
+router.post('/auth/verify-otp', authLimiter, verifyOtp);
 router.post('/auth/register', authLimiter, register);
 router.post('/auth/login', authLimiter, login);
 router.post('/auth/refresh', refresh);

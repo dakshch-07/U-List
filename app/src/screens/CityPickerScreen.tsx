@@ -93,6 +93,27 @@ export const CityPickerScreen: React.FC<{ navigation: any }> = ({ navigation }) 
         </View>
       </TouchableOpacity>
 
+      {/* All India Option (Exactly like OLX) */}
+      <TouchableOpacity
+        style={styles.allIndiaRow}
+        onPress={() => handleSelectCity('India')}
+      >
+        <View style={styles.allIndiaLeft}>
+          <View style={styles.pinCircle}>
+            <MaterialCommunityIcons name="map-marker" size={20} color={theme.colors.primary} />
+          </View>
+          <View style={{ marginLeft: 12 }}>
+            <Text style={[styles.cityName, (selectedCity === 'India' || selectedCity === 'All India') && styles.selectedText]}>
+              India
+            </Text>
+            <Text style={styles.stateName}>All over India</Text>
+          </View>
+        </View>
+        {(selectedCity === 'India' || selectedCity === 'All India') && (
+          <MaterialCommunityIcons name="check" size={20} color={theme.colors.primary} />
+        )}
+      </TouchableOpacity>
+
       <Text style={styles.sectionHeader}>Popular Cities in India</Text>
 
       <FlatList
@@ -158,6 +179,28 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.size.caption,
     color: theme.colors.secondaryText,
     marginTop: 2,
+  },
+  allIndiaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+    backgroundColor: '#FFF9F6',
+  },
+  allIndiaLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  pinCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFE8DF',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   sectionHeader: {
     paddingHorizontal: 16,

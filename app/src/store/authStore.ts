@@ -23,7 +23,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  selectedCity: 'Mumbai',
+  selectedCity: 'India',
   isLoading: true,
 
   setCity: async (city) => {

@@ -41,24 +41,45 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* Top Location and Search Bar */}
+      {/* Top Location and Search Bar Header with Wishlist and Notifications */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.citySelector} onPress={() => navigation.navigate('CityPicker')}>
-          <MaterialCommunityIcons name="map-marker" size={18} color={theme.colors.primary} />
-          <Text style={styles.cityName} numberOfLines={1}>
-            {selectedCity}
-          </Text>
-          <MaterialCommunityIcons name="chevron-down" size={18} color={theme.colors.text} />
-        </TouchableOpacity>
+        <View style={styles.topRow}>
+          <View style={styles.brandContainer}>
+            <Text style={styles.brandTitle}>Ulist</Text>
+          </View>
+          <TouchableOpacity style={styles.citySelector} onPress={() => navigation.navigate('CityPicker')}>
+            <MaterialCommunityIcons name="map-marker-outline" size={18} color={theme.colors.primary} />
+            <Text style={styles.cityName} numberOfLines={1}>
+              {selectedCity}
+            </Text>
+            <MaterialCommunityIcons name="chevron-down" size={16} color={theme.colors.text} />
+          </TouchableOpacity>
+        </View>
 
-        <TouchableOpacity
-          style={styles.searchBar}
-          activeOpacity={0.9}
-          onPress={() => navigation.navigate('Search')}
-        >
-          <MaterialCommunityIcons name="magnify" size={20} color={theme.colors.secondaryText} />
-          <Text style={styles.searchPlaceholder}>Find Cars, Mobile Phones and more...</Text>
-        </TouchableOpacity>
+        <View style={styles.searchRow}>
+          <TouchableOpacity
+            style={styles.searchBar}
+            activeOpacity={0.9}
+            onPress={() => navigation.navigate('Search')}
+          >
+            <MaterialCommunityIcons name="magnify" size={20} color={theme.colors.secondaryText} />
+            <Text style={styles.searchPlaceholder} numberOfLines={1}>Search "Cars, Mobiles, Bikes..."</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.headerIconButton}
+            onPress={() => navigation.navigate('Favorites')}
+          >
+            <MaterialCommunityIcons name="heart-outline" size={24} color={theme.colors.text} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.headerIconButton}
+            onPress={() => alert('No new notifications')}
+          >
+            <MaterialCommunityIcons name="bell-outline" size={24} color={theme.colors.text} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <FlatList
@@ -124,36 +145,64 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 8,
+    paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
     backgroundColor: theme.colors.background,
   },
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  brandContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  brandTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: theme.colors.primary,
+    letterSpacing: -0.5,
+  },
   citySelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
   },
   cityName: {
     fontSize: theme.typography.size.body,
-    fontWeight: theme.typography.weight.bold,
+    fontWeight: theme.typography.weight.medium,
     marginHorizontal: 4,
     color: theme.colors.text,
   },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
   searchBar: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: theme.colors.surface,
     borderWidth: 1,
     borderColor: theme.colors.border,
     borderRadius: theme.borderRadius.sm,
-    paddingHorizontal: 10,
-    height: 42,
+    paddingHorizontal: 12,
+    height: 44,
   },
   searchPlaceholder: {
     marginLeft: 8,
     color: theme.colors.secondaryText,
     fontSize: theme.typography.size.body,
+    flex: 1,
+  },
+  headerIconButton: {
+    width: 40,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   listContent: {
     padding: 8,

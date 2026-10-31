@@ -35,7 +35,7 @@ const uploadsDir = path.join(__dirname, '../uploads');
 app.use('/uploads', express.static(uploadsDir));
 
 // Serve Admin Web Panel build
-const adminDistDir = path.join(__dirname, '../../admin/dist');
+const adminDistDir = path.join(__dirname, '../admin-dist');
 app.use('/admin', express.static(adminDistDir));
 
 // Serve Main Marketplace Web App directly from backend

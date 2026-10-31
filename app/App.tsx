@@ -21,6 +21,7 @@ import { ChatsScreen } from './src/screens/ChatsScreen';
 import { ChatRoomScreen } from './src/screens/ChatRoomScreen';
 import { FavoritesScreen } from './src/screens/FavoritesScreen';
 import { SellerProfileScreen } from './src/screens/SellerProfileScreen';
+import { OfflineNotice } from './src/components/OfflineNotice';
 
 const queryClient = new QueryClient();
 const Stack = createNativeStackNavigator();
@@ -121,6 +122,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <NavigationContainer>
+        <OfflineNotice />
         <Stack.Navigator
           screenOptions={{
             headerStyle: { backgroundColor: theme.colors.background },

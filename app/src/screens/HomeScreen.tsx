@@ -178,7 +178,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               buttonLabel="Switch to All India"
               onButtonPress={() => navigation.navigate('CityPicker')}
             />
-          ) : null
+          ) : undefined
         }
       />
     </View>

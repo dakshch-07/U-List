@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
+import * as SecureStore from 'expo-secure-store';
 import { api } from '../services/api';
 import { theme } from '../theme';
 import { useAuthStore } from '../store/authStore';
@@ -29,6 +30,33 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   // Photos
   const [images, setImages] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+
+  // Auto-restore draft from local storage if session expired or page reloaded
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const savedDraft = await SecureStore.getItemAsync('ulist_ad_draft');
+        if (savedDraft) {
+          const d = JSON.parse(savedDraft);
+          if (d.title) setTitle(d.title);
+          if (d.description) setDescription(d.description);
+          if (d.price) setPrice(d.price);
+          if (d.locality) setLocality(d.locality);
+          if (d.dynamicAttrs) setDynamicAttrs(d.dynamicAttrs);
+        }
+      } catch {}
+    })();
+  }, []);
+
+  // Auto-save draft on every detail update
+  React.useEffect(() => {
+    if (title || description || price || locality) {
+      SecureStore.setItemAsync(
+        'ulist_ad_draft',
+        JSON.stringify({ title, description, price, locality, dynamicAttrs })
+      ).catch(() => {});
+    }
+  }, [title, description, price, locality, dynamicAttrs]);
 
   // Fetch Categories
   const { data: categories = [] } = useQuery({
@@ -97,6 +125,9 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       const res = await api.post('/ads', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
+
+      // Clear draft upon successful post
+      await SecureStore.deleteItemAsync('ulist_ad_draft').catch(() => {});
 
       Alert.alert('Success', res.data.message || 'Your ad has been posted!', [
         { text: 'OK', onPress: () => navigation.navigate('Home') },

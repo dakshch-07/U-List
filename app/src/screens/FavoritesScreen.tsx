@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, FlatList } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { theme } from '../theme';
 import { AdCard } from '../components/AdCard';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { SkeletonCard } from '../components/SkeletonCard';
+import { EmptyState } from '../components/EmptyState';
 
 export const FavoritesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const queryClient = useQueryClient();
@@ -31,32 +32,40 @@ export const FavoritesScreen: React.FC<{ navigation: any }> = ({ navigation }) =
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={favorites}
-        numColumns={2}
-        keyExtractor={(item) => item._id}
-        contentContainerStyle={styles.list}
-        onRefresh={refetch}
-        refreshing={isFetching}
-        renderItem={({ item }) => (
-          <AdCard
-            ad={item}
-            isFavorite={true}
-            onPress={() => navigation.navigate('AdDetail', { adId: item._id })}
-            onFavoritePress={() => removeMutation.mutate(item._id)}
-          />
-        )}
-        ListEmptyComponent={
-          !isFetching ? (
-            <View style={styles.empty}>
-              <MaterialCommunityIcons name="heart-broken-outline" size={48} color={theme.colors.secondaryText} />
-              <Text style={styles.emptyText}>You haven't saved any ads yet.</Text>
-            </View>
-          ) : (
-            <View />
-          )
-        }
-      />
+      {isFetching && favorites.length === 0 ? (
+        <View style={styles.skeletonGrid}>
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </View>
+      ) : (
+        <FlatList
+          data={favorites}
+          numColumns={2}
+          keyExtractor={(item) => item._id}
+          contentContainerStyle={styles.list}
+          onRefresh={refetch}
+          refreshing={isFetching}
+          renderItem={({ item }) => (
+            <AdCard
+              ad={item}
+              isFavorite={true}
+              onPress={() => navigation.navigate('AdDetail', { adId: item._id })}
+              onFavoritePress={() => removeMutation.mutate(item._id)}
+            />
+          )}
+          ListEmptyComponent={
+            <EmptyState
+              icon="heart-outline"
+              title="Nothing saved yet"
+              description="Tap the heart on any classified ad and it will show up here for quick access."
+              buttonLabel="Browse Bestsellers & Ads"
+              onButtonPress={() => navigation.navigate('Home')}
+            />
+          }
+        />
+      )}
     </View>
   );
 };
@@ -68,15 +77,11 @@ const styles = StyleSheet.create({
   },
   list: {
     padding: 6,
+    flexGrow: 1,
   },
-  empty: {
-    padding: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyText: {
-    fontSize: theme.typography.size.body,
-    color: theme.colors.secondaryText,
-    marginTop: 12,
+  skeletonGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    padding: 6,
   },
 });

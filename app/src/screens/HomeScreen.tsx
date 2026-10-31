@@ -4,6 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { theme } from '../theme';
 import { AdCard } from '../components/AdCard';
+import { SkeletonCard } from '../components/SkeletonCard';
+import { EmptyState } from '../components/EmptyState';
 import { useAuthStore } from '../store/authStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -37,7 +39,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   });
 
   // Fresh ads query
-  const { data: adsData, refetch } = useQuery({
+  const { data: adsData, refetch, isFetching } = useQuery({
     queryKey: ['ads', selectedCity],
     queryFn: async () => {
       const res = await api.get('/ads', {
@@ -150,6 +152,15 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Fresh recommendations</Text>
             </View>
+
+            {isFetching && ads.length === 0 && (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', padding: 4 }}>
+                <SkeletonCard />
+                <SkeletonCard />
+                <SkeletonCard />
+                <SkeletonCard />
+              </View>
+            )}
           </>
         }
         renderItem={({ item }) => (
@@ -159,9 +170,15 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           />
         )}
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No listings found in {selectedCity}</Text>
-          </View>
+          !isFetching ? (
+            <EmptyState
+              icon="map-marker-radius-outline"
+              title={`No ads in ${selectedCity} right now`}
+              description="Be the first to post a classified listing here, or switch to All India to see available listings."
+              buttonLabel="Switch to All India"
+              onButtonPress={() => navigation.navigate('CityPicker')}
+            />
+          ) : null
         }
       />
     </View>

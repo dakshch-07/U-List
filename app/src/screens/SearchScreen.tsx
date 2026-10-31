@@ -1,11 +1,27 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { theme } from '../theme';
 import { AdCard } from '../components/AdCard';
+import { SkeletonCard } from '../components/SkeletonCard';
+import { EmptyState } from '../components/EmptyState';
 import { useAuthStore } from '../store/authStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+// Popular Indian Search Suggestions with typo corrections
+const POPULAR_SEARCHES = ['Swift VXi', 'iPhone 14', 'Royal Enfield', '2 BHK Flat', 'Smart TV', 'Activa 6G'];
+
+const TYPO_MAP: Record<string, string> = {
+  'blu sheos': 'blue shoes',
+  'iphne': 'iPhone 14',
+  'actva': 'Activa 6G',
+  'swft': 'Swift VXi',
+  'royel': 'Royal Enfield',
+  'tv': 'Smart TV',
+  'flat': '2 BHK Flat',
+  'scoty': 'Activa 6G',
+};
 
 export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { selectedCity } = useAuthStore();
@@ -13,7 +29,7 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [submittedQuery, setSubmittedQuery] = useState('');
   const [sort, setSort] = useState<'newest' | 'price_asc' | 'price_desc'>('newest');
 
-  // Suggestions
+  // Suggestions while typing
   const { data: suggestions = [] } = useQuery({
     queryKey: ['suggestions', search],
     queryFn: async () => {
@@ -39,34 +55,40 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     },
   });
 
-  const handleSearchSubmit = () => {
-    setSubmittedQuery(search.trim());
+  const handleSearchSubmit = (textToSearch?: string) => {
+    const q = (textToSearch || search).trim();
+    if (q) {
+      setSearch(q);
+      setSubmittedQuery(q);
+    }
   };
 
   const ads = resultsData?.items || [];
+  const normalizedQuery = submittedQuery.toLowerCase().trim();
+  const suggestedCorrection = TYPO_MAP[normalizedQuery] || (ads.length === 0 && search.length > 3 ? 'Swift VXi' : null);
 
   return (
     <View style={styles.container}>
       {/* Header Search Box */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 8 }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 10 }}>
           <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.text} />
         </TouchableOpacity>
         <TextInput
           style={styles.searchInput}
-          placeholder="Search items, brands, cars..."
+          placeholder="Search cars, mobiles, bikes, furniture..."
           value={search}
           onChangeText={(txt) => {
             setSearch(txt);
             if (submittedQuery) setSubmittedQuery('');
           }}
-          onSubmitEditing={handleSearchSubmit}
+          onSubmitEditing={() => handleSearchSubmit()}
           autoFocus
           returnKeyType="search"
         />
         {search.length > 0 && (
           <TouchableOpacity onPress={() => { setSearch(''); setSubmittedQuery(''); }}>
-            <MaterialCommunityIcons name="close" size={20} color={theme.colors.secondaryText} />
+            <MaterialCommunityIcons name="close-circle" size={20} color={theme.colors.secondaryText} />
           </TouchableOpacity>
         )}
       </View>
@@ -78,10 +100,7 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             <TouchableOpacity
               key={item._id}
               style={styles.suggestionRow}
-              onPress={() => {
-                setSearch(item.title);
-                setSubmittedQuery(item.title);
-              }}
+              onPress={() => handleSearchSubmit(item.title)}
             >
               <MaterialCommunityIcons name="magnify" size={18} color={theme.colors.secondaryText} />
               <Text style={styles.suggestionText}>{item.title}</Text>
@@ -90,53 +109,118 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         </View>
       )}
 
-      {/* Sort Options Bar */}
-      <View style={styles.sortBar}>
-        <Text style={styles.resultsCount}>{ads.length} ads found</Text>
-        <View style={styles.sortOptions}>
-          <TouchableOpacity
-            style={[styles.sortButton, sort === 'newest' && styles.activeSortButton]}
-            onPress={() => setSort('newest')}
-          >
-            <Text style={[styles.sortText, sort === 'newest' && styles.activeSortText]}>Newest</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.sortButton, sort === 'price_asc' && styles.activeSortButton]}
-            onPress={() => setSort('price_asc')}
-          >
-            <Text style={[styles.sortText, sort === 'price_asc' && styles.activeSortText]}>Price Low</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.sortButton, sort === 'price_desc' && styles.activeSortButton]}
-            onPress={() => setSort('price_desc')}
-          >
-            <Text style={[styles.sortText, sort === 'price_desc' && styles.activeSortText]}>Price High</Text>
-          </TouchableOpacity>
+      {/* Filter and Sort row when query submitted */}
+      {submittedQuery ? (
+        <View style={styles.sortBar}>
+          <Text style={styles.resultsCount}>
+            {ads.length} results in <Text style={{ fontWeight: '700' }}>{selectedCity}</Text>
+          </Text>
+          <View style={styles.sortButtons}>
+            <TouchableOpacity
+              style={[styles.sortPill, sort === 'newest' && styles.activeSortPill]}
+              onPress={() => setSort('newest')}
+            >
+              <Text style={[styles.sortPillText, sort === 'newest' && styles.activeSortPillText]}>Newest</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.sortPill, sort === 'price_asc' && styles.activeSortPill]}
+              onPress={() => setSort('price_asc')}
+            >
+              <Text style={[styles.sortPillText, sort === 'price_asc' && styles.activeSortPillText]}>Price ↑</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.sortPill, sort === 'price_desc' && styles.activeSortPill]}
+              onPress={() => setSort('price_desc')}
+            >
+              <Text style={[styles.sortPillText, sort === 'price_desc' && styles.activeSortPillText]}>Price ↓</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      ) : null}
 
-      {/* Ads Results */}
-      <FlatList
-        data={ads}
-        numColumns={2}
-        keyExtractor={(item) => item._id}
-        contentContainerStyle={styles.list}
-        renderItem={({ item }) => (
-          <AdCard
-            ad={item}
-            onPress={() => navigation.navigate('AdDetail', { adId: item._id })}
-          />
-        )}
-        ListEmptyComponent={
-          !isFetching ? (
-            <View style={styles.empty}>
-              <Text style={styles.emptyText}>No results match your search.</Text>
-            </View>
-          ) : (
-            <View />
-          )
-        }
-      />
+      {/* Loading Skeletons */}
+      {isFetching && submittedQuery ? (
+        <View style={styles.skeletonGrid}>
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </View>
+      ) : (
+        <FlatList
+          data={ads}
+          numColumns={2}
+          keyExtractor={(item) => item._id}
+          contentContainerStyle={styles.list}
+          renderItem={({ item }) => (
+            <AdCard
+              ad={item}
+              onPress={() => navigation.navigate('AdDetail', { adId: item._id })}
+            />
+          )}
+          ListEmptyComponent={
+            submittedQuery ? (
+              <View style={styles.emptyContainer}>
+                <EmptyState
+                  icon="magnify-remove-outline"
+                  title={`No results for "${submittedQuery}"`}
+                  description="We couldn't find anything matching your search. Check for typos or try popular terms."
+                />
+
+                {/* Typo Suggestion pill */}
+                {suggestedCorrection && (
+                  <View style={styles.typoBox}>
+                    <Text style={styles.typoLabel}>Did you mean: </Text>
+                    <TouchableOpacity onPress={() => handleSearchSubmit(suggestedCorrection)}>
+                      <Text style={styles.typoLink}>{suggestedCorrection}?</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {/* Popular searches pills */}
+                <View style={styles.popularBox}>
+                  <Text style={styles.popularTitle}>Popular right now</Text>
+                  <View style={styles.popularPills}>
+                    {POPULAR_SEARCHES.map((item) => (
+                      <TouchableOpacity
+                        key={item}
+                        style={styles.popularPill}
+                        onPress={() => handleSearchSubmit(item)}
+                      >
+                        <Text style={styles.popularPillText}>{item}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+
+                {suggestedCorrection && (
+                  <TouchableOpacity
+                    style={styles.fallbackButton}
+                    onPress={() => handleSearchSubmit(suggestedCorrection)}
+                  >
+                    <Text style={styles.fallbackButtonText}>Search "{suggestedCorrection}"</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            ) : (
+              <View style={styles.initialState}>
+                <Text style={styles.popularTitle}>Popular Categories & Searches</Text>
+                <View style={styles.popularPills}>
+                  {POPULAR_SEARCHES.map((item) => (
+                    <TouchableOpacity
+                      key={item}
+                      style={styles.popularPill}
+                      onPress={() => handleSearchSubmit(item)}
+                    >
+                      <Text style={styles.popularPillText}>{item}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            )
+          }
+        />
+      )}
     </View>
   );
 };
@@ -150,78 +234,143 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
   },
   searchInput: {
     flex: 1,
-    fontSize: theme.typography.size.body,
+    fontSize: 15,
     color: theme.colors.text,
+    paddingVertical: 6,
   },
   suggestionsContainer: {
-    backgroundColor: theme.colors.background,
+    backgroundColor: theme.colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
+    paddingVertical: 6,
   },
   suggestionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: theme.colors.border,
+    gap: 12,
   },
   suggestionText: {
-    marginLeft: 10,
-    fontSize: theme.typography.size.body,
+    fontSize: 14,
     color: theme.colors.text,
   },
   sortBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: '#FAF5F2',
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
   },
   resultsCount: {
-    fontSize: theme.typography.size.caption,
-    color: theme.colors.secondaryText,
-  },
-  sortOptions: {
-    flexDirection: 'row',
-  },
-  sortButton: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    marginLeft: 4,
-  },
-  activeSortButton: {
-    backgroundColor: theme.colors.background,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  sortText: {
     fontSize: 12,
     color: theme.colors.secondaryText,
   },
-  activeSortText: {
-    color: theme.colors.primary,
-    fontWeight: theme.typography.weight.bold,
+  sortButtons: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  sortPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  activeSortPill: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  sortPillText: {
+    fontSize: 11,
+    color: theme.colors.text,
+    fontWeight: '500',
+  },
+  activeSortPillText: {
+    color: '#FFFFFF',
+  },
+  skeletonGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    padding: 6,
   },
   list: {
     padding: 6,
   },
-  empty: {
-    padding: 32,
+  emptyContainer: {
+    paddingHorizontal: 16,
+  },
+  typoBox: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  typoLabel: {
+    fontSize: 14,
+    color: theme.colors.secondaryText,
+  },
+  typoLink: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: theme.colors.primary,
+    textDecorationLine: 'underline',
+  },
+  popularBox: {
+    marginTop: 10,
+    marginBottom: 20,
     alignItems: 'center',
   },
-  emptyText: {
-    fontSize: theme.typography.size.body,
-    color: theme.colors.secondaryText,
+  popularTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: theme.colors.text,
+    marginBottom: 10,
+  },
+  popularPills: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  popularPill: {
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+  },
+  popularPillText: {
+    fontSize: 13,
+    color: theme.colors.text,
+  },
+  fallbackButton: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: 6,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginHorizontal: 20,
+    marginTop: 10,
+  },
+  fallbackButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  initialState: {
+    padding: 24,
+    alignItems: 'center',
   },
 });

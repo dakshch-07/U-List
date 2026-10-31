@@ -4,6 +4,7 @@ import * as SecureStore from 'expo-secure-store';
 import { api } from '../services/api';
 import { theme } from '../theme';
 import { useAuthStore } from '../store/authStore';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { setUser } = useAuthStore();
@@ -13,6 +14,7 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleAuth = async () => {
@@ -96,13 +98,25 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Password</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="••••••••"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={styles.passwordInput}
+            placeholder="••••••••"
+            secureTextEntry={!showPassword}
+            value={password}
+            onChangeText={setPassword}
+          />
+          <TouchableOpacity
+            style={styles.eyeButton}
+            onPress={() => setShowPassword(!showPassword)}
+          >
+            <MaterialCommunityIcons
+              name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+              size={22}
+              color={theme.colors.secondaryText}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <TouchableOpacity
@@ -167,6 +181,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: theme.typography.size.body,
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: theme.colors.background,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: theme.typography.size.body,
+  },
+  eyeButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
   submitButton: {
     backgroundColor: theme.colors.primary,

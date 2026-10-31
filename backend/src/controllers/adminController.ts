@@ -1,0 +1,233 @@
+import { Request, Response } from 'express';
+import { User } from '../models/User';
+import { Ad } from '../models/Ad';
+import { Category } from '../models/Category';
+import { Report, City, Banner, Setting } from '../models/Extras';
+
+export const getDashboardStats = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const [totalUsers, activeAds, pendingAds, openReports] = await Promise.all([
+      User.countDocuments({ role: 'user' }),
+      Ad.countDocuments({ status: 'active' }),
+      Ad.countDocuments({ status: 'pending' }),
+      Report.countDocuments({ status: 'open' }),
+    ]);
+
+    const latestPending = await Ad.find({ status: 'pending' })
+      .populate('user', 'name email phone')
+      .populate('category', 'name')
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    res.json({
+      success: true,
+      data: {
+        stats: {
+          totalUsers,
+          activeAds,
+          pendingAds,
+          openReports,
+        },
+        latestPending,
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const getAdminAds = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { status, category, city, search, page = '1', limit = '15' } = req.query;
+    const query: any = {};
+
+    if (status && status !== 'all') query.status = status;
+    if (category) query.category = category;
+    if (city) query.city = city;
+    if (search) {
+      query.title = { $regex: search as string, $options: 'i' };
+    }
+
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    const [items, total] = await Promise.all([
+      Ad.find(query)
+        .populate('user', 'name email phone')
+        .populate('category', 'name')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum),
+      Ad.countDocuments(query),
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        items,
+        total,
+        page: pageNum,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const approveAd = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const ad = await Ad.findById(id);
+    if (!ad) {
+      res.status(404).json({ success: false, message: 'Ad not found' });
+      return;
+    }
+
+    ad.status = 'active';
+    ad.rejectReason = '';
+    await ad.save();
+
+    res.json({ success: true, message: 'Ad approved successfully', data: ad });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const rejectAd = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+    const ad = await Ad.findById(id);
+    if (!ad) {
+      res.status(404).json({ success: false, message: 'Ad not found' });
+      return;
+    }
+
+    ad.status = 'rejected';
+    ad.rejectReason = reason || 'Does not comply with listing guidelines';
+    await ad.save();
+
+    res.json({ success: true, message: 'Ad rejected', data: ad });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const setFeaturedAd = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { isFeatured, days = 7 } = req.body;
+    const ad = await Ad.findById(id);
+    if (!ad) {
+      res.status(404).json({ success: false, message: 'Ad not found' });
+      return;
+    }
+
+    ad.isFeatured = isFeatured;
+    if (isFeatured) {
+      ad.featuredUntil = new Date(Date.now() + Number(days) * 24 * 60 * 60 * 1000);
+    } else {
+      ad.featuredUntil = undefined;
+    }
+    await ad.save();
+
+    res.json({ success: true, message: 'Ad featured status updated', data: ad });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const getAdminUsers = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { search, page = '1', limit = '15' } = req.query;
+    const query: any = {};
+    if (search) {
+      query.$or = [
+        { name: { $regex: search as string, $options: 'i' } },
+        { email: { $regex: search as string, $options: 'i' } },
+        { phone: { $regex: search as string, $options: 'i' } },
+      ];
+    }
+
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    const [items, total] = await Promise.all([
+      User.find(query).sort({ createdAt: -1 }).skip(skip).limit(limitNum),
+      User.countDocuments(query),
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        items,
+        total,
+        page: pageNum,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const toggleUserStatus = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+    if (!user) {
+      res.status(404).json({ success: false, message: 'User not found' });
+      return;
+    }
+
+    user.status = user.status === 'active' ? 'blocked' : 'active';
+    await user.save();
+
+    res.json({ success: true, message: `User ${user.status}`, data: user });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const updateCategory = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const updated = await Category.findByIdAndUpdate(id, req.body, { new: true });
+    res.json({ success: true, data: updated });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const createCategory = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const created = await Category.create(req.body);
+    res.json({ success: true, data: created });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const getAdminReports = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const reports = await Report.find({})
+      .populate('reporter', 'name email phone')
+      .sort({ createdAt: -1 });
+    res.json({ success: true, data: reports });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const dismissReport = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    await Report.findByIdAndUpdate(id, { status: 'dismissed' });
+    res.json({ success: true, message: 'Report dismissed' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};

@@ -204,10 +204,11 @@ async function startServer() {
     console.log('[Bootstrap] Admin password synced for:', adminEmail);
   }
 
-  // Auto-seed if database is empty
+  // Check if seed update is needed (e.g. realistic images across all 12 categories)
   const count = await Ad.countDocuments();
-  if (count === 0) {
-    console.log('[Bootstrap] No existing ads detected. Running initial seed...');
+  const needsReSeed = await Ad.findOne({ 'images.publicId': 'demo_1' });
+  if (count === 0 || needsReSeed) {
+    console.log('[Bootstrap] Running initial/refreshed seed with realistic category images...');
     await runSeed();
   }
 

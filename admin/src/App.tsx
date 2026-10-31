@@ -15,6 +15,7 @@ export default function App() {
 
   // Admin section navigation
   const [activeTab, setActiveTab] = useState<'dashboard' | 'ads' | 'users' | 'categories' | 'reports'>('dashboard');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Stats state
   const [stats, setStats] = useState<any>(null);
@@ -183,8 +184,8 @@ export default function App() {
 
   if (!token) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ background: '#FFFFFF', border: '1px solid #E3E3E3', borderRadius: '6px', width: '380px', padding: '24px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+        <div style={{ background: '#FFFFFF', border: '1px solid #E3E3E3', borderRadius: '6px', width: '100%', maxWidth: '380px', padding: '24px' }}>
           <div style={{ marginBottom: '20px', textAlign: 'center' }}>
             <h1 style={{ color: '#D9480F', fontSize: '24px', fontWeight: 700 }}>Ulist</h1>
             <p style={{ color: '#6B6B6B', fontSize: '14px', marginTop: '4px' }}>Administration Panel</p>
@@ -250,12 +251,27 @@ export default function App() {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5F5' }}>
+    <div className="admin-layout">
+      {/* Mobile Drawer Overlay */}
+      <div
+        className={`mobile-overlay ${isSidebarOpen ? 'overlay-open' : ''}`}
+        onClick={() => setIsSidebarOpen(false)}
+      />
+
       {/* Sidebar */}
-      <div style={{ width: '240px', background: '#FFFFFF', borderRight: '1px solid #E3E3E3', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: '20px', borderBottom: '1px solid #E3E3E3' }}>
-          <h2 style={{ color: '#D9480F', fontSize: '20px', fontWeight: 700 }}>Ulist</h2>
-          <span style={{ fontSize: '12px', color: '#6B6B6B' }}>Admin Control</span>
+      <div className={`admin-sidebar ${isSidebarOpen ? 'sidebar-open' : ''}`}>
+        <div style={{ padding: '20px', borderBottom: '1px solid #E3E3E3', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h2 style={{ color: '#D9480F', fontSize: '20px', fontWeight: 700 }}>Ulist</h2>
+            <span style={{ fontSize: '12px', color: '#6B6B6B' }}>Admin Control</span>
+          </div>
+          <button
+            onClick={() => setIsSidebarOpen(false)}
+            className="menu-toggle-btn"
+            style={{ fontSize: '18px' }}
+          >
+            ✕
+          </button>
         </div>
         <div style={{ flex: 1, padding: '12px 0' }}>
           {[
@@ -267,7 +283,10 @@ export default function App() {
           ].map((item) => (
             <button
               key={item.id}
-              onClick={() => setActiveTab(item.id as any)}
+              onClick={() => {
+                setActiveTab(item.id as any);
+                setIsSidebarOpen(false);
+              }}
               style={{
                 width: '100%',
                 textAlign: 'left',
@@ -295,26 +314,35 @@ export default function App() {
       </div>
 
       {/* Main Content Area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+      <div className="admin-main">
         {/* Top Header */}
-        <div style={{ height: '60px', background: '#FFFFFF', borderBottom: '1px solid #E3E3E3', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px' }}>
-          <div style={{ fontWeight: 500, fontSize: '16px' }}>
-            {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+        <div className="admin-top-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="menu-toggle-btn"
+              title="Open Navigation"
+            >
+              ☰
+            </button>
+            <div style={{ fontWeight: 600, fontSize: '16px' }}>
+              {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+            </div>
           </div>
           {message && (
             <div style={{ background: '#E6F4EA', color: '#1E8E3E', padding: '4px 12px', borderRadius: '4px', fontSize: '13px' }}>
               {message}
             </div>
           )}
-          <div style={{ color: '#6B6B6B', fontSize: '13px' }}>
-            Connected to Live Backend API
+          <div style={{ color: '#6B6B6B', fontSize: '12px' }}>
+            Live API
           </div>
         </div>
 
-        <div style={{ padding: '24px' }}>
+        <div className="admin-main-content" style={{ padding: '24px' }}>
           {activeTab === 'dashboard' && stats && (
             <div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
+              <div className="stats-grid">
                 <div style={{ background: '#FFFFFF', border: '1px solid #E3E3E3', borderRadius: '6px', padding: '16px' }}>
                   <div style={{ fontSize: '12px', color: '#6B6B6B' }}>Total Registered Users</div>
                   <div style={{ fontSize: '24px', fontWeight: 700, marginTop: '4px' }}>{stats.totalUsers}</div>
@@ -339,41 +367,43 @@ export default function App() {
                 {latestPending.length === 0 ? (
                   <p style={{ color: '#6B6B6B' }}>No pending ads right now.</p>
                 ) : (
-                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                    <thead>
-                      <tr style={{ borderBottom: '1px solid #E3E3E3', color: '#6B6B6B', fontSize: '12px' }}>
-                        <th style={{ padding: '8px' }}>Title</th>
-                        <th style={{ padding: '8px' }}>Seller</th>
-                        <th style={{ padding: '8px' }}>Price</th>
-                        <th style={{ padding: '8px' }}>City</th>
-                        <th style={{ padding: '8px', textAlign: 'right' }}>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {latestPending.map((ad) => (
-                        <tr key={ad._id} style={{ borderBottom: '1px solid #E3E3E3' }}>
-                          <td style={{ padding: '12px 8px', fontWeight: 500 }}>{ad.title}</td>
-                          <td style={{ padding: '12px 8px' }}>{ad.user?.name} ({ad.user?.phone})</td>
-                          <td style={{ padding: '12px 8px' }}>₹{ad.price?.toLocaleString('en-IN')}</td>
-                          <td style={{ padding: '12px 8px' }}>{ad.city}</td>
-                          <td style={{ padding: '12px 8px', textAlign: 'right' }}>
-                            <button
-                              onClick={() => handleApproveAd(ad._id)}
-                              style={{ background: '#1E8E3E', color: '#FFFFFF', border: 'none', padding: '6px 12px', borderRadius: '4px', marginRight: '8px', cursor: 'pointer' }}
-                            >
-                              Approve
-                            </button>
-                            <button
-                              onClick={() => handleRejectAd(ad._id)}
-                              style={{ background: '#D93025', color: '#FFFFFF', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}
-                            >
-                              Reject
-                            </button>
-                          </td>
+                  <div className="table-responsive">
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid #E3E3E3', color: '#6B6B6B', fontSize: '12px' }}>
+                          <th style={{ padding: '8px' }}>Title</th>
+                          <th style={{ padding: '8px' }}>Seller</th>
+                          <th style={{ padding: '8px' }}>Price</th>
+                          <th style={{ padding: '8px' }}>City</th>
+                          <th style={{ padding: '8px', textAlign: 'right' }}>Actions</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {latestPending.map((ad) => (
+                          <tr key={ad._id} style={{ borderBottom: '1px solid #E3E3E3' }}>
+                            <td style={{ padding: '12px 8px', fontWeight: 500 }}>{ad.title}</td>
+                            <td style={{ padding: '12px 8px' }}>{ad.user?.name} ({ad.user?.phone})</td>
+                            <td style={{ padding: '12px 8px' }}>₹{ad.price?.toLocaleString('en-IN')}</td>
+                            <td style={{ padding: '12px 8px' }}>{ad.city}</td>
+                            <td style={{ padding: '12px 8px', textAlign: 'right' }}>
+                              <button
+                                onClick={() => handleApproveAd(ad._id)}
+                                style={{ background: '#1E8E3E', color: '#FFFFFF', border: 'none', padding: '6px 12px', borderRadius: '4px', marginRight: '8px', cursor: 'pointer' }}
+                              >
+                                Approve
+                              </button>
+                              <button
+                                onClick={() => handleRejectAd(ad._id)}
+                                style={{ background: '#D93025', color: '#FFFFFF', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}
+                              >
+                                Reject
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </div>
             </div>
@@ -381,7 +411,7 @@ export default function App() {
 
           {activeTab === 'ads' && (
             <div style={{ background: '#FFFFFF', border: '1px solid #E3E3E3', borderRadius: '6px', padding: '20px' }}>
-              <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+              <div className="filter-row" style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
                 <input
                   type="text"
                   placeholder="Search ads by title..."
@@ -409,79 +439,81 @@ export default function App() {
                 </button>
               </div>
 
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid #E3E3E3', color: '#6B6B6B', fontSize: '12px' }}>
-                    <th style={{ padding: '8px' }}>Title</th>
-                    <th style={{ padding: '8px' }}>Category</th>
-                    <th style={{ padding: '8px' }}>Price</th>
-                    <th style={{ padding: '8px' }}>City</th>
-                    <th style={{ padding: '8px' }}>Status</th>
-                    <th style={{ padding: '8px' }}>Highlighted</th>
-                    <th style={{ padding: '8px', textAlign: 'right' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ads.map((ad) => (
-                    <tr key={ad._id} style={{ borderBottom: '1px solid #E3E3E3' }}>
-                      <td style={{ padding: '12px 8px', fontWeight: 500 }}>{ad.title}</td>
-                      <td style={{ padding: '12px 8px' }}>{ad.category?.name}</td>
-                      <td style={{ padding: '12px 8px' }}>₹{ad.price?.toLocaleString('en-IN')}</td>
-                      <td style={{ padding: '12px 8px' }}>{ad.city}</td>
-                      <td style={{ padding: '12px 8px' }}>
-                        <span style={{
-                          padding: '2px 8px',
-                          borderRadius: '4px',
-                          fontSize: '12px',
-                          background: ad.status === 'active' ? '#E6F4EA' : ad.status === 'pending' ? '#FEF7E0' : '#F1F3F4',
-                          color: ad.status === 'active' ? '#1E8E3E' : ad.status === 'pending' ? '#B06000' : '#5F6368',
-                        }}>
-                          {ad.status}
-                        </span>
-                      </td>
-                      <td style={{ padding: '12px 8px' }}>
-                        <button
-                          onClick={() => handleToggleFeatured(ad._id, ad.isFeatured)}
-                          style={{
-                            padding: '4px 8px',
-                            fontSize: '12px',
-                            background: ad.isFeatured ? '#FFC107' : '#F5F5F5',
-                            border: '1px solid #E3E3E3',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          {ad.isFeatured ? 'Highlighted ★' : 'Make Highlighted'}
-                        </button>
-                      </td>
-                      <td style={{ padding: '12px 8px', textAlign: 'right' }}>
-                        {ad.status === 'pending' && (
-                          <button
-                            onClick={() => handleApproveAd(ad._id)}
-                            style={{ background: '#1E8E3E', color: '#FFFFFF', border: 'none', padding: '4px 8px', borderRadius: '4px', marginRight: '6px', cursor: 'pointer' }}
-                          >
-                            Approve
-                          </button>
-                        )}
-                        {ad.status !== 'rejected' && (
-                          <button
-                            onClick={() => handleRejectAd(ad._id)}
-                            style={{ background: '#F5F5F5', border: '1px solid #E3E3E3', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }}
-                          >
-                            Reject
-                          </button>
-                        )}
-                      </td>
+              <div className="table-responsive">
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '700px' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid #E3E3E3', color: '#6B6B6B', fontSize: '12px' }}>
+                      <th style={{ padding: '8px' }}>Title</th>
+                      <th style={{ padding: '8px' }}>Category</th>
+                      <th style={{ padding: '8px' }}>Price</th>
+                      <th style={{ padding: '8px' }}>City</th>
+                      <th style={{ padding: '8px' }}>Status</th>
+                      <th style={{ padding: '8px' }}>Highlighted</th>
+                      <th style={{ padding: '8px', textAlign: 'right' }}>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {ads.map((ad) => (
+                      <tr key={ad._id} style={{ borderBottom: '1px solid #E3E3E3' }}>
+                        <td style={{ padding: '12px 8px', fontWeight: 500 }}>{ad.title}</td>
+                        <td style={{ padding: '12px 8px' }}>{ad.category?.name}</td>
+                        <td style={{ padding: '12px 8px' }}>₹{ad.price?.toLocaleString('en-IN')}</td>
+                        <td style={{ padding: '12px 8px' }}>{ad.city}</td>
+                        <td style={{ padding: '12px 8px' }}>
+                          <span style={{
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            fontSize: '12px',
+                            background: ad.status === 'active' ? '#E6F4EA' : ad.status === 'pending' ? '#FEF7E0' : '#F1F3F4',
+                            color: ad.status === 'active' ? '#1E8E3E' : ad.status === 'pending' ? '#B06000' : '#5F6368',
+                          }}>
+                            {ad.status}
+                          </span>
+                        </td>
+                        <td style={{ padding: '12px 8px' }}>
+                          <button
+                            onClick={() => handleToggleFeatured(ad._id, ad.isFeatured)}
+                            style={{
+                              padding: '4px 8px',
+                              fontSize: '12px',
+                              background: ad.isFeatured ? '#FFC107' : '#F5F5F5',
+                              border: '1px solid #E3E3E3',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            {ad.isFeatured ? 'Highlighted ★' : 'Make Highlighted'}
+                          </button>
+                        </td>
+                        <td style={{ padding: '12px 8px', textAlign: 'right' }}>
+                          {ad.status === 'pending' && (
+                            <button
+                              onClick={() => handleApproveAd(ad._id)}
+                              style={{ background: '#1E8E3E', color: '#FFFFFF', border: 'none', padding: '4px 8px', borderRadius: '4px', marginRight: '6px', cursor: 'pointer' }}
+                            >
+                              Approve
+                            </button>
+                          )}
+                          {ad.status !== 'rejected' && (
+                            <button
+                              onClick={() => handleRejectAd(ad._id)}
+                              style={{ background: '#F5F5F5', border: '1px solid #E3E3E3', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }}
+                            >
+                              Reject
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
           {activeTab === 'users' && (
             <div style={{ background: '#FFFFFF', border: '1px solid #E3E3E3', borderRadius: '6px', padding: '20px' }}>
-              <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+              <div className="filter-row" style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
                 <input
                   type="text"
                   placeholder="Search user by name, email or phone..."
@@ -498,63 +530,61 @@ export default function App() {
                 </button>
               </div>
 
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid #E3E3E3', color: '#6B6B6B', fontSize: '12px' }}>
-                    <th style={{ padding: '8px' }}>Name</th>
-                    <th style={{ padding: '8px' }}>Email</th>
-                    <th style={{ padding: '8px' }}>Phone</th>
-                    <th style={{ padding: '8px' }}>Role</th>
-                    <th style={{ padding: '8px' }}>Status</th>
-                    <th style={{ padding: '8px', textAlign: 'right' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((u) => (
-                    <tr key={u._id} style={{ borderBottom: '1px solid #E3E3E3' }}>
-                      <td style={{ padding: '12px 8px', fontWeight: 500 }}>{u.name}</td>
-                      <td style={{ padding: '12px 8px' }}>{u.email}</td>
-                      <td style={{ padding: '12px 8px' }}>{u.phone}</td>
-                      <td style={{ padding: '12px 8px' }}>{u.role}</td>
-                      <td style={{ padding: '12px 8px' }}>
-                        <span style={{
-                          padding: '2px 8px',
-                          borderRadius: '4px',
-                          fontSize: '12px',
-                          background: u.status === 'active' ? '#E6F4EA' : '#FCE8E6',
-                          color: u.status === 'active' ? '#1E8E3E' : '#D93025',
-                        }}>
-                          {u.status}
-                        </span>
-                      </td>
-                      <td style={{ padding: '12px 8px', textAlign: 'right' }}>
-                        {u.role !== 'admin' && (
+              <div className="table-responsive">
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid #E3E3E3', color: '#6B6B6B', fontSize: '12px' }}>
+                      <th style={{ padding: '8px' }}>Name</th>
+                      <th style={{ padding: '8px' }}>Phone</th>
+                      <th style={{ padding: '8px' }}>Role</th>
+                      <th style={{ padding: '8px' }}>Status</th>
+                      <th style={{ padding: '8px', textAlign: 'right' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map((u) => (
+                      <tr key={u._id} style={{ borderBottom: '1px solid #E3E3E3' }}>
+                        <td style={{ padding: '12px 8px', fontWeight: 500 }}>{u.name}</td>
+                        <td style={{ padding: '12px 8px' }}>{u.phone}</td>
+                        <td style={{ padding: '12px 8px' }}>{u.role}</td>
+                        <td style={{ padding: '12px 8px' }}>
+                          <span style={{
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            fontSize: '12px',
+                            background: u.status === 'active' ? '#E6F4EA' : '#FCE8E6',
+                            color: u.status === 'active' ? '#1E8E3E' : '#D93025',
+                          }}>
+                            {u.status}
+                          </span>
+                        </td>
+                        <td style={{ padding: '12px 8px', textAlign: 'right' }}>
                           <button
                             onClick={() => handleToggleUserStatus(u._id)}
                             style={{
-                              background: u.status === 'active' ? '#D93025' : '#1E8E3E',
-                              color: '#FFFFFF',
+                              background: u.status === 'active' ? '#FCE8E6' : '#E6F4EA',
+                              color: u.status === 'active' ? '#D93025' : '#1E8E3E',
                               border: 'none',
                               padding: '4px 8px',
                               borderRadius: '4px',
                               cursor: 'pointer',
                             }}
                           >
-                            {u.status === 'active' ? 'Block' : 'Unblock'}
+                            {u.status === 'active' ? 'Block User' : 'Unblock User'}
                           </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
           {activeTab === 'categories' && (
             <div style={{ background: '#FFFFFF', border: '1px solid #E3E3E3', borderRadius: '6px', padding: '20px' }}>
               <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>Categories & Dynamic Attributes</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+              <div className="categories-grid">
                 {categories.map((c) => (
                   <div key={c._id} style={{ border: '1px solid #E3E3E3', borderRadius: '6px', padding: '16px' }}>
                     <div style={{ fontWeight: 700, fontSize: '16px', marginBottom: '6px' }}>{c.name}</div>
@@ -579,38 +609,40 @@ export default function App() {
               {reports.length === 0 ? (
                 <p style={{ color: '#6B6B6B' }}>No unresolved reports.</p>
               ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid #E3E3E3', color: '#6B6B6B', fontSize: '12px' }}>
-                      <th style={{ padding: '8px' }}>Type</th>
-                      <th style={{ padding: '8px' }}>Reporter</th>
-                      <th style={{ padding: '8px' }}>Reason</th>
-                      <th style={{ padding: '8px' }}>Status</th>
-                      <th style={{ padding: '8px', textAlign: 'right' }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {reports.map((r) => (
-                      <tr key={r._id} style={{ borderBottom: '1px solid #E3E3E3' }}>
-                        <td style={{ padding: '12px 8px', fontWeight: 500 }}>{r.targetType.toUpperCase()}</td>
-                        <td style={{ padding: '12px 8px' }}>{r.reporter?.name || 'Anonymous'}</td>
-                        <td style={{ padding: '12px 8px' }}>{r.reason}</td>
-                        <td style={{ padding: '12px 8px' }}>{r.status}</td>
-                        <td style={{ padding: '12px 8px', textAlign: 'right' }}>
-                          <button
-                            onClick={async () => {
-                              await axios.post(`${API_BASE}/admin/reports/${r._id}/dismiss`, {}, authHeaders);
-                              fetchReports();
-                            }}
-                            style={{ background: '#F5F5F5', border: '1px solid #E3E3E3', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }}
-                          >
-                            Dismiss
-                          </button>
-                        </td>
+                <div className="table-responsive">
+                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid #E3E3E3', color: '#6B6B6B', fontSize: '12px' }}>
+                        <th style={{ padding: '8px' }}>Type</th>
+                        <th style={{ padding: '8px' }}>Reporter</th>
+                        <th style={{ padding: '8px' }}>Reason</th>
+                        <th style={{ padding: '8px' }}>Status</th>
+                        <th style={{ padding: '8px', textAlign: 'right' }}>Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {reports.map((r) => (
+                        <tr key={r._id} style={{ borderBottom: '1px solid #E3E3E3' }}>
+                          <td style={{ padding: '12px 8px', fontWeight: 500 }}>{r.targetType.toUpperCase()}</td>
+                          <td style={{ padding: '12px 8px' }}>{r.reporter?.name || 'Anonymous'}</td>
+                          <td style={{ padding: '12px 8px' }}>{r.reason}</td>
+                          <td style={{ padding: '12px 8px' }}>{r.status}</td>
+                          <td style={{ padding: '12px 8px', textAlign: 'right' }}>
+                            <button
+                              onClick={async () => {
+                                await axios.post(`${API_BASE}/admin/reports/${r._id}/dismiss`, {}, authHeaders);
+                                fetchReports();
+                              }}
+                              style={{ background: '#F5F5F5', border: '1px solid #E3E3E3', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }}
+                            >
+                              Dismiss
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
           )}

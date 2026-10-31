@@ -30,8 +30,8 @@ export const getAds = async (req: Request, res: Response): Promise<void> => {
     if (category) query.category = category;
     if (subcategory) query.subcategory = subcategory;
 
-    // City
-    if (city && city !== 'All India') {
+    // City (India / All India shows ads from all cities)
+    if (city && typeof city === 'string' && city !== 'All India' && city.toLowerCase() !== 'india') {
       query.city = new RegExp(`^${city}$`, 'i');
     }
 

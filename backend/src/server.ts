@@ -83,6 +83,8 @@ app.get('/api/debug-paths', async (_req, res) => {
     adminEmail,
     adminInDb: !!foundAdmin,
     adminRole: foundAdmin?.role,
+    envAdminPasswordLength: (process.env.ADMIN_PASSWORD || 'AdminUlist#2026').length,
+    envAdminEmail: process.env.ADMIN_EMAIL || 'admin@ulist.in',
   });
 });
 

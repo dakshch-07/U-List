@@ -10,6 +10,7 @@ export default function App() {
   // Login form state
   const [email, setEmail] = useState('admin@ulist.in');
   const [password, setPassword] = useState('AdminUlist#2026');
+  const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState('');
 
   // Admin section navigation
@@ -208,13 +209,33 @@ export default function App() {
             </div>
             <div style={{ marginBottom: '20px' }}>
               <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, marginBottom: '6px' }}>Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={{ width: '100%', padding: '8px 12px', border: '1px solid #E3E3E3', borderRadius: '4px' }}
-                required
-              />
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  style={{ width: '100%', padding: '8px 40px 8px 12px', border: '1px solid #E3E3E3', borderRadius: '4px' }}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '10px',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#6B6B6B',
+                    fontSize: '16px',
+                    padding: 0,
+                    lineHeight: 1,
+                  }}
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? '🙈' : '👁️'}
+                </button>
+              </div>
             </div>
             <button
               type="submit"

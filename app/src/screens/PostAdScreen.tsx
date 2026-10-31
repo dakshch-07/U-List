@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, Image, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, Image, Platform, BackHandler } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import * as SecureStore from 'expo-secure-store';
@@ -73,6 +73,50 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       ).catch(() => {});
     }
   }, [title, description, price, locality, dynamicAttrs]);
+
+  // Handle Step-by-Step Back Navigation
+  const handleStepBack = () => {
+    if (step > 1) {
+      setStep((prev) => ((prev - 1) as 1 | 2 | 3 | 4));
+      return true;
+    }
+    // If on Step 1, go back in app navigation or home
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('HomeTab');
+    }
+    return true;
+  };
+
+  // Hardware Back Button (Android) & Browser Back Navigation handling
+  useEffect(() => {
+    const backAction = () => {
+      if (step > 1) {
+        setStep((prev) => ((prev - 1) as 1 | 2 | 3 | 4));
+        return true;
+      }
+      return false;
+    };
+
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+
+    // Browser popstate hook for Web
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const handlePopState = () => {
+        if (step > 1) {
+          setStep((prev) => ((prev - 1) as 1 | 2 | 3 | 4));
+        }
+      };
+      window.addEventListener('popstate', handlePopState);
+      return () => {
+        backHandler.remove();
+        window.removeEventListener('popstate', handlePopState);
+      };
+    }
+
+    return () => backHandler.remove();
+  }, [step]);
 
   // Fetch Categories
   const { data: categories = [] } = useQuery({
@@ -211,14 +255,24 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* Step Indicator */}
+      {/* Step Indicator with Back Navigation Button */}
       <View style={styles.stepHeader}>
-        <Text style={styles.stepTitle}>
-          {step === 1 && 'Step 1: Choose Category'}
-          {step === 2 && 'Step 2: Key Details'}
-          {step === 3 && 'Step 3: Upload Photos'}
-          {step === 4 && 'Step 4: Price & Contact'}
-        </Text>
+        <View style={styles.stepLeftContainer}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={handleStepBack}
+            activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.text} />
+          </TouchableOpacity>
+          <Text style={styles.stepTitle}>
+            {step === 1 && 'Step 1: Choose Category'}
+            {step === 2 && 'Step 2: Key Details'}
+            {step === 3 && 'Step 3: Upload Photos'}
+            {step === 4 && 'Step 4: Price & Contact'}
+          </Text>
+        </View>
         <Text style={styles.stepProgress}>{step}/4</Text>
       </View>
 
@@ -313,18 +367,27 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               </View>
             ))}
 
-            <TouchableOpacity
-              style={styles.nextButton}
-              onPress={() => {
-                if (!title || !description) {
-                  Alert.alert('Required', 'Please fill title and description');
-                  return;
-                }
-                setStep(3);
-              }}
-            >
-              <Text style={styles.nextButtonText}>Next: Photos</Text>
-            </TouchableOpacity>
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                style={styles.backStepButton}
+                onPress={() => setStep(1)}
+              >
+                <MaterialCommunityIcons name="arrow-left" size={18} color={theme.colors.text} />
+                <Text style={styles.backStepButtonText}>Back</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.nextButton, { flex: 1, marginTop: 0, marginLeft: 12 }]}
+                onPress={() => {
+                  if (!title || !description) {
+                    Alert.alert('Required', 'Please fill title and description');
+                    return;
+                  }
+                  setStep(3);
+                }}
+              >
+                <Text style={styles.nextButtonText}>Next: Photos</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 
@@ -352,9 +415,21 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               )}
             </View>
 
-            <TouchableOpacity style={styles.nextButton} onPress={() => setStep(4)}>
-              <Text style={styles.nextButtonText}>Next: Pricing & Contact</Text>
-            </TouchableOpacity>
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                style={styles.backStepButton}
+                onPress={() => setStep(2)}
+              >
+                <MaterialCommunityIcons name="arrow-left" size={18} color={theme.colors.text} />
+                <Text style={styles.backStepButtonText}>Back</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.nextButton, { flex: 1, marginTop: 0, marginLeft: 12 }]}
+                onPress={() => setStep(4)}
+              >
+                <Text style={styles.nextButtonText}>Next: Price & Details</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 
@@ -414,15 +489,24 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               <Text style={styles.toggleText}>Show my phone number on this ad</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.nextButton, submitting && { opacity: 0.6 }]}
-              onPress={handleSubmitAd}
-              disabled={submitting}
-            >
-              <Text style={styles.nextButtonText}>
-                {submitting ? 'Submitting Ad...' : 'Post Ad Now'}
-              </Text>
-            </TouchableOpacity>
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                style={styles.backStepButton}
+                onPress={() => setStep(3)}
+              >
+                <MaterialCommunityIcons name="arrow-left" size={18} color={theme.colors.text} />
+                <Text style={styles.backStepButtonText}>Back</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.nextButton, { flex: 1, marginTop: 0, marginLeft: 12 }, submitting && { opacity: 0.6 }]}
+                onPress={handleSubmitAd}
+                disabled={submitting}
+              >
+                <Text style={styles.nextButtonText}>
+                  {submitting ? 'Submitting Ad...' : 'Post Ad Now'}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
       </ScrollView>
@@ -455,11 +539,23 @@ const styles = StyleSheet.create({
   },
   stepHeader: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
     backgroundColor: theme.colors.surface,
+  },
+  stepLeftContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  backButton: {
+    marginRight: 12,
+    padding: 4,
+    borderRadius: 20,
   },
   stepTitle: {
     fontSize: theme.typography.size.body,
@@ -603,6 +699,28 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: '#FFFFFF',
     fontWeight: theme.typography.weight.bold,
+    fontSize: theme.typography.size.body,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  backStepButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: theme.borderRadius.sm,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
+  },
+  backStepButtonText: {
+    marginLeft: 4,
+    color: theme.colors.text,
+    fontWeight: theme.typography.weight.semibold,
     fontSize: theme.typography.size.body,
   },
 });

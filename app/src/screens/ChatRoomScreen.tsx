@@ -35,7 +35,7 @@ export const ChatRoomScreen: React.FC<{ route: any; navigation: any }> = ({ rout
 
   // Setup Socket.io
   useEffect(() => {
-    const socket = io('http://10.0.2.2:5000', {
+    const socket = io('https://u-list-api.onrender.com', {
       query: { userId: user?._id },
     });
     socketRef.current = socket;

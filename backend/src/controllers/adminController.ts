@@ -48,8 +48,8 @@ export const getAdminAds = async (req: Request, res: Response): Promise<void> =>
       query.title = { $regex: search as string, $options: 'i' };
     }
 
-    const pageNum = parseInt(page as string, 10);
-    const limitNum = parseInt(limit as string, 10);
+    const pageNum = parseInt(page as string, 10) || 1;
+    const limitNum = parseInt(limit as string, 10) || 100;
     const skip = (pageNum - 1) * limitNum;
 
     const [items, total] = await Promise.all([
@@ -151,8 +151,8 @@ export const getAdminUsers = async (req: Request, res: Response): Promise<void> 
       ];
     }
 
-    const pageNum = parseInt(page as string, 10);
-    const limitNum = parseInt(limit as string, 10);
+    const pageNum = parseInt(page as string, 10) || 1;
+    const limitNum = parseInt(limit as string, 10) || 100;
     const skip = (pageNum - 1) * limitNum;
 
     const [items, total] = await Promise.all([

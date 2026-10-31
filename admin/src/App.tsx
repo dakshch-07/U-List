@@ -69,6 +69,22 @@ export default function App() {
     localStorage.removeItem('ulist_admin_token');
   };
 
+  // Auto-refresh token if expired (401 response interceptor)
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          localStorage.removeItem('ulist_admin_token');
+          setToken(null);
+          setLoginError('Session expired. Please sign in again.');
+        }
+        return Promise.reject(error);
+      }
+    );
+    return () => axios.interceptors.response.eject(interceptor);
+  }, []);
+
   const authHeaders = {
     headers: { Authorization: `Bearer ${token}` },
   };
@@ -440,7 +456,10 @@ export default function App() {
               </div>
 
               <div className="table-responsive">
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '700px' }}>
+                {ads.length === 0 ? (
+                  <p style={{ color: '#6B6B6B', padding: '16px 0' }}>No ads found matching current filter.</p>
+                ) : (
+                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '700px' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid #E3E3E3', color: '#6B6B6B', fontSize: '12px' }}>
                       <th style={{ padding: '8px' }}>Title</th>
@@ -485,11 +504,11 @@ export default function App() {
                             {ad.isFeatured ? 'Highlighted ★' : 'Make Highlighted'}
                           </button>
                         </td>
-                        <td style={{ padding: '12px 8px', textAlign: 'right' }}>
-                          {ad.status === 'pending' && (
+                        <td style={{ padding: '12px 8px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                          {ad.status !== 'active' && (
                             <button
                               onClick={() => handleApproveAd(ad._id)}
-                              style={{ background: '#1E8E3E', color: '#FFFFFF', border: 'none', padding: '4px 8px', borderRadius: '4px', marginRight: '6px', cursor: 'pointer' }}
+                              style={{ background: '#1E8E3E', color: '#FFFFFF', border: 'none', padding: '6px 12px', borderRadius: '4px', marginRight: '6px', cursor: 'pointer', fontWeight: 600 }}
                             >
                               Approve
                             </button>
@@ -497,7 +516,7 @@ export default function App() {
                           {ad.status !== 'rejected' && (
                             <button
                               onClick={() => handleRejectAd(ad._id)}
-                              style={{ background: '#F5F5F5', border: '1px solid #E3E3E3', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }}
+                              style={{ background: '#D93025', color: '#FFFFFF', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}
                             >
                               Reject
                             </button>
@@ -507,6 +526,7 @@ export default function App() {
                     ))}
                   </tbody>
                 </table>
+                )}
               </div>
             </div>
           )}

@@ -271,15 +271,12 @@ export const createAd = async (req: AuthenticatedRequest, res: Response): Promis
       }
     }
 
-    // Auto approve setting check
-    const autoApproveSetting = await Setting.findOne({ key: 'auto_approve' });
-    const isAutoApprove = autoApproveSetting ? Boolean(autoApproveSetting.value) : false;
-
     // Ad validity setting
     const validitySetting = await Setting.findOne({ key: 'ad_validity_days' });
     const validityDays = validitySetting?.value || 30;
     const expiresAt = new Date(Date.now() + validityDays * 24 * 60 * 60 * 1000);
 
+    // Force newly posted user ads into 'pending' moderation queue so admin can approve or reject
     const newAd = await Ad.create({
       user: userId,
       category,
@@ -295,13 +292,13 @@ export const createAd = async (req: AuthenticatedRequest, res: Response): Promis
       contactName: contactName.trim(),
       phone: phone.trim(),
       showPhone: showPhone === 'true' || showPhone === true,
-      status: isAutoApprove ? 'active' : 'pending',
+      status: 'pending',
       expiresAt,
     });
 
     res.status(201).json({
       success: true,
-      message: isAutoApprove ? 'Ad published directly' : 'Ad submitted and under review',
+      message: 'Ad submitted successfully! It is now under admin review and will appear once approved.',
       data: newAd,
     });
   } catch (err: any) {

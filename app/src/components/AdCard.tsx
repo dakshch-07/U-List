@@ -20,7 +20,7 @@ export const AdCard: React.FC<AdCardProps> = ({ ad, onPress, onFavoritePress, is
         <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
         {ad.isFeatured && (
           <View style={styles.featuredBadge}>
-            <Text style={styles.featuredText}>FEATURED</Text>
+            <Text style={styles.featuredText}>HIGHLIGHTED</Text>
           </View>
         )}
         {onFavoritePress && (
@@ -36,7 +36,9 @@ export const AdCard: React.FC<AdCardProps> = ({ ad, onPress, onFavoritePress, is
 
       <View style={styles.content}>
         <Text style={styles.price} numberOfLines={1}>
-          {ad.salary ? `₹${ad.salary.from} - ₹${ad.salary.to}` : formatINR(ad.price)}
+          {ad.salary?.from != null && ad.salary?.to != null
+            ? `₹${ad.salary.from.toLocaleString('en-IN')} - ₹${ad.salary.to.toLocaleString('en-IN')}`
+            : formatINR(ad.price)}
         </Text>
         <Text style={styles.title} numberOfLines={1}>
           {ad.title}

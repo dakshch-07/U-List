@@ -148,7 +148,9 @@ export const AdDetailScreen: React.FC<{ route: any; navigation: any }> = ({ rout
         {/* Pricing & Title */}
         <View style={styles.section}>
           <Text style={styles.price}>
-            {ad.salary ? `₹${ad.salary.from} - ₹${ad.salary.to} / ${ad.salary.period}` : formatINR(ad.price)}
+            {ad.salary?.from != null && ad.salary?.to != null
+              ? `₹${ad.salary.from.toLocaleString('en-IN')} - ₹${ad.salary.to.toLocaleString('en-IN')} / ${ad.salary.period || 'Month'}`
+              : formatINR(ad.price)}
           </Text>
           <Text style={styles.title}>{ad.title}</Text>
           <View style={styles.locationRow}>

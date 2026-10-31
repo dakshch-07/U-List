@@ -396,7 +396,7 @@ export default function App() {
                     <th style={{ padding: '8px' }}>Price</th>
                     <th style={{ padding: '8px' }}>City</th>
                     <th style={{ padding: '8px' }}>Status</th>
-                    <th style={{ padding: '8px' }}>Featured</th>
+                    <th style={{ padding: '8px' }}>Highlighted</th>
                     <th style={{ padding: '8px', textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
@@ -430,7 +430,7 @@ export default function App() {
                             cursor: 'pointer',
                           }}
                         >
-                          {ad.isFeatured ? 'Featured ★' : 'Make Featured'}
+                          {ad.isFeatured ? 'Highlighted ★' : 'Make Highlighted'}
                         </button>
                       </td>
                       <td style={{ padding: '12px 8px', textAlign: 'right' }}>

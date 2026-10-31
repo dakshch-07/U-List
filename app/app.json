@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "Ulist",
+    "slug": "ulist",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#D9480F",
+      "resizeMode": "contain"
+    },
+    "android": {
+      "package": "com.weegrow.ulist",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#D9480F",
+        "foregroundImage": "./assets/icon.png"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you attach pictures to your classified listings."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "The app uses your location to show listings near you."
+        }
+      ]
+    ]
+  }
+}

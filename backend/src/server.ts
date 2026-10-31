@@ -61,7 +61,7 @@ app.use('/admin', express.static(adminDistDir));
 app.get('/admin', (_req, res) => {
   res.sendFile(path.join(adminDistDir, 'index.html'));
 });
-app.get('/admin/*', (_req, res) => {
+app.get('/admin/{*splat}', (_req, res) => {
   res.sendFile(path.join(adminDistDir, 'index.html'));
 });
 
@@ -132,8 +132,8 @@ app.get('/delete-account', (_req, res) => {
   `);
 });
 
-// Fallback for single page app routing
-app.get('*', (_req, res) => {
+// Fallback for single page app routing in Express 5
+app.get('/{*splat}', (_req, res) => {
   const indexHtml = path.join(appPublicDir, 'index.html');
   if (fs.existsSync(indexHtml)) {
     res.sendFile(indexHtml);

@@ -65,6 +65,20 @@ app.get('/admin/*', (_req, res) => {
   res.sendFile(path.join(adminDistDir, 'index.html'));
 });
 
+// Debug endpoint to verify live server filesystem on Render
+app.get('/api/debug-paths', (_req, res) => {
+  res.json({
+    cwd: process.cwd(),
+    __dirname,
+    adminDistDir,
+    adminExists: fs.existsSync(adminDistDir),
+    adminFiles: fs.existsSync(adminDistDir) ? fs.readdirSync(adminDistDir) : [],
+    appPublicDir,
+    publicExists: fs.existsSync(appPublicDir),
+    publicFiles: fs.existsSync(appPublicDir) ? fs.readdirSync(appPublicDir) : [],
+  });
+});
+
 // Serve Main Marketplace Web App directly from backend
 app.use(express.static(appPublicDir));
 

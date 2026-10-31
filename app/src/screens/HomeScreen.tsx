@@ -57,21 +57,43 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* Top Location and Search Bar Header with Wishlist and Notifications */}
+      {/* Top Location and Brand Header matching OLX style */}
       <View style={styles.header}>
         <View style={styles.topRow}>
-          <View style={styles.brandContainer}>
-            <Text style={styles.brandTitle}>Ulist</Text>
-          </View>
+          {/* Left: Location dropdown */}
           <TouchableOpacity style={styles.citySelector} onPress={() => navigation.navigate('CityPicker')}>
-            <MaterialCommunityIcons name="map-marker-outline" size={18} color={theme.colors.primary} />
+            <MaterialCommunityIcons name="map-marker" size={18} color={theme.colors.primary} />
             <Text style={styles.cityName} numberOfLines={1}>
               {selectedCity}
             </Text>
             <MaterialCommunityIcons name="chevron-down" size={16} color={theme.colors.text} />
           </TouchableOpacity>
+
+          {/* Right: Wishlist Heart, Notifications Bell, Brand Logo */}
+          <View style={styles.topRightActions}>
+            <TouchableOpacity
+              style={styles.headerIconButton}
+              onPress={() => navigation.navigate('Favorites')}
+              accessibilityLabel="Wishlist"
+            >
+              <MaterialCommunityIcons name="heart-outline" size={24} color={theme.colors.text} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.headerIconButton}
+              onPress={() => alert('No new notifications')}
+              accessibilityLabel="Notifications"
+            >
+              <MaterialCommunityIcons name="bell-outline" size={24} color={theme.colors.text} />
+            </TouchableOpacity>
+
+            <View style={styles.brandContainer}>
+              <Text style={styles.brandTitle}>Ulist</Text>
+            </View>
+          </View>
         </View>
 
+        {/* Search Bar Row below */}
         <View style={styles.searchRow}>
           <TouchableOpacity
             style={styles.searchBar}
@@ -79,21 +101,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             onPress={() => navigation.navigate('Search')}
           >
             <MaterialCommunityIcons name="magnify" size={20} color={theme.colors.secondaryText} />
-            <Text style={styles.searchPlaceholder} numberOfLines={1}>Search "Cars, Mobiles, Bikes..."</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.headerIconButton}
-            onPress={() => navigation.navigate('Favorites')}
-          >
-            <MaterialCommunityIcons name="heart-outline" size={24} color={theme.colors.text} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.headerIconButton}
-            onPress={() => alert('No new notifications')}
-          >
-            <MaterialCommunityIcons name="bell-outline" size={24} color={theme.colors.text} />
+            <Text style={styles.searchPlaceholder} numberOfLines={1}>Find Cars, Mobile Phones and more...</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -179,9 +187,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
+  topRightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   brandContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginLeft: 6,
   },
   brandTitle: {
     fontSize: 22,
@@ -192,10 +206,11 @@ const styles = StyleSheet.create({
   citySelector: {
     flexDirection: 'row',
     alignItems: 'center',
+    maxWidth: '45%',
   },
   cityName: {
     fontSize: theme.typography.size.body,
-    fontWeight: theme.typography.weight.medium,
+    fontWeight: theme.typography.weight.bold,
     marginHorizontal: 4,
     color: theme.colors.text,
   },

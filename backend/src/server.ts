@@ -66,7 +66,11 @@ app.get('/admin/{*splat}', (_req, res) => {
 });
 
 // Debug endpoint to verify live server filesystem on Render
-app.get('/api/debug-paths', (_req, res) => {
+app.get('/api/debug-paths', async (_req, res) => {
+  const { User } = await import('./models/User');
+  const adminEmail = (process.env.ADMIN_EMAIL || 'admin@ulist.in').toLowerCase();
+  const foundAdmin = await User.findOne({ email: adminEmail });
+  
   res.json({
     cwd: process.cwd(),
     __dirname,
@@ -76,6 +80,9 @@ app.get('/api/debug-paths', (_req, res) => {
     appPublicDir,
     publicExists: fs.existsSync(appPublicDir),
     publicFiles: fs.existsSync(appPublicDir) ? fs.readdirSync(appPublicDir) : [],
+    adminEmail,
+    adminInDb: !!foundAdmin,
+    adminRole: foundAdmin?.role,
   });
 });
 
@@ -169,13 +176,14 @@ async function startServer() {
   initExpiryCron();
   
   // Ensure Admin user always exists with current credentials on startup
-  const bcrypt = await import('bcrypt');
+  const bcryptMod = await import('bcrypt');
+  const bcryptFn = (bcryptMod as any).default || bcryptMod;
   const { User } = await import('./models/User');
   const adminEmail = (process.env.ADMIN_EMAIL || 'admin@ulist.in').toLowerCase();
   const adminPassword = process.env.ADMIN_PASSWORD || 'AdminUlist#2026';
   
   let admin = await User.findOne({ email: adminEmail });
-  const passwordHash = await bcrypt.default.hash(adminPassword, 10);
+  const passwordHash = await bcryptFn.hash(adminPassword, 10);
   if (!admin) {
     await User.create({
       name: 'Ulist Administrator',

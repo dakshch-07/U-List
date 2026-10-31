@@ -168,6 +168,32 @@ async function startServer() {
   // Initialize ad expiry cron scheduler
   initExpiryCron();
   
+  // Ensure Admin user always exists with current credentials on startup
+  const bcrypt = await import('bcrypt');
+  const { User } = await import('./models/User');
+  const adminEmail = (process.env.ADMIN_EMAIL || 'admin@ulist.in').toLowerCase();
+  const adminPassword = process.env.ADMIN_PASSWORD || 'AdminUlist#2026';
+  
+  let admin = await User.findOne({ email: adminEmail });
+  const passwordHash = await bcrypt.default.hash(adminPassword, 10);
+  if (!admin) {
+    await User.create({
+      name: 'Ulist Administrator',
+      email: adminEmail,
+      phone: process.env.ADMIN_PHONE || '+919876543210',
+      passwordHash,
+      role: 'admin',
+      status: 'active',
+    });
+    console.log('[Bootstrap] Admin user initialized:', adminEmail);
+  } else {
+    admin.passwordHash = passwordHash;
+    admin.role = 'admin';
+    admin.status = 'active';
+    await admin.save();
+    console.log('[Bootstrap] Admin password synced for:', adminEmail);
+  }
+
   // Auto-seed if database is empty
   const count = await Ad.countDocuments();
   if (count === 0) {

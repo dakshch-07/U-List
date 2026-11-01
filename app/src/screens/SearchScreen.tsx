@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../services/api';
@@ -8,6 +8,7 @@ import { SkeletonCard } from '../components/SkeletonCard';
 import { EmptyState } from '../components/EmptyState';
 import { useAuthStore } from '../store/authStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { getRecentSearches, saveRecentSearch, clearRecentSearches } from '../services/recentSearches';
 
 // Popular Indian Search Suggestions with typo corrections
 const POPULAR_SEARCHES = ['Swift VXi', 'iPhone 14', 'Royal Enfield', '2 BHK Flat', 'Smart TV', 'Activa 6G'];
@@ -23,11 +24,28 @@ const TYPO_MAP: Record<string, string> = {
   'scoty': 'Activa 6G',
 };
 
-export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+export const SearchScreen: React.FC<{ navigation: any; route: any }> = ({ navigation, route }) => {
   const { selectedCity } = useAuthStore();
-  const [search, setSearch] = useState('');
-  const [submittedQuery, setSubmittedQuery] = useState('');
+  const initialQuery = route?.params?.initialQuery || '';
+  const [search, setSearch] = useState(initialQuery);
+  const [submittedQuery, setSubmittedQuery] = useState(initialQuery);
   const [sort, setSort] = useState<'newest' | 'price_asc' | 'price_desc'>('newest');
+  const [recentList, setRecentList] = useState<string[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const list = await getRecentSearches();
+      setRecentList(list);
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (initialQuery) {
+      setSearch(initialQuery);
+      setSubmittedQuery(initialQuery);
+      saveRecentSearch(initialQuery);
+    }
+  }, [initialQuery]);
 
   // Suggestions while typing
   const { data: suggestions = [] } = useQuery({
@@ -55,11 +73,13 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     },
   });
 
-  const handleSearchSubmit = (textToSearch?: string) => {
+  const handleSearchSubmit = async (textToSearch?: string) => {
     const q = (textToSearch || search).trim();
     if (q) {
       setSearch(q);
       setSubmittedQuery(q);
+      const updated = await saveRecentSearch(q);
+      setRecentList(updated);
     }
   };
 
@@ -204,17 +224,50 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               </View>
             ) : (
               <View style={styles.initialState}>
-                <Text style={styles.popularTitle}>Popular Categories & Searches</Text>
-                <View style={styles.popularPills}>
-                  {POPULAR_SEARCHES.map((item) => (
-                    <TouchableOpacity
-                      key={item}
-                      style={styles.popularPill}
-                      onPress={() => handleSearchSubmit(item)}
-                    >
-                      <Text style={styles.popularPillText}>{item}</Text>
-                    </TouchableOpacity>
-                  ))}
+                {recentList.length > 0 && (
+                  <View style={styles.searchSectionBlock}>
+                    <View style={styles.sectionHeaderRow}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <MaterialCommunityIcons name="history" size={16} color={theme.colors.secondaryText} />
+                        <Text style={styles.popularTitle}>Recent Searches</Text>
+                      </View>
+                      <TouchableOpacity
+                        onPress={async () => {
+                          await clearRecentSearches();
+                          setRecentList([]);
+                        }}
+                      >
+                        <Text style={styles.clearLink}>Clear</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <View style={styles.popularPills}>
+                      {recentList.map((item, idx) => (
+                        <TouchableOpacity
+                          key={`${item}-${idx}`}
+                          style={[styles.popularPill, styles.recentPill]}
+                          onPress={() => handleSearchSubmit(item)}
+                        >
+                          <MaterialCommunityIcons name="magnify" size={14} color="#555" style={{ marginRight: 4 }} />
+                          <Text style={styles.popularPillText}>{item}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
+                <View style={styles.searchSectionBlock}>
+                  <Text style={styles.popularTitle}>Popular Categories & Searches</Text>
+                  <View style={styles.popularPills}>
+                    {POPULAR_SEARCHES.map((item) => (
+                      <TouchableOpacity
+                        key={item}
+                        style={styles.popularPill}
+                        onPress={() => handleSearchSubmit(item)}
+                      >
+                        <Text style={styles.popularPillText}>{item}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
                 </View>
               </View>
             )
@@ -370,7 +423,29 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   initialState: {
-    padding: 24,
+    padding: 16,
+  },
+  searchSectionBlock: {
+    marginBottom: 20,
+    width: '100%',
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 10,
+    paddingHorizontal: 4,
+  },
+  clearLink: {
+    fontSize: 12,
+    color: theme.colors.primary,
+    fontWeight: '600',
+  },
+  recentPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
 });

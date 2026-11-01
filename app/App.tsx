@@ -21,6 +21,7 @@ import { ChatsScreen } from './src/screens/ChatsScreen';
 import { ChatRoomScreen } from './src/screens/ChatRoomScreen';
 import { FavoritesScreen } from './src/screens/FavoritesScreen';
 import { SellerProfileScreen } from './src/screens/SellerProfileScreen';
+import { ContactUsScreen } from './src/screens/ContactUsScreen';
 import { OfflineNotice } from './src/components/OfflineNotice';
 
 const queryClient = new QueryClient();
@@ -176,6 +177,11 @@ export default function App() {
             name="SellerProfile"
             component={SellerProfileScreen}
             options={{ title: 'Seller Profile' }}
+          />
+          <Stack.Screen
+            name="ContactUs"
+            component={ContactUsScreen}
+            options={{ title: 'Help & Contact Us' }}
           />
         </Stack.Navigator>
       </NavigationContainer>

@@ -157,3 +157,30 @@ const SettingSchema = new Schema<ISetting>(
   { timestamps: true }
 );
 export const Setting = model<ISetting>('Setting', SettingSchema);
+
+// Contact Inquiry / Support Ticket
+export interface IContactInquiry extends Document {
+  type: 'general' | 'management';
+  fullName: string;
+  mobile: string;
+  email: string;
+  subject: string;
+  message: string;
+  status: 'new' | 'in_progress' | 'resolved';
+  createdAt: Date;
+}
+
+const ContactInquirySchema = new Schema<IContactInquiry>(
+  {
+    type: { type: String, enum: ['general', 'management'], default: 'general' },
+    fullName: { type: String, required: true, trim: true },
+    mobile: { type: String, required: true, trim: true },
+    email: { type: String, required: true, trim: true, lowercase: true },
+    subject: { type: String, required: true, trim: true },
+    message: { type: String, required: true, trim: true },
+    status: { type: String, enum: ['new', 'in_progress', 'resolved'], default: 'new' },
+  },
+  { timestamps: true }
+);
+
+export const ContactInquiry = model<IContactInquiry>('ContactInquiry', ContactInquirySchema);

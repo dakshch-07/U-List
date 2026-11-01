@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { register, login, refresh, forgotPassword, changePassword, deleteAccount, sendOtp, verifyOtp } from '../controllers/authController';
 import { getMe, updateMe, getPublicUser, blockUser, unblockUser, savePushToken } from '../controllers/userController';
-import { getCategories, getCities, getBanners, getPage, getPublicSettings } from '../controllers/metaController';
+import { getCategories, getCities, getBanners, getPage, getPublicSettings, submitContactInquiry } from '../controllers/metaController';
 import { getAds, suggestAds, getAdById, getSimilarAds, createAd, updateAd, markAsSold, renewAd, deleteAd, getMyAds } from '../controllers/adController';
 import {
   getDashboardStats,
@@ -59,6 +59,7 @@ router.get('/cities', getCities);
 router.get('/banners', getBanners);
 router.get('/pages/:slug', getPage);
 router.get('/settings/public', getPublicSettings);
+router.post('/contact', submitContactInquiry);
 
 // Ads routes
 router.get('/ads', optionalAuth, getAds);

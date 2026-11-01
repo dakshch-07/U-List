@@ -82,7 +82,16 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
 
         <TouchableOpacity
           style={styles.menuItem}
-          onPress={() => Linking.openURL('http://localhost:5000/privacy')}
+          onPress={() => navigation.navigate('ContactUs')}
+        >
+          <MaterialCommunityIcons name="headset" size={22} color={theme.colors.primary} />
+          <Text style={[styles.menuText, { fontWeight: '600' }]}>Help & Contact Us</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.secondaryText} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => Linking.openURL('https://u-list-api.onrender.com/privacy')}
         >
           <MaterialCommunityIcons name="shield-check-outline" size={22} color={theme.colors.text} />
           <Text style={styles.menuText}>Privacy Policy</Text>
@@ -91,7 +100,7 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
 
         <TouchableOpacity
           style={styles.menuItem}
-          onPress={() => Linking.openURL('http://localhost:5000/terms')}
+          onPress={() => Linking.openURL('https://u-list-api.onrender.com/terms')}
         >
           <MaterialCommunityIcons name="file-document-outline" size={22} color={theme.colors.text} />
           <Text style={styles.menuText}>Terms of Service</Text>

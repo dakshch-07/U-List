@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, TextInput, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, TextInput, Image, ScrollView } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { theme } from '../theme';
@@ -8,6 +8,8 @@ import { SkeletonCard } from '../components/SkeletonCard';
 import { EmptyState } from '../components/EmptyState';
 import { useAuthStore } from '../store/authStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { AppDownloadBanner } from '../components/AppDownloadBanner';
+import { getRecentSearches, clearRecentSearches } from '../services/recentSearches';
 
 // Realistic Indian 3D product category images matching OLX India style
 const CATEGORY_IMAGES: Record<string, string> = {
@@ -28,6 +30,21 @@ const CATEGORY_IMAGES: Record<string, string> = {
 export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { selectedCity } = useAuthStore();
   const [refreshing, setRefreshing] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Load recent searches on mount and when screen is focused
+    const loadSearches = async () => {
+      const list = await getRecentSearches();
+      setRecentSearches(list);
+    };
+    loadSearches();
+
+    const unsubscribe = navigation.addListener?.('focus', () => {
+      loadSearches();
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   // Categories query
   const { data: categories = [] } = useQuery({
@@ -59,6 +76,9 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      {/* Top Banner on Web */}
+      <AppDownloadBanner />
+
       {/* Top Location and Brand Header matching OLX style */}
       <View style={styles.header}>
         <View style={styles.topRow}>
@@ -106,6 +126,44 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             <Text style={styles.searchPlaceholder} numberOfLines={1}>Find Cars, Mobile Phones and more...</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Recent Searches Horizontal Row */}
+        {recentSearches.length > 0 && (
+          <View style={styles.recentSearchesContainer}>
+            <View style={styles.recentSearchesHeader}>
+              <View style={styles.recentSearchesTitleRow}>
+                <MaterialCommunityIcons name="history" size={15} color={theme.colors.secondaryText} />
+                <Text style={styles.recentSearchesTitle}>Recent Searches</Text>
+              </View>
+              <TouchableOpacity
+                onPress={async () => {
+                  await clearRecentSearches();
+                  setRecentSearches([]);
+                }}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Text style={styles.recentClearText}>Clear</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.recentChipsScroll}
+            >
+              {recentSearches.map((item, idx) => (
+                <TouchableOpacity
+                  key={`${item}-${idx}`}
+                  style={styles.recentChip}
+                  activeOpacity={0.7}
+                  onPress={() => navigation.navigate('Search', { initialQuery: item })}
+                >
+                  <MaterialCommunityIcons name="magnify" size={13} color="#666" style={{ marginRight: 4 }} />
+                  <Text style={styles.recentChipText} numberOfLines={1}>{item}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
       </View>
 
       <FlatList
@@ -312,5 +370,53 @@ const styles = StyleSheet.create({
   emptyText: {
     color: theme.colors.secondaryText,
     fontSize: theme.typography.size.body,
+  },
+  recentSearchesContainer: {
+    marginTop: 8,
+    paddingTop: 4,
+  },
+  recentSearchesHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+    paddingHorizontal: 2,
+  },
+  recentSearchesTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  recentSearchesTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: theme.colors.secondaryText,
+    marginLeft: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  recentClearText: {
+    fontSize: 11,
+    color: theme.colors.primary,
+    fontWeight: '600',
+  },
+  recentChipsScroll: {
+    paddingVertical: 2,
+    gap: 8,
+  },
+  recentChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 6,
+  },
+  recentChipText: {
+    fontSize: 12,
+    color: '#374151',
+    fontWeight: '500',
   },
 });

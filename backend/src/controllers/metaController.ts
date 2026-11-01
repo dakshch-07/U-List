@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Category } from '../models/Category';
-import { City, Banner, Page, Setting } from '../models/Extras';
+import { City, Banner, Page, Setting, ContactInquiry } from '../models/Extras';
 
 export const getCategories = async (_req: Request, res: Response): Promise<void> => {
   try {
@@ -62,6 +62,39 @@ export const getPublicSettings = async (_req: Request, res: Response): Promise<v
       map[s.key] = s.value;
     });
     res.json({ success: true, data: map });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const submitContactInquiry = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { type, fullName, mobile, email, subject, message } = req.body;
+    if (!fullName || !mobile || !email || !subject || !message) {
+      res.status(400).json({ success: false, message: 'All fields are required' });
+      return;
+    }
+
+    const cleanMobile = mobile.replace(/[^0-9]/g, '');
+    if (cleanMobile.length < 10) {
+      res.status(400).json({ success: false, message: 'Please enter a valid 10-digit mobile number' });
+      return;
+    }
+
+    const inquiry = await ContactInquiry.create({
+      type: type === 'management' ? 'management' : 'general',
+      fullName: fullName.trim(),
+      mobile: cleanMobile,
+      email: email.trim().toLowerCase(),
+      subject: subject.trim(),
+      message: message.trim(),
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Thank you! Your inquiry has been submitted. Our team will get back to you shortly.',
+      data: inquiry,
+    });
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });
   }

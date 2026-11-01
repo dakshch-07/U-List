@@ -163,7 +163,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               onPress={() => navigation.navigate('Favorites')}
               accessibilityLabel="Wishlist"
             >
-              <MaterialCommunityIcons name="heart-outline" size={24} color={theme.colors.text} />
+              <MaterialCommunityIcons name="heart-outline" size={20} color={theme.colors.text} />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -171,7 +171,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               onPress={() => alert('No new notifications')}
               accessibilityLabel="Notifications"
             >
-              <MaterialCommunityIcons name="bell-outline" size={24} color={theme.colors.text} />
+              <MaterialCommunityIcons name="bell-outline" size={20} color={theme.colors.text} />
             </TouchableOpacity>
 
             <View style={styles.brandContainer}>
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
   topRightActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 0,
   },
   brandContainer: {
     flexDirection: 'row',
@@ -410,8 +410,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerIconButton: {
-    width: 40,
-    height: 44,
+    width: 32,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
   },

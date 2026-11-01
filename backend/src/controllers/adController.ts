@@ -178,14 +178,14 @@ export const createAd = async (req: AuthenticatedRequest, res: Response): Promis
   try {
     const userId = req.user!._id;
 
-    // Check max active ads per user
+    // Check max active ads per user (5 free ads in any category)
     const maxAdsSetting = await Setting.findOne({ key: 'max_active_ads_per_user' });
-    const maxAds = maxAdsSetting?.value || 10;
-    const activeAdsCount = await Ad.countDocuments({ user: userId, status: 'active' });
+    const maxAds = maxAdsSetting?.value || 5;
+    const activeAdsCount = await Ad.countDocuments({ user: userId, status: { $in: ['active', 'pending'] } });
     if (activeAdsCount >= maxAds) {
       res.status(400).json({
         success: false,
-        message: `You have reached the maximum limit of ${maxAds} active ads`,
+        message: `You have reached the limit of ${maxAds} free ads. Upgrade or renew to post more.`,
       });
       return;
     }

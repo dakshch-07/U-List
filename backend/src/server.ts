@@ -124,6 +124,40 @@ app.get('/terms', (_req, res) => {
   `);
 });
 
+app.get('/about', (_req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>About Us | Ulist Marketplace</title>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 800px; margin: 40px auto; line-height: 1.7; padding: 0 20px; color: #1b1b1b; }
+        h1 { color: #D9480F; }
+        .feature-box { background: #FAF5F2; border-left: 4px solid #D9480F; padding: 14px 18px; margin: 20px 0; border-radius: 4px; }
+      </style>
+    </head>
+    <body>
+      <h1>About Ulist</h1>
+      <p><strong>Ulist</strong> is India's fast, modern, and transparent classifieds marketplace connecting genuine local buyers and sellers across Cars, Bikes, Real Estate, Mobiles, Electronics, Jobs, and Services.</p>
+      
+      <div class="feature-box">
+        <h3>Why Choose Ulist?</h3>
+        <ul>
+          <li><strong>Direct Verified Connections:</strong> Instant chat, call, and WhatsApp connecting buyer and seller.</li>
+          <li><strong>30-Day Listing Validity:</strong> Every ad stays live for 30 days. Easily reactivate when needed.</li>
+          <li><strong>5 Free Ads:</strong> Every user can post up to 5 free ads in any category with photo uploads.</li>
+          <li><strong>Safe Trading:</strong> Built-in Buyer Guidelines & Safety Tips to protect your transactions.</li>
+        </ul>
+      </div>
+
+      <p>For inquiries, feedback, or support, visit our in-app <strong>Help & Contact Us</strong> or email us at <a href="mailto:support@ulist.in">support@ulist.in</a>.</p>
+    </body>
+    </html>
+  `);
+});
+
 app.get('/delete-account', (_req, res) => {
   res.send(`
     <!DOCTYPE html>

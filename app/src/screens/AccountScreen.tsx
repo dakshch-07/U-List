@@ -107,6 +107,15 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
           <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.secondaryText} />
         </TouchableOpacity>
 
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => Linking.openURL('https://u-list-api.onrender.com/about')}
+        >
+          <MaterialCommunityIcons name="information-outline" size={22} color={theme.colors.text} />
+          <Text style={styles.menuText}>About Us</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.secondaryText} />
+        </TouchableOpacity>
+
         {user && (
           <>
             <TouchableOpacity style={styles.menuItem} onPress={logout}>

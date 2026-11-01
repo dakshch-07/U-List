@@ -210,6 +210,94 @@ export const AdDetailScreen: React.FC<{ route: any; navigation: any }> = ({ rout
           </TouchableOpacity>
         </View>
 
+        {/* 5-Step Deal Flowchart matching user requested journey */}
+        <View style={styles.flowSection}>
+          <Text style={styles.flowSectionTitle}>How Deal Works on Ulist</Text>
+          <View style={styles.flowGrid}>
+            <View style={styles.flowStep}>
+              <View style={[styles.flowIconBox, { backgroundColor: '#E0F2FE' }]}>
+                <MaterialCommunityIcons name="help-circle-outline" size={20} color="#0284C7" />
+              </View>
+              <Text style={styles.flowStepTitle}>Ask for More</Text>
+              <Text style={styles.flowStepSub}>Chat & clarify details</Text>
+            </View>
+
+            <View style={styles.flowArrow}>
+              <MaterialCommunityIcons name="chevron-right" size={18} color="#9CA3AF" />
+            </View>
+
+            <View style={styles.flowStep}>
+              <View style={[styles.flowIconBox, { backgroundColor: '#FEF3C7' }]}>
+                <MaterialCommunityIcons name="handshake-outline" size={20} color="#D97706" />
+              </View>
+              <Text style={styles.flowStepTitle}>Negotiate</Text>
+              <Text style={styles.flowStepSub}>Agree on best price</Text>
+            </View>
+
+            <View style={styles.flowArrow}>
+              <MaterialCommunityIcons name="chevron-right" size={18} color="#9CA3AF" />
+            </View>
+
+            <View style={styles.flowStep}>
+              <View style={[styles.flowIconBox, { backgroundColor: '#EDE9FE' }]}>
+                <MaterialCommunityIcons name="eye-check-outline" size={20} color="#7C3AED" />
+              </View>
+              <Text style={styles.flowStepTitle}>Check Yourself</Text>
+              <Text style={styles.flowStepSub}>Inspect item in-person</Text>
+            </View>
+
+            <View style={styles.flowArrow}>
+              <MaterialCommunityIcons name="chevron-right" size={18} color="#9CA3AF" />
+            </View>
+
+            <View style={styles.flowStep}>
+              <View style={[styles.flowIconBox, { backgroundColor: '#DCFCE7' }]}>
+                <MaterialCommunityIcons name="cash-check" size={20} color="#16A34A" />
+              </View>
+              <Text style={styles.flowStepTitle}>Buy & Happy U</Text>
+              <Text style={styles.flowStepSub}>Safe closing</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Buyer Guidelines (Quikr Style) Below Every Ad */}
+        <View style={styles.guidelinesSection}>
+          <View style={styles.guidelinesHeader}>
+            <Text style={styles.guidelinesTitle}>Buyer Guidelines</Text>
+            <TouchableOpacity onPress={() => Linking.openURL('https://u-list-api.onrender.com/terms')}>
+              <Text style={styles.knowMoreLink}>Know More</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.guidelineRow}>
+            <View style={styles.guidelineCheck}>
+              <MaterialCommunityIcons name="check" size={14} color="#FFFFFF" />
+            </View>
+            <Text style={styles.guidelineText}>Be careful when paying offline</Text>
+          </View>
+
+          <View style={styles.guidelineRow}>
+            <View style={styles.guidelineCheck}>
+              <MaterialCommunityIcons name="check" size={14} color="#FFFFFF" />
+            </View>
+            <Text style={styles.guidelineText}>Beware of ads with unrealistic prices, lookalikes or clone products</Text>
+          </View>
+
+          <View style={styles.guidelineRow}>
+            <View style={styles.guidelineCheck}>
+              <MaterialCommunityIcons name="check" size={14} color="#FFFFFF" />
+            </View>
+            <Text style={styles.guidelineText}>Chat and ask questions to be clear on product details</Text>
+          </View>
+
+          <View style={styles.guidelineRow}>
+            <View style={styles.guidelineCheck}>
+              <MaterialCommunityIcons name="check" size={14} color="#FFFFFF" />
+            </View>
+            <Text style={styles.guidelineText}>Do not deposit/transfer money to bank or any third party payment gateways without verifying credentials</Text>
+          </View>
+        </View>
+
         {/* Report Link */}
         <TouchableOpacity style={styles.reportRow} onPress={handleReportAd}>
           <MaterialCommunityIcons name="flag-outline" size={18} color={theme.colors.error} />
@@ -430,5 +518,96 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.sm,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  flowSection: {
+    padding: 16,
+    backgroundColor: '#F8FAFC',
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  flowSectionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 12,
+  },
+  flowGrid: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  flowStep: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  flowIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+  },
+  flowStepTitle: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#1E293B',
+    textAlign: 'center',
+  },
+  flowStepSub: {
+    fontSize: 9,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 2,
+  },
+  flowArrow: {
+    paddingHorizontal: 2,
+    marginBottom: 16,
+  },
+  guidelinesSection: {
+    margin: 16,
+    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  guidelinesHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  guidelinesTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  knowMoreLink: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: theme.colors.primary,
+  },
+  guidelineRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 10,
+  },
+  guidelineCheck: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#10B981',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+    marginTop: 2,
+  },
+  guidelineText: {
+    flex: 1,
+    fontSize: 12,
+    color: '#334155',
+    lineHeight: 18,
+    fontWeight: '400',
   },
 });

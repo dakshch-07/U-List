@@ -131,28 +131,52 @@ app.get('/about', (_req, res) => {
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>About Us | Ulist Marketplace</title>
+      <title>About Us | Ulist - BY WISHCRAFT</title>
       <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 800px; margin: 40px auto; line-height: 1.7; padding: 0 20px; color: #1b1b1b; }
-        h1 { color: #D9480F; }
-        .feature-box { background: #FAF5F2; border-left: 4px solid #D9480F; padding: 14px 18px; margin: 20px 0; border-radius: 4px; }
+        .hero { text-align: center; margin-bottom: 30px; }
+        h1 { color: #D9480F; margin-bottom: 4px; font-size: 32px; font-weight: 900; }
+        .badge { display: inline-block; background: #FAF5F2; border: 1px solid #FED7AA; color: #D9480F; padding: 3px 12px; border-radius: 20px; font-weight: 800; font-size: 12px; letter-spacing: 1px; }
+        .tagline { font-size: 18px; font-weight: 700; color: #1e293b; margin-top: 14px; }
+        .card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 22px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .philosophy-box { background: #FFF7ED; border: 1.5px solid #FDBA74; padding: 22px; margin: 24px 0; border-radius: 8px; text-align: center; }
+        .philosophy-box h2 { color: #9A3412; margin-top: 0; font-size: 22px; }
+        .pills { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 16px 0; }
+        .pill { background: #fff; border: 1px solid #FED7AA; padding: 6px 14px; border-radius: 20px; font-weight: 600; color: #7C2D12; font-size: 13px; }
       </style>
     </head>
     <body>
-      <h1>About Ulist</h1>
-      <p><strong>Ulist</strong> is India's fast, modern, and transparent classifieds marketplace connecting genuine local buyers and sellers across Cars, Bikes, Real Estate, Mobiles, Electronics, Jobs, and Services.</p>
-      
-      <div class="feature-box">
-        <h3>Why Choose Ulist?</h3>
-        <ul>
-          <li><strong>Direct Verified Connections:</strong> Instant chat, call, and WhatsApp connecting buyer and seller.</li>
-          <li><strong>30-Day Listing Validity:</strong> Every ad stays live for 30 days. Easily reactivate when needed.</li>
-          <li><strong>5 Free Ads:</strong> Every user can post up to 5 free ads in any category with photo uploads.</li>
-          <li><strong>Safe Trading:</strong> Built-in Buyer Guidelines & Safety Tips to protect your transactions.</li>
-        </ul>
+      <div class="hero">
+        <h1>Ulist</h1>
+        <div class="badge">BY WISHCRAFT</div>
+        <p class="tagline">Don't Let Unused Things Lose Their Value. Turn Them Into Cash!</p>
       </div>
 
-      <p>For inquiries, feedback, or support, visit our in-app <strong>Help & Contact Us</strong> or email us at <a href="mailto:support@ulist.in">support@ulist.in</a>.</p>
+      <div class="card">
+        <p>Every home, office and business has something lying unused — an old mobile phone, furniture, electronics, appliances, clothing, accessories, collectibles or simply something we no longer need.</p>
+        <p>These products may be unused, extra, pre-owned or just taking up valuable space. But what is no longer useful to one person could be exactly what someone else is looking for.</p>
+        <p><strong>That's where ULIST comes in!</strong></p>
+        <p><strong>ULIST</strong>, an app by <strong>WishCraft</strong>, was born from a simple yet powerful idea: to help people give their unused and extra belongings a second life while unlocking the value hidden in them.</p>
+        <p>We believe that one person's unused product can become another person's valuable find.</p>
+        <p>Through ULIST, we aim to make it easier for individuals, families and businesses to list, discover, buy, sell and trade products. Instead of letting things gather dust, why not turn them into extra cash?</p>
+      </div>
+
+      <div class="card">
+        <h3>Our Vision</h3>
+        <p>Our vision goes beyond buying and selling. We want to encourage smarter consumption, reduce unnecessary waste, promote reuse and create a community where products find new owners and value gets a second chance.</p>
+        <p>Whether you are decluttering your home, upgrading your gadgets, clearing excess inventory or simply looking to make some extra money, ULIST gives you an opportunity to make it happen.</p>
+      </div>
+
+      <div class="philosophy-box">
+        <p style="font-size: 12px; font-weight: 800; color: #EA580C; letter-spacing: 1.5px; margin: 0;">OUR PHILOSOPHY</p>
+        <h2>List It. Sell It. Cash It!</h2>
+        <div class="pills">
+          <span class="pill">❌ Don't store it</span>
+          <span class="pill">❌ Don't waste it</span>
+          <span class="pill">❌ Don't let it sit unused</span>
+        </div>
+        <p style="font-weight: 700; color: #1E293B; font-style: italic; margin-bottom: 0;">Give it a new owner, a new purpose and a new beginning.</p>
+      </div>
     </body>
     </html>
   `);

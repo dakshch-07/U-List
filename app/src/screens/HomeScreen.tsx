@@ -147,14 +147,22 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       {/* Top Location and Brand Header matching OLX style */}
       <View style={styles.header}>
         <View style={styles.topRow}>
-          {/* Left: Location dropdown */}
-          <TouchableOpacity style={styles.citySelector} onPress={() => navigation.navigate('CityPicker')}>
-            <MaterialCommunityIcons name="map-marker" size={18} color={theme.colors.primary} />
-            <Text style={styles.cityName} numberOfLines={1}>
-              {selectedCity}
-            </Text>
-            <MaterialCommunityIcons name="chevron-down" size={16} color={theme.colors.text} />
-          </TouchableOpacity>
+          {/* Left: Location dropdown + Tagline */}
+          <View style={styles.locationTaglineCol}>
+            <TouchableOpacity style={styles.citySelector} onPress={() => navigation.navigate('CityPicker')}>
+              <MaterialCommunityIcons name="map-marker" size={17} color={theme.colors.primary} />
+              <Text style={styles.cityName} numberOfLines={1}>
+                {selectedCity}
+              </Text>
+              <MaterialCommunityIcons name="chevron-down" size={15} color={theme.colors.text} />
+            </TouchableOpacity>
+
+            <View style={styles.taglineBadge}>
+              <Text style={styles.taglineText} numberOfLines={1}>
+                List It. Sell It. Cash It!
+              </Text>
+            </View>
+          </View>
 
           {/* Right: Wishlist Heart, Notifications Bell, Brand Logo */}
           <View style={styles.topRightActions}>
@@ -387,13 +395,36 @@ const styles = StyleSheet.create({
   citySelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    maxWidth: '45%',
+    marginRight: 6,
+  },
+  locationTaglineCol: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 6,
+    flexWrap: 'nowrap',
+  },
+  taglineBadge: {
+    backgroundColor: '#FFF7ED',
+    borderWidth: 1,
+    borderColor: '#FED7AA',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    flexShrink: 1,
+  },
+  taglineText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#D9480F',
+    letterSpacing: 0.2,
   },
   cityName: {
     fontSize: theme.typography.size.body,
     fontWeight: theme.typography.weight.bold,
-    marginHorizontal: 4,
+    marginHorizontal: 3,
     color: theme.colors.text,
+    maxWidth: 80,
   },
   searchRow: {
     flexDirection: 'row',

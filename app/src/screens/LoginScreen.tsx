@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Image } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { api } from '../services/api';
 import { theme } from '../theme';
@@ -112,7 +112,11 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   return (
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       <View style={styles.brandBox}>
-        <Text style={styles.brandTitle}>Ulist</Text>
+        <Image
+          source={require('../../assets/logo.png')}
+          style={styles.logoImage}
+          resizeMode="contain"
+        />
         <Text style={styles.brandSubtitle}>
           {step === 'phone'
             ? 'Enter your phone number to sign in or register'
@@ -226,7 +230,12 @@ const styles = StyleSheet.create({
   },
   brandBox: {
     alignItems: 'center',
-    marginBottom: 28,
+    marginBottom: 24,
+  },
+  logoImage: {
+    width: 140,
+    height: 52,
+    marginBottom: 8,
   },
   brandTitle: {
     fontSize: theme.typography.size.title,

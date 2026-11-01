@@ -175,7 +175,11 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             </TouchableOpacity>
 
             <View style={styles.brandContainer}>
-              <Text style={styles.brandTitle}>Ulist</Text>
+              <Image
+                source={require('../../assets/logo.png')}
+                style={styles.brandLogo}
+                resizeMode="contain"
+              />
             </View>
           </View>
         </View>
@@ -368,7 +372,11 @@ const styles = StyleSheet.create({
   brandContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 6,
+    marginLeft: 8,
+  },
+  brandLogo: {
+    width: 78,
+    height: 30,
   },
   brandTitle: {
     fontSize: 22,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Linking, Image } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import { theme } from '../theme';
@@ -50,7 +50,11 @@ export const AppDownloadBanner: React.FC = () => {
       <View style={styles.leftSection}>
         {/* App Logo Badge */}
         <View style={styles.appIconBox}>
-          <Text style={styles.appIconText}>U</Text>
+          <Image
+            source={require('../../assets/logo.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
         </View>
         <View style={styles.textContent}>
           <Text style={styles.mainTitle} numberOfLines={1}>
@@ -107,20 +111,15 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   appIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    backgroundColor: theme.colors.primary,
+    width: 60,
+    height: 38,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
-    elevation: 2,
   },
-  appIconText: {
-    color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: '900',
-    letterSpacing: -0.5,
+  logoImage: {
+    width: 58,
+    height: 28,
   },
   textContent: {
     flex: 1,

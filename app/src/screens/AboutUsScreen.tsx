@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Image } from 'react-native';
 import { theme } from '../theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -8,7 +8,11 @@ export const AboutUsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Brand Header */}
       <View style={styles.brandHero}>
-        <Text style={styles.brandName}>Ulist</Text>
+        <Image
+          source={require('../../assets/logo.png')}
+          style={styles.logoImage}
+          resizeMode="contain"
+        />
         <View style={styles.badge}>
           <Text style={styles.badgeText}>BY WISHCRAFT</Text>
         </View>
@@ -105,14 +109,13 @@ const styles = StyleSheet.create({
   },
   brandHero: {
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: 14,
     marginBottom: 8,
   },
-  brandName: {
-    fontSize: 32,
-    fontWeight: '900',
-    color: theme.colors.primary,
-    letterSpacing: -0.5,
+  logoImage: {
+    width: 140,
+    height: 48,
+    marginBottom: 6,
   },
   badge: {
     backgroundColor: '#FAF5F2',

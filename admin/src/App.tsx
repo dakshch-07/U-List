@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import logoImg from './assets/logo.png';
 
 const API_BASE = '/api/v1';
 
@@ -237,8 +238,8 @@ export default function App() {
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
         <div style={{ background: '#FFFFFF', border: '1px solid #E3E3E3', borderRadius: '6px', width: '100%', maxWidth: '380px', padding: '24px' }}>
           <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-            <h1 style={{ color: '#D9480F', fontSize: '24px', fontWeight: 700 }}>Ulist</h1>
-            <p style={{ color: '#6B6B6B', fontSize: '14px', marginTop: '4px' }}>Administration Panel</p>
+            <img src={logoImg} alt="Ulist Logo" style={{ height: '42px', maxWidth: '100%', objectFit: 'contain', marginBottom: '8px' }} />
+            <p style={{ color: '#6B6B6B', fontSize: '13px', margin: 0, fontWeight: 500 }}>Administration Control Panel</p>
           </div>
 
           {loginError && (
@@ -310,10 +311,10 @@ export default function App() {
 
       {/* Sidebar */}
       <div className={`admin-sidebar ${isSidebarOpen ? 'sidebar-open' : ''}`}>
-        <div style={{ padding: '20px', borderBottom: '1px solid #E3E3E3', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid #E3E3E3', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h2 style={{ color: '#D9480F', fontSize: '20px', fontWeight: 700 }}>Ulist</h2>
-            <span style={{ fontSize: '12px', color: '#6B6B6B' }}>Admin Control</span>
+            <img src={logoImg} alt="Ulist" style={{ height: '32px', maxWidth: '120px', objectFit: 'contain' }} />
+            <div style={{ fontSize: '11px', color: '#6B6B6B', fontWeight: 600, letterSpacing: 0.5, marginTop: '2px' }}>Admin Control</div>
           </div>
           <button
             onClick={() => setIsSidebarOpen(false)}

@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet, Platform } from 'react-native';
+import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -116,14 +116,26 @@ function BottomTabs() {
 
 export default function App() {
   const { initializeAuth } = useAuthStore();
+  const navigationRef = useRef<any>(null);
 
   useEffect(() => {
     initializeAuth();
+
+    // Check URL parameters for direct ad navigation (e.g., ?adId=xxx or #/ad/xxx)
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const urlAdId = params.get('adId');
+      if (urlAdId) {
+        setTimeout(() => {
+          navigationRef.current?.navigate('AdDetail', { adId: urlAdId });
+        }, 500);
+      }
+    }
   }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
-      <NavigationContainer>
+      <NavigationContainer ref={navigationRef}>
         <OfflineNotice />
         <Stack.Navigator
           screenOptions={{

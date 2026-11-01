@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, TextInput, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, TextInput, Image, ScrollView, Platform, Alert } from 'react-native';
+import * as Location from 'expo-location';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { theme } from '../theme';
@@ -28,9 +29,73 @@ const CATEGORY_IMAGES: Record<string, string> = {
 };
 
 export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const { selectedCity } = useAuthStore();
+  const { selectedCity, setCity } = useAuthStore();
   const [refreshing, setRefreshing] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [showLocationPrompt, setShowLocationPrompt] = useState(true);
+  const [locating, setLocating] = useState(false);
+
+  useEffect(() => {
+    // Check if location prompt was dismissed
+    if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
+      if (localStorage.getItem('ulist_dismiss_location_prompt') === 'true') {
+        setShowLocationPrompt(false);
+      }
+    }
+    if (selectedCity && selectedCity !== 'India') {
+      setShowLocationPrompt(false);
+    }
+  }, [selectedCity]);
+
+  const handleDismissLocationPrompt = () => {
+    setShowLocationPrompt(false);
+    try {
+      if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
+        localStorage.setItem('ulist_dismiss_location_prompt', 'true');
+      }
+    } catch {}
+  };
+
+  const handleTurnOnLocation = async () => {
+    try {
+      setLocating(true);
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Please allow location permission to discover ads nearby.');
+        setLocating(false);
+        return;
+      }
+      const loc = await Location.getCurrentPositionAsync({});
+      
+      // Fetch available cities to match closest one
+      const res = await api.get('/cities');
+      const cities = res.data.data || [];
+      if (cities.length > 0) {
+        let nearest = cities[0];
+        let minDistance = Infinity;
+        cities.forEach((c: any) => {
+          if (c.lat && c.lng) {
+            const dist = Math.hypot(c.lat - loc.coords.latitude, c.lng - loc.coords.longitude);
+            if (dist < minDistance) {
+              minDistance = dist;
+              nearest = c;
+            }
+          }
+        });
+        setCity(nearest.name);
+        setShowLocationPrompt(false);
+        try {
+          if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
+            localStorage.setItem('ulist_dismiss_location_prompt', 'true');
+          }
+        } catch {}
+      }
+    } catch (e: any) {
+      Alert.alert('Location Error', 'Unable to fetch your precise GPS coordinates.');
+    } finally {
+      setLocating(false);
+    }
+  };
 
   useEffect(() => {
     // Load recent searches on mount and when screen is focused
@@ -205,6 +270,39 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 );
               })}
             </View>
+
+            {/* Quikr-style "Turn on location" nearby recommendations prompt banner */}
+            {showLocationPrompt && (
+              <View style={styles.locationBanner}>
+                <TouchableOpacity
+                  style={styles.locationBannerClose}
+                  onPress={handleDismissLocationPrompt}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <MaterialCommunityIcons name="close" size={16} color="rgba(255,255,255,0.8)" />
+                </TouchableOpacity>
+
+                <View style={styles.locationBannerLeft}>
+                  <Text style={styles.locationBannerText}>
+                    Want better recommendations? Turn on your location & we'll show ads nearby.
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.locationBannerButton}
+                    onPress={handleTurnOnLocation}
+                    disabled={locating}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={styles.locationBannerBtnText}>
+                      {locating ? 'Detecting...' : 'Turn on location'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.locationBannerGraphic}>
+                  <MaterialCommunityIcons name="map-marker-path" size={48} color="rgba(255,255,255,0.7)" />
+                </View>
+              </View>
+            )}
 
             {/* Fresh Recommendations Header */}
             <View style={styles.sectionHeader}>
@@ -418,5 +516,52 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#374151',
     fontWeight: '500',
+  },
+  locationBanner: {
+    backgroundColor: '#4B6584',
+    borderRadius: 8,
+    marginHorizontal: 8,
+    marginVertical: 10,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  locationBannerClose: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    zIndex: 2,
+    padding: 4,
+  },
+  locationBannerLeft: {
+    flex: 1,
+    paddingRight: 10,
+  },
+  locationBannerText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '500',
+    marginBottom: 10,
+  },
+  locationBannerButton: {
+    alignSelf: 'flex-start',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
+    borderRadius: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+  },
+  locationBannerBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  locationBannerGraphic: {
+    opacity: 0.85,
+    marginLeft: 6,
   },
 });

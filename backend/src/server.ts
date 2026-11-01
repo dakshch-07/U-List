@@ -141,6 +141,48 @@ app.get('/delete-account', (_req, res) => {
   `);
 });
 
+// Short link redirect: /ad/:id or /a/:id -> opens listing on Web or deep-links
+app.get(['/ad/:id', '/a/:id'], async (req, res) => {
+  try {
+    const adId = req.params.id;
+    const ad = await Ad.findById(adId).lean();
+    if (!ad) {
+      return res.redirect('/');
+    }
+    const safeTitle = (ad.title || 'Ulist Listing').replace(/"/g, '&quot;');
+    const safePrice = ad.price ? `₹${ad.price.toLocaleString('en-IN')}` : '';
+    const safeDesc = (ad.description || `View ${safeTitle} on Ulist`).slice(0, 150).replace(/"/g, '&quot;');
+    const safeImage = ad.images?.[0]?.url || 'https://u-list-api.onrender.com/assets/icon.png';
+    const targetUrl = `https://u-list-app.vercel.app/?adId=${adId}`;
+
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>${safeTitle} ${safePrice ? `- ${safePrice}` : ''} | Ulist</title>
+        <meta name="description" content="${safeDesc}">
+        <meta property="og:title" content="${safeTitle} ${safePrice ? `for ${safePrice}` : ''}">
+        <meta property="og:description" content="${safeDesc}">
+        <meta property="og:image" content="${safeImage}">
+        <meta property="og:url" content="${targetUrl}">
+        <meta property="og:type" content="product">
+        <meta name="twitter:card" content="summary_large_image">
+        <script>
+          window.location.replace("${targetUrl}");
+        </script>
+      </head>
+      <body>
+        <p>Redirecting to listing... <a href="${targetUrl}">Click here if not redirected</a>.</p>
+      </body>
+      </html>
+    `);
+  } catch (e) {
+    res.redirect('/');
+  }
+});
+
 // Fallback for single page app routing in Express 5
 app.get('/{*splat}', (_req, res) => {
   const indexHtml = path.join(appPublicDir, 'index.html');

@@ -58,9 +58,9 @@ function BottomTabs() {
           overflow: 'visible',
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 11.4,
           fontWeight: '600',
-          lineHeight: 14,
+          lineHeight: 13.5,
           paddingTop: 3,
         },
       }}
@@ -71,7 +71,7 @@ function BottomTabs() {
         options={{
           tabBarLabel: t.home,
           tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="home-outline" color={color} size={24} />
+            <MaterialCommunityIcons name="home-outline" color={color} size={22.5} />
           ),
         }}
       />
@@ -81,7 +81,7 @@ function BottomTabs() {
         options={{
           tabBarLabel: t.chats,
           tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="chat-outline" color={color} size={24} />
+            <MaterialCommunityIcons name="chat-outline" color={color} size={22.5} />
           ),
         }}
       />
@@ -105,7 +105,7 @@ function BottomTabs() {
         options={{
           tabBarLabel: t.myAds,
           tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="heart-outline" color={color} size={24} />
+            <MaterialCommunityIcons name="heart-outline" color={color} size={22.5} />
           ),
         }}
       />
@@ -115,7 +115,7 @@ function BottomTabs() {
         options={{
           tabBarLabel: t.account,
           tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="account-outline" color={color} size={24} />
+            <MaterialCommunityIcons name="account-outline" color={color} size={22.5} />
           ),
         }}
       />

@@ -166,7 +166,7 @@ export interface IContactInquiry extends Document {
   email: string;
   subject: string;
   message: string;
-  status: 'new' | 'in_progress' | 'resolved';
+  status: 'pending' | 'new' | 'in_progress' | 'resolved' | 'dismissed';
   createdAt: Date;
 }
 
@@ -178,7 +178,7 @@ const ContactInquirySchema = new Schema<IContactInquiry>(
     email: { type: String, required: true, trim: true, lowercase: true },
     subject: { type: String, required: true, trim: true },
     message: { type: String, required: true, trim: true },
-    status: { type: String, enum: ['new', 'in_progress', 'resolved'], default: 'new' },
+    status: { type: String, enum: ['pending', 'new', 'in_progress', 'resolved', 'dismissed'], default: 'pending' },
   },
   { timestamps: true }
 );

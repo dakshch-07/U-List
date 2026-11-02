@@ -15,7 +15,7 @@ export default function App() {
   const [loginError, setLoginError] = useState('');
 
   // Admin section navigation
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'ads' | 'highlighted' | 'paid' | 'users' | 'categories' | 'reports'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'ads' | 'highlighted' | 'paid' | 'users' | 'categories' | 'reports' | 'inquiries'>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Stats state
@@ -24,6 +24,12 @@ export default function App() {
 
   // Reports state
   const [reports, setReports] = useState<any[]>([]);
+
+  // Inquiries / Support state
+  const [inquiries, setInquiries] = useState<any[]>([]);
+  const [inquirySearch, setInquirySearch] = useState('');
+  const [inquiryStatusFilter, setInquiryStatusFilter] = useState('all');
+  const [pendingInquiriesCount, setPendingInquiriesCount] = useState(0);
 
   // Ads list state
   const [ads, setAds] = useState<any[]>([]);
@@ -174,6 +180,36 @@ export default function App() {
     }
   };
 
+  const fetchInquiries = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/admin/inquiries`, {
+        ...authHeaders,
+        params: {
+          status: inquiryStatusFilter,
+          search: inquirySearch,
+        },
+      });
+      setInquiries(res.data.data);
+      if (typeof res.data.pendingCount === 'number') {
+        setPendingInquiriesCount(res.data.pendingCount);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleUpdateInquiryStatus = async (id: string, status: string) => {
+    try {
+      await axios.put(`${API_BASE}/admin/inquiries/${id}/status`, { status }, authHeaders);
+      setMessage(`Inquiry marked as ${status}`);
+      setTimeout(() => setMessage(''), 3000);
+      fetchInquiries();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update status');
+    }
+  };
+
   useEffect(() => {
     if (!token) return;
     if (activeTab === 'dashboard') fetchDashboard();
@@ -183,7 +219,8 @@ export default function App() {
     if (activeTab === 'users') fetchUsers();
     if (activeTab === 'categories') fetchCategories();
     if (activeTab === 'reports') fetchReports();
-  }, [activeTab, adFilterStatus, token]);
+    if (activeTab === 'inquiries') fetchInquiries();
+  }, [activeTab, adFilterStatus, inquiryStatusFilter, token]);
 
   const handleApproveAd = async (id: string) => {
     try {
@@ -333,6 +370,7 @@ export default function App() {
             { id: 'users', label: 'Users' },
             { id: 'categories', label: 'Categories' },
             { id: 'reports', label: 'Reports Queue' },
+            { id: 'inquiries', label: 'Inquiries / Support ✉' },
           ].map((item) => (
             <button
               key={item.id}
@@ -871,6 +909,210 @@ export default function App() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'inquiries' && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#1B1B1B' }}>
+                    User Support & Inquiries
+                  </h3>
+                  {pendingInquiriesCount > 0 && (
+                    <span style={{ background: '#FFF1ED', color: '#D9480F', fontSize: '12px', fontWeight: 700, padding: '2px 8px', borderRadius: '12px', border: '1px solid #FFD8CC' }}>
+                      {pendingInquiriesCount} Pending
+                    </span>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <select
+                    value={inquiryStatusFilter}
+                    onChange={(e) => setInquiryStatusFilter(e.target.value)}
+                    style={{ padding: '8px 12px', borderRadius: '4px', border: '1px solid #E3E3E3', fontSize: '13px' }}
+                  >
+                    <option value="all">All Inquiries</option>
+                    <option value="pending">Pending</option>
+                    <option value="resolved">Resolved</option>
+                    <option value="dismissed">Dismissed</option>
+                  </select>
+
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      fetchInquiries();
+                    }}
+                    style={{ display: 'flex', gap: '6px' }}
+                  >
+                    <input
+                      type="text"
+                      placeholder="Search by name, email, phone..."
+                      value={inquirySearch}
+                      onChange={(e) => setInquirySearch(e.target.value)}
+                      style={{ padding: '8px 12px', border: '1px solid #E3E3E3', borderRadius: '4px', fontSize: '13px', width: '220px' }}
+                    />
+                    <button
+                      type="submit"
+                      style={{ background: '#D9480F', color: '#FFF', border: 'none', borderRadius: '4px', padding: '8px 14px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
+                    >
+                      Search
+                    </button>
+                  </form>
+                </div>
+              </div>
+
+              {inquiries.length === 0 ? (
+                <div style={{ padding: '40px', textAlign: 'center', color: '#6B6B6B', background: '#FFFFFF', borderRadius: '6px', border: '1px solid #E3E3E3' }}>
+                  No customer support inquiries found.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {inquiries.map((inq) => (
+                    <div
+                      key={inq._id}
+                      style={{
+                        background: '#FFFFFF',
+                        border: '1px solid #E3E3E3',
+                        borderRadius: '8px',
+                        padding: '16px 20px',
+                        borderLeft: inq.status === 'resolved' ? '4px solid #1E8E3E' : inq.status === 'dismissed' ? '4px solid #9E9E9E' : '4px solid #D9480F',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '10px' }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: '16px', fontWeight: 700, color: '#1B1B1B' }}>{inq.fullName}</span>
+                            <span
+                              style={{
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                textTransform: 'uppercase',
+                                padding: '2px 8px',
+                                borderRadius: '4px',
+                                background: inq.status === 'resolved' ? '#E6F4EA' : inq.status === 'dismissed' ? '#F5F5F5' : '#FFF1ED',
+                                color: inq.status === 'resolved' ? '#1E8E3E' : inq.status === 'dismissed' ? '#6B6B6B' : '#D9480F',
+                              }}
+                            >
+                              {inq.status || 'pending'}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#6B6B6B', marginTop: '3px' }}>
+                            Received: {new Date(inq.createdAt).toLocaleString()}
+                          </div>
+                        </div>
+
+                        {/* Quick Action Buttons: Call, WhatsApp, Email, Status */}
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          <a
+                            href={`tel:${inq.mobile}`}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              background: '#0B4F9C',
+                              color: '#FFFFFF',
+                              padding: '6px 12px',
+                              borderRadius: '4px',
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              textDecoration: 'none',
+                            }}
+                          >
+                            📞 Call {inq.mobile}
+                          </a>
+
+                          <a
+                            href={`https://wa.me/91${inq.mobile}?text=${encodeURIComponent(`Hello ${inq.fullName}, this is Ulist Support regarding your inquiry: "${inq.subject}". How can we help you?`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              background: '#25D366',
+                              color: '#FFFFFF',
+                              padding: '6px 12px',
+                              borderRadius: '4px',
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              textDecoration: 'none',
+                            }}
+                          >
+                            💬 WhatsApp
+                          </a>
+
+                          <a
+                            href={`mailto:${inq.email}?subject=${encodeURIComponent(`Re: [Ulist Support] ${inq.subject}`)}&body=${encodeURIComponent(`Hello ${inq.fullName},\n\nThank you for reaching out to Ulist Support.\n\nIn response to your query:\n"${inq.message}"\n\n`)}`}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              background: '#F5F5F5',
+                              border: '1px solid #E3E3E3',
+                              color: '#1B1B1B',
+                              padding: '6px 12px',
+                              borderRadius: '4px',
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              textDecoration: 'none',
+                            }}
+                          >
+                            ✉ Email
+                          </a>
+
+                          {inq.status !== 'resolved' && (
+                            <button
+                              onClick={() => handleUpdateInquiryStatus(inq._id, 'resolved')}
+                              style={{
+                                background: '#E6F4EA',
+                                color: '#1E8E3E',
+                                border: '1px solid #A5D6A7',
+                                padding: '6px 12px',
+                                borderRadius: '4px',
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              ✓ Mark Resolved
+                            </button>
+                          )}
+
+                          {inq.status === 'resolved' && (
+                            <button
+                              onClick={() => handleUpdateInquiryStatus(inq._id, 'pending')}
+                              style={{
+                                background: '#FFF1ED',
+                                color: '#D9480F',
+                                border: '1px solid #FFD8CC',
+                                padding: '6px 12px',
+                                borderRadius: '4px',
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              Reopen
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Subject & Message Content Box */}
+                      <div style={{ background: '#F8F9FA', padding: '12px 14px', borderRadius: '6px', border: '1px solid #EFEFEF' }}>
+                        <div style={{ fontWeight: 700, fontSize: '13px', color: '#1B1B1B', marginBottom: '6px' }}>
+                          Subject: {inq.subject}
+                        </div>
+                        <div style={{ fontSize: '13px', color: '#374151', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+                          {inq.message}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

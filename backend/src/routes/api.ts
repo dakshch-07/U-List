@@ -15,6 +15,8 @@ import {
   createCategory,
   getAdminReports,
   dismissReport,
+  getAdminInquiries,
+  updateInquiryStatus,
 } from '../controllers/adminController';
 import {
   getFavorites,
@@ -100,5 +102,7 @@ router.post('/admin/categories', authenticate, requireAdmin, createCategory);
 router.put('/admin/categories/:id', authenticate, requireAdmin, updateCategory);
 router.get('/admin/reports', authenticate, requireAdmin, getAdminReports);
 router.post('/admin/reports/:id/dismiss', authenticate, requireAdmin, dismissReport);
+router.get('/admin/inquiries', authenticate, requireAdmin, getAdminInquiries);
+router.put('/admin/inquiries/:id/status', authenticate, requireAdmin, updateInquiryStatus);
 
 export default router;

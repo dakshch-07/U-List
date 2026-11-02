@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { User } from '../models/User';
 import { Ad } from '../models/Ad';
 import { Category } from '../models/Category';
-import { Report, City, Banner, Setting } from '../models/Extras';
+import { Report, City, Banner, Setting, ContactInquiry } from '../models/Extras';
 
 export const getDashboardStats = async (_req: Request, res: Response): Promise<void> => {
   try {
@@ -248,6 +248,72 @@ export const dismissReport = async (req: Request, res: Response): Promise<void> 
     const { id } = req.params;
     await Report.findByIdAndUpdate(id, { status: 'dismissed' });
     res.json({ success: true, message: 'Report dismissed' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const getAdminInquiries = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { status, search, page = '1', limit = '20' } = req.query;
+    const query: any = {};
+
+    if (status && status !== 'all') {
+      query.status = status;
+    }
+
+    if (search) {
+      query.$or = [
+        { fullName: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { mobile: { $regex: search, $options: 'i' } },
+        { subject: { $regex: search, $options: 'i' } },
+        { message: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const pageNum = parseInt(page as string, 10) || 1;
+    const limitNum = parseInt(limit as string, 10) || 20;
+    const skip = (pageNum - 1) * limitNum;
+
+    const [inquiries, total, pendingCount] = await Promise.all([
+      ContactInquiry.find(query).sort({ createdAt: -1 }).skip(skip).limit(limitNum),
+      ContactInquiry.countDocuments(query),
+      ContactInquiry.countDocuments({ status: 'pending' }),
+    ]);
+
+    res.json({
+      success: true,
+      data: inquiries,
+      pendingCount,
+      pagination: {
+        page: pageNum,
+        totalPages: Math.ceil(total / limitNum),
+        total,
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const updateInquiryStatus = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body; // 'pending' | 'resolved' | 'dismissed'
+
+    const inquiry = await ContactInquiry.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
+
+    if (!inquiry) {
+      res.status(404).json({ success: false, message: 'Inquiry not found' });
+      return;
+    }
+
+    res.json({ success: true, message: 'Inquiry status updated', data: inquiry });
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });
   }

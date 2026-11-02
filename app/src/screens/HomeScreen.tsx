@@ -14,19 +14,19 @@ import { getRecentSearches, clearRecentSearches } from '../services/recentSearch
 import { translations } from '../utils/translations';
 
 // Realistic Indian 3D product category images matching OLX India style
-const CATEGORY_IMAGES: Record<string, string> = {
+const CATEGORY_IMAGES: Record<string, any> = {
   cars: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=200&q=80',
   properties: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=200&q=80',
   mobiles: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=200&q=80',
   jobs: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=200&q=80',
   bikes: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=200&q=80',
   electronics: 'https://images.unsplash.com/photo-1588854337236-6889d631faa8?auto=format&fit=crop&w=200&q=80',
-  'commercial-vehicles': 'https://images.unsplash.com/photo-1519003722824-194d4455a60c?auto=format&fit=crop&w=200&q=80',
-  furniture: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=200&q=80',
-  fashion: 'https://images.unsplash.com/photo-1523381294911-8d3cead13475?auto=format&fit=crop&w=200&q=80',
+  'commercial-vehicles': require('../../assets/categories/commercial-vehicles.jpg'),
+  furniture: require('../../assets/categories/furniture.jpg'),
+  fashion: require('../../assets/categories/fashion.jpg'),
   'books-sports': 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=200&q=80',
-  pets: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=200&q=80',
-  services: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=200&q=80',
+  pets: require('../../assets/categories/pets.jpg'),
+  services: require('../../assets/categories/services.jpg'),
 };
 
 export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
@@ -227,7 +227,11 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   >
                     <View style={styles.categoryImageBox}>
                       {catImg ? (
-                        <Image source={{ uri: catImg }} style={styles.categoryImage} resizeMode="contain" />
+                        <Image
+                          source={typeof catImg === 'string' ? { uri: catImg } : catImg}
+                          style={styles.categoryImage}
+                          resizeMode="cover"
+                        />
                       ) : (
                         <MaterialCommunityIcons
                           name={cat.icon || 'tag-outline'}
@@ -432,19 +436,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   categoryImageBox: {
-    width: 58,
-    height: 58,
-    borderRadius: 12,
-    backgroundColor: '#F7F7F7',
+    width: 60,
+    height: 60,
+    borderRadius: 14,
+    backgroundColor: '#F3F4F6',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 6,
     overflow: 'hidden',
   },
   categoryImage: {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
+    width: '100%',
+    height: '100%',
+    borderRadius: 14,
   },
   categoryLabel: {
     fontSize: 11,

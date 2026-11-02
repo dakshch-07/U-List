@@ -414,8 +414,8 @@ const styles = StyleSheet.create({
     marginLeft: 'auto',
   },
   headerIconButton: {
-    width: 26,
-    height: 32,
+    width: 24,
+    height: 34,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -425,8 +425,8 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   brandLogo: {
-    width: 66,
-    height: 26,
+    width: 82,
+    height: 34,
   },
   searchRow: {
     flexDirection: 'row',

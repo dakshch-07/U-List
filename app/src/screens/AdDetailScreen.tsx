@@ -317,10 +317,19 @@ export const AdDetailScreen: React.FC<{ route: any; navigation: any }> = ({ rout
           <Text style={styles.chatButtonText}>Chat</Text>
         </TouchableOpacity>
 
-        {ad.showPhone && (
+        {ad.showPhone ? (
           <TouchableOpacity style={styles.outlineButton} onPress={handleCall}>
             <MaterialCommunityIcons name="phone-outline" size={20} color={theme.colors.primary} />
             <Text style={styles.outlineButtonText}>Call</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={[styles.outlineButton, styles.disabledButton]}
+            disabled={true}
+            activeOpacity={1}
+          >
+            <MaterialCommunityIcons name="phone-off-outline" size={20} color="#9CA3AF" />
+            <Text style={[styles.outlineButtonText, styles.disabledButtonText]}>Call</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -504,6 +513,13 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
     fontWeight: theme.typography.weight.bold,
     fontSize: theme.typography.size.body,
+  },
+  disabledButton: {
+    borderColor: '#D1D5DB',
+    backgroundColor: '#F3F4F6',
+  },
+  disabledButtonText: {
+    color: '#9CA3AF',
   },
   whatsappButton: {
     width: 44,

@@ -35,6 +35,8 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [images, setImages] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
+  const [createdAdData, setCreatedAdData] = useState<any>(null);
+  const [selectedHighlightPlan, setSelectedHighlightPlan] = useState<'30_days' | '15_days'>('30_days');
 
   // Sync city & contact if user changes
   React.useEffect(() => {
@@ -145,6 +147,17 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     },
   });
 
+  const { data: myAds = [] } = useQuery({
+    queryKey: ['myAds'],
+    queryFn: async () => {
+      const res = await api.get('/ads/mine');
+      return res.data.data;
+    },
+    enabled: !!user,
+  });
+
+  const activeMyAdsCount = myAds.filter((a: any) => a.status === 'active' || a.status === 'pending').length;
+
   const pickImage = async () => {
     if (images.length >= 8) {
       Alert.alert('Limit reached', 'You can upload up to 8 photos');
@@ -223,7 +236,7 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         }
       }
 
-      await api.post('/ads', formData, {
+      const res = await api.post('/ads', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
@@ -234,7 +247,8 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       queryClient.invalidateQueries({ queryKey: ['ads'] });
       queryClient.invalidateQueries({ queryKey: ['myAds'] });
 
-      // Show beautiful dedicated approval notice modal like OLX
+      // Store created ad data and show Highlight screen
+      setCreatedAdData(res.data?.data || null);
       setIsSuccessModalVisible(true);
     } catch (err: any) {
       const errMsg = err.response?.data?.message || err.message || 'Could not post ad. Please try again.';
@@ -518,35 +532,25 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 </Text>
               </TouchableOpacity>
             </View>
+
+            {/* Free Ads usage badge below Post Ad Now */}
+            <View style={styles.freeAdsCounterBox}>
+              <MaterialCommunityIcons name="tag-outline" size={14} color="#6B7280" />
+              <Text style={styles.freeAdsCounterText}>
+                {Math.min(activeMyAdsCount, 5)}/5 Free Ads
+              </Text>
+            </View>
           </View>
         )}
       </ScrollView>
 
-      {/* OLX-Style Success & Moderation Status Modal */}
+      {/* OLX-Style "Sell Faster Now" Highlight Upsell Screen */}
       {isSuccessModalVisible && (
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <View style={styles.modalSuccessIcon}>
-              <MaterialCommunityIcons name="clock-check-outline" size={44} color="#FFFFFF" />
-            </View>
-            <Text style={styles.modalHeading}>Ad Submitted Successfully!</Text>
-            <Text style={styles.modalSubheading}>
-              Your listing will be verified and approved by the Ulist Moderation Team within 2 to 3 hours.
-            </Text>
-
-            <View style={styles.modalInfoBox}>
-              <View style={styles.modalInfoRow}>
-                <MaterialCommunityIcons name="shield-check-outline" size={20} color={theme.colors.primary} />
-                <Text style={styles.modalInfoText}>Ensures safe & verified buyers & sellers</Text>
-              </View>
-              <View style={styles.modalInfoRow}>
-                <MaterialCommunityIcons name="bell-ring-outline" size={20} color={theme.colors.primary} />
-                <Text style={styles.modalInfoText}>Live on app immediately upon admin approval</Text>
-              </View>
-            </View>
-
+        <View style={styles.sellFasterContainer}>
+          {/* Header */}
+          <View style={styles.sellFasterHeader}>
             <TouchableOpacity
-              style={styles.modalPrimaryBtn}
+              style={styles.sellFasterBackBtn}
               onPress={() => {
                 setIsSuccessModalVisible(false);
                 setStep(1);
@@ -557,11 +561,205 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 navigation.navigate('MyAdsTab');
               }}
             >
-              <Text style={styles.modalPrimaryBtnText}>Go to My Ads</Text>
+              <MaterialCommunityIcons name="arrow-left" size={24} color="#0F2942" />
+            </TouchableOpacity>
+            <Text style={styles.sellFasterHeaderTitle}>Sell Faster Now</Text>
+            <TouchableOpacity
+              onPress={() => {
+                Alert.alert('Help & Support', 'Highlighting your ad gives it a verified HIGHLIGHTED badge, 3x larger visual presence, and keeps it at the top of search & browse results for maximum buyers.');
+              }}
+            >
+              <Text style={styles.sellFasterHelpText}>Help</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.sellFasterScroll} contentContainerStyle={styles.sellFasterScrollContent}>
+            {/* Success Banner */}
+            <View style={styles.sellFasterSuccessRow}>
+              <View style={styles.sellFasterSuccessCircle}>
+                <MaterialCommunityIcons name="check" size={22} color="#FFFFFF" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.sellFasterCongratsTitle}>Congratulations!</Text>
+                <Text style={styles.sellFasterCongratsSubtitle}>Your ad will be live soon.</Text>
+              </View>
+              {createdAdData?._id && (
+                <TouchableOpacity
+                  style={styles.previewAdBtn}
+                  onPress={() => {
+                    setIsSuccessModalVisible(false);
+                    navigation.navigate('AdDetail', { id: createdAdData._id });
+                  }}
+                >
+                  <Text style={styles.previewAdText}>Preview Ad</Text>
+                  <MaterialCommunityIcons name="chevron-right" size={16} color="#005CA8" />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* Promo Card */}
+            <View style={styles.sellFasterPromoCard}>
+              <View style={styles.promoTagIconBox}>
+                <MaterialCommunityIcons name="sale" size={26} color="#D9480F" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.promoCardHeading}>Want to reach more buyers & Sell faster?</Text>
+              </View>
+            </View>
+
+            {/* Feature your Ad / Highlight Your Ad Card */}
+            <View style={styles.highlightAdCard}>
+              <Text style={styles.highlightAdHeading}>Highlight your Ad</Text>
+
+              <View style={styles.highlightBenefitRow}>
+                <MaterialCommunityIcons name="check-circle-outline" size={18} color="#10B981" />
+                <Text style={styles.highlightBenefitText}>
+                  Get <Text style={{ fontWeight: '700' }}>'HIGHLIGHTED'</Text> tag
+                </Text>
+              </View>
+
+              <View style={styles.highlightBenefitRow}>
+                <MaterialCommunityIcons name="check-circle-outline" size={18} color="#10B981" />
+                <Text style={styles.highlightBenefitText}>
+                  Stand out with a 3X larger listing
+                </Text>
+              </View>
+
+              {/* Mock visual preview of Highlighted listing */}
+              <View style={styles.adVisualPreviewBox}>
+                <View style={styles.adVisualMockFeatured}>
+                  <View style={styles.adMockImgBox}>
+                    <MaterialCommunityIcons name="image-outline" size={20} color="#94A3B8" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <View style={styles.adMockBadge}>
+                      <Text style={styles.adMockBadgeText}>HIGHLIGHTED</Text>
+                    </View>
+                    <View style={styles.adMockLineLong} />
+                    <Text style={styles.adMockYourAdText}>Your Ad</Text>
+                  </View>
+                </View>
+                <View style={styles.adVisualMockRegular}>
+                  <View style={[styles.adMockImgBox, { width: 34, height: 26 }]} />
+                  <View style={{ flex: 1, gap: 4 }}>
+                    <View style={[styles.adMockLineLong, { width: '80%' }]} />
+                    <Text style={styles.adMockOthersText}>Others ad</Text>
+                  </View>
+                </View>
+                <View style={styles.adVisualMockRegular}>
+                  <View style={[styles.adMockImgBox, { width: 34, height: 26 }]} />
+                  <View style={{ flex: 1, gap: 4 }}>
+                    <View style={[styles.adMockLineLong, { width: '60%' }]} />
+                    <Text style={styles.adMockOthersText}>Others ad</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Plan 1: 30 Days Guaranteed Sale */}
+              <TouchableOpacity
+                style={[
+                  styles.planOptionCard,
+                  selectedHighlightPlan === '30_days' && styles.planOptionCardActive,
+                ]}
+                onPress={() => setSelectedHighlightPlan('30_days')}
+                activeOpacity={0.85}
+              >
+                <View style={styles.planRibbonRow}>
+                  <View style={[styles.planRibbon, { backgroundColor: '#2563EB' }]}>
+                    <MaterialCommunityIcons name="thumb-up" size={11} color="#FFFFFF" />
+                    <Text style={styles.planRibbonText}>Guaranteed Sale</Text>
+                  </View>
+                </View>
+
+                <View style={styles.planMainRow}>
+                  <MaterialCommunityIcons
+                    name={selectedHighlightPlan === '30_days' ? 'radiobox-marked' : 'radiobox-blank'}
+                    size={22}
+                    color={selectedHighlightPlan === '30_days' ? '#005CA8' : '#94A3B8'}
+                  />
+                  <View style={{ flex: 1, marginLeft: 10 }}>
+                    <Text style={styles.planNameText}>
+                      Guaranteed Sale : 30 Days - Highlight Tag
+                    </Text>
+                    <Text style={styles.planSubnoteText}>*Min. 15 replies or money back</Text>
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={styles.planPriceText}>₹399</Text>
+                    <Text style={styles.planPriceCrossed}>₹665</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+
+              {/* Plan 2: 15 Days Best Value */}
+              <TouchableOpacity
+                style={[
+                  styles.planOptionCard,
+                  selectedHighlightPlan === '15_days' && styles.planOptionCardActive,
+                  { marginTop: 14 },
+                ]}
+                onPress={() => setSelectedHighlightPlan('15_days')}
+                activeOpacity={0.85}
+              >
+                <View style={styles.planRibbonRow}>
+                  <View style={[styles.planRibbon, { backgroundColor: '#3B82F6' }]}>
+                    <MaterialCommunityIcons name="eye" size={11} color="#FFFFFF" />
+                    <Text style={styles.planRibbonText}>Best value</Text>
+                  </View>
+                </View>
+
+                <View style={styles.planMainRow}>
+                  <MaterialCommunityIcons
+                    name={selectedHighlightPlan === '15_days' ? 'radiobox-marked' : 'radiobox-blank'}
+                    size={22}
+                    color={selectedHighlightPlan === '15_days' ? '#005CA8' : '#94A3B8'}
+                  />
+                  <View style={{ flex: 1, marginLeft: 10 }}>
+                    <Text style={styles.planNameText}>
+                      15 Days - Highlight Tag
+                    </Text>
+                    <Text style={styles.planSubnoteText}>Get 6x more replies</Text>
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={styles.planPriceText}>₹249</Text>
+                    <Text style={styles.planPriceCrossed}>₹415</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+
+          {/* Sticky Bottom Pay CTA & Skip */}
+          <View style={styles.sellFasterFooter}>
+            <TouchableOpacity
+              style={styles.sellFasterPayBtn}
+              onPress={() => {
+                Alert.alert(
+                  'Highlight Ad Package',
+                  `Payment for ${selectedHighlightPlan === '30_days' ? '30 Days (₹399)' : '15 Days (₹249)'} Highlight Tag initiated. Admin approval will activate the HIGHLIGHTED badge immediately.`,
+                  [
+                    {
+                      text: 'OK',
+                      onPress: () => {
+                        setIsSuccessModalVisible(false);
+                        setStep(1);
+                        setTitle('');
+                        setDescription('');
+                        setPrice('');
+                        setImages([]);
+                        navigation.navigate('MyAdsTab');
+                      },
+                    },
+                  ]
+                );
+              }}
+            >
+              <Text style={styles.sellFasterPayBtnText}>
+                Pay {selectedHighlightPlan === '30_days' ? '₹399' : '₹249'}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.modalSecondaryBtn}
+              style={styles.sellFasterSkipBtn}
               onPress={() => {
                 setIsSuccessModalVisible(false);
                 setStep(1);
@@ -569,10 +767,10 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 setDescription('');
                 setPrice('');
                 setImages([]);
-                navigation.navigate('HomeTab');
+                navigation.navigate('MyAdsTab');
               }}
             >
-              <Text style={styles.modalSecondaryBtnText}>Back to Home</Text>
+              <Text style={styles.sellFasterSkipBtnText}>Skip for now (Continue with Free Listing)</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -881,5 +1079,290 @@ const styles = StyleSheet.create({
     color: theme.colors.secondaryText,
     fontWeight: theme.typography.weight.semibold,
     fontSize: theme.typography.size.body,
+  },
+  freeAdsCounterBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 10,
+    paddingVertical: 4,
+  },
+  freeAdsCounterText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  // Sell Faster Full Screen View
+  sellFasterContainer: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#F8FAFC',
+    zIndex: 9999,
+  },
+  sellFasterHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+  },
+  sellFasterBackBtn: {
+    padding: 4,
+  },
+  sellFasterHeaderTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#0F2942',
+  },
+  sellFasterHelpText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#005CA8',
+  },
+  sellFasterScroll: {
+    flex: 1,
+  },
+  sellFasterScrollContent: {
+    padding: 16,
+    paddingBottom: 24,
+  },
+  sellFasterSuccessRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  sellFasterSuccessCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#059669',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  sellFasterCongratsTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  sellFasterCongratsSubtitle: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  previewAdBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 8,
+  },
+  previewAdText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#005CA8',
+  },
+  sellFasterPromoCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  promoTagIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  promoCardHeading: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#1E293B',
+    lineHeight: 20,
+  },
+  highlightAdCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  highlightAdHeading: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 12,
+  },
+  highlightBenefitRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  highlightBenefitText: {
+    fontSize: 13,
+    color: '#334155',
+  },
+  adVisualPreviewBox: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 10,
+    padding: 12,
+    marginVertical: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    gap: 8,
+  },
+  adVisualMockFeatured: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    padding: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    gap: 10,
+  },
+  adMockImgBox: {
+    width: 48,
+    height: 38,
+    borderRadius: 6,
+    backgroundColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  adMockBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#FEF08A',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginBottom: 4,
+  },
+  adMockBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#854D0E',
+  },
+  adMockLineLong: {
+    height: 6,
+    width: '90%',
+    backgroundColor: '#CBD5E1',
+    borderRadius: 3,
+  },
+  adMockYourAdText: {
+    fontSize: 9,
+    color: '#64748B',
+    marginTop: 4,
+  },
+  adVisualMockRegular: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 6,
+    gap: 10,
+  },
+  adMockOthersText: {
+    fontSize: 9,
+    color: '#94A3B8',
+  },
+  planOptionCard: {
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    padding: 12,
+    backgroundColor: '#FFFFFF',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  planOptionCardActive: {
+    borderColor: '#005CA8',
+    backgroundColor: '#F0F9FF',
+  },
+  planRibbonRow: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  planRibbon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  planRibbonText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  planMainRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  planNameText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  planSubnoteText: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  planPriceText: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  planPriceCrossed: {
+    fontSize: 12,
+    color: '#94A3B8',
+    textDecorationLine: 'line-through',
+  },
+  sellFasterFooter: {
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+  },
+  sellFasterPayBtn: {
+    backgroundColor: '#005CA8',
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sellFasterPayBtnText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  sellFasterSkipBtn: {
+    alignItems: 'center',
+    marginTop: 10,
+    paddingVertical: 6,
+  },
+  sellFasterSkipBtnText: {
+    fontSize: 13,
+    color: '#64748B',
+    fontWeight: '600',
   },
 });

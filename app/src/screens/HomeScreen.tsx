@@ -15,7 +15,7 @@ import { translations } from '../utils/translations';
 
 // Realistic Indian 3D product category images matching OLX India style
 const CATEGORY_IMAGES: Record<string, any> = {
-  cars: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=200&q=80',
+  cars: require('../../assets/categories/cars.jpg'),
   properties: require('../../assets/categories/properties.jpg'),
   mobiles: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=200&q=80',
   jobs: require('../../assets/categories/jobs.jpg'),

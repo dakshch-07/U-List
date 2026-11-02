@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: -26,
-    marginBottom: 6,
+    marginBottom: 0,
     elevation: 6,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },

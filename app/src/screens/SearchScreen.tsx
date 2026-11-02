@@ -25,7 +25,7 @@ const TYPO_MAP: Record<string, string> = {
 };
 
 export const SearchScreen: React.FC<{ navigation: any; route: any }> = ({ navigation, route }) => {
-  const { selectedCity } = useAuthStore();
+  const { selectedCity, setCity } = useAuthStore();
   const initialQuery = route?.params?.initialQuery || '';
   const [search, setSearch] = useState(initialQuery);
   const [submittedQuery, setSubmittedQuery] = useState(initialQuery);
@@ -96,7 +96,7 @@ export const SearchScreen: React.FC<{ navigation: any; route: any }> = ({ naviga
         </TouchableOpacity>
         <TextInput
           style={styles.searchInput}
-          placeholder="Search cars, mobiles, bikes, furniture..."
+          placeholder="Find Cars, Mobile Phones and more..."
           value={search}
           onChangeText={(txt) => {
             setSearch(txt);
@@ -106,11 +106,42 @@ export const SearchScreen: React.FC<{ navigation: any; route: any }> = ({ naviga
           autoFocus
           returnKeyType="search"
         />
-        {search.length > 0 && (
-          <TouchableOpacity onPress={() => { setSearch(''); setSubmittedQuery(''); }}>
+        {search.length > 0 ? (
+          <TouchableOpacity onPress={() => { setSearch(''); setSubmittedQuery(''); }} style={{ padding: 4 }}>
             <MaterialCommunityIcons name="close-circle" size={20} color={theme.colors.secondaryText} />
           </TouchableOpacity>
+        ) : (
+          <TouchableOpacity onPress={() => handleSearchSubmit()} style={styles.searchSubmitBtn}>
+            <MaterialCommunityIcons name="magnify" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
         )}
+      </View>
+
+      {/* Location Filter Bar directly below Search input (OLX India style) */}
+      <View style={styles.locationSelectorRow}>
+        <TouchableOpacity
+          style={styles.locationSelectorBox}
+          onPress={() => navigation.navigate('CityPicker')}
+          activeOpacity={0.8}
+        >
+          <View style={styles.locationLeftGroup}>
+            <MaterialCommunityIcons name="map-marker" size={18} color="#1B1B1B" />
+            <Text style={styles.locationText} numberOfLines={1}>
+              {selectedCity}
+            </Text>
+          </View>
+          {selectedCity !== 'India' ? (
+            <TouchableOpacity
+              onPress={() => setCity('India')}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              style={styles.locationClearBtn}
+            >
+              <MaterialCommunityIcons name="close" size={16} color="#666666" />
+            </TouchableOpacity>
+          ) : (
+            <MaterialCommunityIcons name="chevron-down" size={18} color="#666666" />
+          )}
+        </TouchableOpacity>
       </View>
 
       {/* Instant Suggestions Dropdown if typing */}
@@ -287,7 +318,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
     backgroundColor: theme.colors.surface,
@@ -297,6 +328,47 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: theme.colors.text,
     paddingVertical: 6,
+  },
+  searchSubmitBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 4,
+    backgroundColor: theme.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 6,
+  },
+  locationSelectorRow: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: theme.colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  locationSelectorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  locationLeftGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: 8,
+  },
+  locationText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  locationClearBtn: {
+    padding: 2,
   },
   suggestionsContainer: {
     backgroundColor: theme.colors.surface,

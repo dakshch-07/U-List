@@ -44,25 +44,24 @@ function BottomTabs() {
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.secondaryText,
         tabBarStyle: {
-          height: 48,
+          height: 54,
           paddingTop: 4,
           paddingBottom: 4,
           backgroundColor: theme.colors.background,
           borderTopWidth: 1,
           borderTopColor: '#EBEBEB',
-          boxSizing: 'content-box',
+          overflow: 'visible',
         },
         tabBarItemStyle: {
           justifyContent: 'center',
           alignItems: 'center',
-          paddingVertical: 1,
+          paddingVertical: 0,
         },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
-          lineHeight: 12,
-          paddingTop: 2,
-          paddingBottom: 1,
+          marginTop: 1,
+          marginBottom: 1,
         },
       }}
     >

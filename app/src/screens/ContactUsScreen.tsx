@@ -16,7 +16,6 @@ import { theme } from '../theme';
 import { api } from '../services/api';
 
 export const ContactUsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const [tab, setTab] = useState<'write' | 'management'>('write');
   const [fullName, setFullName] = useState('');
   const [mobile, setMobile] = useState('');
   const [email, setEmail] = useState('');
@@ -50,7 +49,7 @@ export const ContactUsScreen: React.FC<{ navigation: any }> = ({ navigation }) =
     setLoading(true);
     try {
       const res = await api.post('/contact', {
-        type: tab === 'management' ? 'management' : 'general',
+        type: 'general',
         fullName: fullName.trim(),
         mobile: cleanMobile,
         email: email.trim(),
@@ -85,29 +84,8 @@ export const ContactUsScreen: React.FC<{ navigation: any }> = ({ navigation }) =
         <View style={styles.headerBanner}>
           <Text style={styles.headerTitle}>WE ARE HERE TO HELP YOU</Text>
           <Text style={styles.headerSubtitle}>
-            Have a question, feedback, or need assistance? Reach out directly to our support team or senior management.
+            Have a question, feedback, or need assistance? Reach out directly to our team.
           </Text>
-        </View>
-
-        {/* Tab Switcher */}
-        <View style={styles.tabBar}>
-          <TouchableOpacity
-            style={[styles.tabItem, tab === 'write' && styles.activeTabItem]}
-            onPress={() => setTab('write')}
-          >
-            <Text style={[styles.tabText, tab === 'write' && styles.activeTabText]}>
-              Write to us
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.tabItem, tab === 'management' && styles.activeTabItem]}
-            onPress={() => setTab('management')}
-          >
-            <Text style={[styles.tabText, tab === 'management' && styles.activeTabText]}>
-              Write to management
-            </Text>
-          </TouchableOpacity>
         </View>
 
         {/* Success Confirmation Card */}
@@ -118,8 +96,7 @@ export const ContactUsScreen: React.FC<{ navigation: any }> = ({ navigation }) =
             </View>
             <Text style={styles.successTitle}>Inquiry Sent!</Text>
             <Text style={styles.successDesc}>
-              Thank you for contacting Ulist. Your inquiry has been routed to our{' '}
-              {tab === 'management' ? 'senior management' : 'support team'}. We will reach out to you within 24 hours.
+              Thank you for contacting Ulist. Your inquiry has been routed to our support team. We will reach out to you within 24 hours.
             </Text>
             <TouchableOpacity
               style={styles.doneBtn}
@@ -137,13 +114,9 @@ export const ContactUsScreen: React.FC<{ navigation: any }> = ({ navigation }) =
           /* Contact Form Card */
           <View style={styles.formCard}>
             <View style={styles.assistBanner}>
-              <Text style={styles.assistHeading}>
-                {tab === 'management' ? 'Escalate to Management' : 'How we can assist you?'}
-              </Text>
+              <Text style={styles.assistHeading}>How we can assist you?</Text>
               <Text style={styles.assistDesc}>
-                {tab === 'management'
-                  ? 'Direct line to our executive team for critical complaints, security reports, or partnership opportunities.'
-                  : 'If you have any issues, feedback, or simply want to clarify something about listings on Ulist, let us know.'}
+                If you have any issues, feedback, or simply want to clarify something about listings on Ulist, let us know.
               </Text>
             </View>
 

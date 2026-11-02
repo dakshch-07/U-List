@@ -307,7 +307,7 @@ export const AdDetailScreen: React.FC<{ route: any; navigation: any }> = ({ rout
         <View style={{ height: 80 }} />
       </ScrollView>
 
-      {/* Sticky Bottom Action Bar: Chat, Call, WhatsApp */}
+      {/* Sticky Bottom Action Bar: Chat & Call */}
       <View style={styles.bottomBar}>
         <TouchableOpacity
           style={styles.chatButton}
@@ -318,16 +318,10 @@ export const AdDetailScreen: React.FC<{ route: any; navigation: any }> = ({ rout
         </TouchableOpacity>
 
         {ad.showPhone && (
-          <>
-            <TouchableOpacity style={styles.outlineButton} onPress={handleCall}>
-              <MaterialCommunityIcons name="phone-outline" size={20} color={theme.colors.primary} />
-              <Text style={styles.outlineButtonText}>Call</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.whatsappButton} onPress={handleWhatsApp}>
-              <MaterialCommunityIcons name="whatsapp" size={20} color="#FFFFFF" />
-            </TouchableOpacity>
-          </>
+          <TouchableOpacity style={styles.outlineButton} onPress={handleCall}>
+            <MaterialCommunityIcons name="phone-outline" size={20} color={theme.colors.primary} />
+            <Text style={styles.outlineButtonText}>Call</Text>
+          </TouchableOpacity>
         )}
       </View>
     </View>

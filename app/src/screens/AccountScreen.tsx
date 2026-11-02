@@ -84,8 +84,8 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
           style={styles.menuItem}
           onPress={() => navigation.navigate('ContactUs')}
         >
-          <MaterialCommunityIcons name="headset" size={22} color={theme.colors.primary} />
-          <Text style={[styles.menuText, { fontWeight: '600' }]}>Help & Contact Us</Text>
+          <MaterialCommunityIcons name="headset" size={22} color={theme.colors.text} />
+          <Text style={styles.menuText}>Help & Contact Us</Text>
           <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.secondaryText} />
         </TouchableOpacity>
 

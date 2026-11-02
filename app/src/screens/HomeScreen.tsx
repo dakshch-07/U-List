@@ -154,22 +154,22 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           <>
             {/* Top Location, Tagline, Icons and Brand Header inside ListHeaderComponent so it scrolls away naturally */}
             <View style={styles.header}>
+              {/* Row 1: Location & Brand Actions */}
               <View style={styles.topRow}>
-                {/* Left: Location dropdown + Tagline */}
-                <View style={styles.locationTaglineCol}>
-                  <TouchableOpacity style={styles.citySelector} onPress={() => navigation.navigate('CityPicker')}>
-                    <MaterialCommunityIcons name="map-marker" size={17} color={theme.colors.primary} />
-                    <Text style={styles.cityName} numberOfLines={1}>
-                      {selectedCity}
-                    </Text>
-                    <MaterialCommunityIcons name="chevron-down" size={15} color={theme.colors.text} />
-                  </TouchableOpacity>
+                {/* Left: Location dropdown */}
+                <TouchableOpacity style={styles.citySelector} onPress={() => navigation.navigate('CityPicker')}>
+                  <MaterialCommunityIcons name="map-marker" size={18} color={theme.colors.primary} />
+                  <Text style={styles.cityName} numberOfLines={1}>
+                    {selectedCity}
+                  </Text>
+                  <MaterialCommunityIcons name="chevron-down" size={16} color={theme.colors.text} />
+                </TouchableOpacity>
 
-                  <View style={styles.taglineBadge}>
-                    <Text style={styles.taglineText} numberOfLines={1}>
-                      List It. Sell It. Cash It!
-                    </Text>
-                  </View>
+                {/* Tagline Badge placed comfortably in Row 1 or centered */}
+                <View style={styles.taglineBadge}>
+                  <Text style={styles.taglineText} numberOfLines={1}>
+                    List It. Sell It. Cash It!
+                  </Text>
                 </View>
 
                 {/* Right: Wishlist Heart, Notifications Bell, Brand Logo */}
@@ -329,21 +329,15 @@ const styles = StyleSheet.create({
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 8,
-  },
-  locationTaglineCol: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    marginRight: 4,
-    flexWrap: 'nowrap',
-    overflow: 'visible',
   },
   citySelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 4,
+    maxWidth: '35%',
     flexShrink: 0,
+    marginRight: 4,
   },
   cityName: {
     fontSize: 13,
@@ -358,7 +352,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    flexShrink: 0,
+    flexShrink: 1,
+    marginHorizontal: 4,
   },
   taglineText: {
     fontSize: 9.5,
@@ -371,7 +366,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 0,
     flexShrink: 0,
-    marginLeft: 'auto',
   },
   headerIconButton: {
     width: 24,
@@ -385,8 +379,8 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   brandLogo: {
-    width: 82,
-    height: 34,
+    width: 76,
+    height: 32,
   },
   searchRow: {
     flexDirection: 'row',

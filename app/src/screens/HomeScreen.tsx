@@ -245,7 +245,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               })}
             </View>
 
-            {/* Quikr-style "Turn on location" nearby recommendations prompt banner */}
+            {/* Ulist custom branded "Turn on location" nearby recommendations prompt banner */}
             {showLocationPrompt && (
               <View style={styles.locationBanner}>
                 <TouchableOpacity
@@ -253,7 +253,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   onPress={handleDismissLocationPrompt}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                  <MaterialCommunityIcons name="close" size={16} color="rgba(255,255,255,0.8)" />
+                  <MaterialCommunityIcons name="close" size={16} color="rgba(255,255,255,0.85)" />
                 </TouchableOpacity>
 
                 <View style={styles.locationBannerLeft}>
@@ -273,7 +273,9 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 </View>
 
                 <View style={styles.locationBannerGraphic}>
-                  <MaterialCommunityIcons name="map-marker-path" size={48} color="rgba(255,255,255,0.7)" />
+                  <View style={styles.locationIconCircle}>
+                    <MaterialCommunityIcons name="crosshairs-gps" size={26} color="#D9480F" />
+                  </View>
                 </View>
               </View>
             )}
@@ -513,16 +515,23 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   locationBanner: {
-    backgroundColor: '#4B6584',
-    borderRadius: 8,
-    marginHorizontal: 8,
-    marginVertical: 10,
-    padding: 14,
+    backgroundColor: '#0F2942',
+    borderRadius: 12,
+    marginHorizontal: 12,
+    marginVertical: 12,
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     position: 'relative',
     overflow: 'hidden',
+    borderLeftWidth: 4,
+    borderLeftColor: '#D9480F',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   locationBannerClose: {
     position: 'absolute',
@@ -533,30 +542,44 @@ const styles = StyleSheet.create({
   },
   locationBannerLeft: {
     flex: 1,
-    paddingRight: 10,
+    paddingRight: 12,
   },
   locationBannerText: {
-    color: '#FFFFFF',
+    color: '#F8FAFC',
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '500',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   locationBannerButton: {
     alignSelf: 'flex-start',
-    borderWidth: 1.5,
-    borderColor: '#FFFFFF',
-    borderRadius: 4,
+    backgroundColor: '#D9480F',
+    borderRadius: 6,
     paddingHorizontal: 14,
-    paddingVertical: 6,
+    paddingVertical: 7,
   },
   locationBannerBtnText: {
     color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '700',
+    letterSpacing: 0.2,
   },
   locationBannerGraphic: {
-    opacity: 0.85,
-    marginLeft: 6,
+    marginLeft: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  locationIconCircle: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 3,
   },
 });

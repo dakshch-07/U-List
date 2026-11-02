@@ -158,20 +158,26 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             <View style={styles.header}>
               {/* Row 1: Location & Brand Actions */}
               <View style={styles.topRow}>
-                {/* Left: Location dropdown */}
-                <TouchableOpacity style={styles.citySelector} onPress={() => navigation.navigate('CityPicker')}>
-                  <MaterialCommunityIcons name="map-marker" size={18} color={theme.colors.primary} />
-                  <Text style={styles.cityName} numberOfLines={1}>
-                    {selectedCity}
-                  </Text>
-                  <MaterialCommunityIcons name="chevron-down" size={16} color={theme.colors.text} />
-                </TouchableOpacity>
+                {/* Left Group: Location dropdown & Tagline Badge */}
+                <View style={styles.topLeftGroup}>
+                  <TouchableOpacity
+                    style={styles.citySelector}
+                    onPress={() => navigation.navigate('CityPicker')}
+                    activeOpacity={0.7}
+                  >
+                    <MaterialCommunityIcons name="map-marker" size={17} color={theme.colors.primary} />
+                    <Text style={styles.cityName} numberOfLines={1} ellipsizeMode="tail">
+                      {selectedCity}
+                    </Text>
+                    <MaterialCommunityIcons name="chevron-down" size={15} color={theme.colors.text} />
+                  </TouchableOpacity>
 
-                {/* Tagline Badge placed comfortably in Row 1 or centered */}
-                <View style={styles.taglineBadge}>
-                  <Text style={styles.taglineText} numberOfLines={1}>
-                    List It. Sell It. Cash It!
-                  </Text>
+                  {/* Tagline Badge: Guaranteed full text visibility without ellipsis */}
+                  <View style={styles.taglineBadge}>
+                    <Text style={styles.taglineText}>
+                      List It. Sell It. Cash It!
+                    </Text>
+                  </View>
                 </View>
 
                 {/* Right: Wishlist Heart, Notifications Bell, Brand Logo */}
@@ -336,12 +342,18 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 8,
   },
+  topLeftGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 6,
+  },
   citySelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    maxWidth: '35%',
-    flexShrink: 0,
-    marginRight: 4,
+    maxWidth: 120,
+    flexShrink: 1,
+    marginRight: 6,
   },
   cityName: {
     fontSize: 13,
@@ -354,13 +366,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#FED7AA',
     borderRadius: 12,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    flexShrink: 1,
-    marginHorizontal: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
+    flexShrink: 0,
   },
   taglineText: {
-    fontSize: 9.5,
+    fontSize: 10,
     fontWeight: '800',
     color: '#D9480F',
     letterSpacing: 0.1,
@@ -368,11 +379,10 @@ const styles = StyleSheet.create({
   topRightActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 0,
     flexShrink: 0,
   },
   headerIconButton: {
-    width: 24,
+    width: 26,
     height: 34,
     alignItems: 'center',
     justifyContent: 'center',

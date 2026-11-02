@@ -44,7 +44,7 @@ function BottomTabs() {
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.secondaryText,
         tabBarStyle: {
-          height: 52,
+          height: 56,
           backgroundColor: theme.colors.background,
           borderTopWidth: 1,
           borderTopColor: '#EBEBEB',
@@ -54,7 +54,7 @@ function BottomTabs() {
           justifyContent: 'center',
           alignItems: 'center',
           height: 60,
-          marginTop: -8,
+          marginTop: -4,
           overflow: 'visible',
         },
         tabBarLabelStyle: {

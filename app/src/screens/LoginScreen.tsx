@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Image } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
+import { storage } from '../utils/storage';
 import { api } from '../services/api';
 import { theme } from '../theme';
 import { useAuthStore } from '../store/authStore';
@@ -79,14 +79,9 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       const { user, accessToken, refreshToken } = res.data.data;
 
       try {
-        await SecureStore.setItemAsync('ulist_access_token', accessToken);
-        await SecureStore.setItemAsync('ulist_refresh_token', refreshToken);
-      } catch (e) {
-        if (typeof localStorage !== 'undefined') {
-          localStorage.setItem('ulist_access_token', accessToken);
-          localStorage.setItem('ulist_refresh_token', refreshToken);
-        }
-      }
+        await storage.setItem('ulist_access_token', accessToken);
+        await storage.setItem('ulist_refresh_token', refreshToken);
+      } catch (e) {}
 
       setUser(user);
 

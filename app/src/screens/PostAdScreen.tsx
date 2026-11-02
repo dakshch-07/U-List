@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, Image, Platform, BackHandler } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
-import * as SecureStore from 'expo-secure-store';
+import { storage } from '../utils/storage';
 import { api } from '../services/api';
 import { theme } from '../theme';
 import { useAuthStore } from '../store/authStore';
@@ -50,27 +50,18 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     }
   }, [selectedCity]);
 
-  // Safe local storage helpers for Web & Mobile
+  // Safe storage helpers for Web & Mobile
   const clearDraft = async () => {
     try {
-      if (typeof localStorage !== 'undefined') {
-        localStorage.removeItem('ulist_ad_draft');
-      }
-      await SecureStore.deleteItemAsync('ulist_ad_draft');
+      await storage.deleteItem('ulist_ad_draft');
     } catch {}
   };
 
-  // Auto-restore draft from local storage if session expired or page reloaded
+  // Auto-restore draft from storage if session expired or page reloaded
   React.useEffect(() => {
     (async () => {
       try {
-        let savedDraft = '';
-        if (typeof localStorage !== 'undefined') {
-          savedDraft = localStorage.getItem('ulist_ad_draft') || '';
-        }
-        if (!savedDraft) {
-          savedDraft = (await SecureStore.getItemAsync('ulist_ad_draft')) || '';
-        }
+        const savedDraft = await storage.getItem('ulist_ad_draft');
         if (savedDraft) {
           const d = JSON.parse(savedDraft);
           if (d.title) setTitle(d.title);
@@ -87,10 +78,7 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   React.useEffect(() => {
     if (title || description || price || locality) {
       const draftStr = JSON.stringify({ title, description, price, locality, dynamicAttrs });
-      if (typeof localStorage !== 'undefined') {
-        localStorage.setItem('ulist_ad_draft', draftStr);
-      }
-      SecureStore.setItemAsync('ulist_ad_draft', draftStr).catch(() => {});
+      storage.setItem('ulist_ad_draft', draftStr).catch(() => {});
     }
   }, [title, description, price, locality, dynamicAttrs]);
 

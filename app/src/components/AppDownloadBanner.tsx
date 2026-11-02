@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform, Linking, Image } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import * as SecureStore from 'expo-secure-store';
+import { storage } from '../utils/storage';
 import { theme } from '../theme';
 
 export const AppDownloadBanner: React.FC = () => {
@@ -13,12 +13,7 @@ export const AppDownloadBanner: React.FC = () => {
 
     (async () => {
       try {
-        let dismissed = '';
-        if (typeof localStorage !== 'undefined') {
-          dismissed = localStorage.getItem('ulist_dismiss_download_banner') || '';
-        } else {
-          dismissed = (await SecureStore.getItemAsync('ulist_dismiss_download_banner')) || '';
-        }
+        const dismissed = await storage.getItem('ulist_dismiss_download_banner');
         if (!dismissed) {
           setVisible(true);
         }
@@ -31,10 +26,7 @@ export const AppDownloadBanner: React.FC = () => {
   const handleDismiss = async () => {
     setVisible(false);
     try {
-      if (typeof localStorage !== 'undefined') {
-        localStorage.setItem('ulist_dismiss_download_banner', 'true');
-      }
-      await SecureStore.setItemAsync('ulist_dismiss_download_banner', 'true');
+      await storage.setItem('ulist_dismiss_download_banner', 'true');
     } catch {}
   };
 

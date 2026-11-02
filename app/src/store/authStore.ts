@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import * as SecureStore from 'expo-secure-store';
+import { storage } from '../utils/storage';
 import { api } from '../services/api';
 import { LanguageCode } from '../utils/translations';
 
@@ -33,14 +33,14 @@ export const useAuthStore = create<AuthState>((set) => ({
   setLanguage: async (lang) => {
     set({ language: lang });
     try {
-      await SecureStore.setItemAsync('ulist_user_language', lang);
+      await storage.setItem('ulist_user_language', lang);
     } catch {}
   },
 
   setCity: async (city) => {
     set({ selectedCity: city });
     try {
-      await SecureStore.setItemAsync('ulist_user_city', city);
+      await storage.setItem('ulist_user_city', city);
     } catch {}
   },
 
@@ -48,25 +48,25 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: async () => {
     try {
-      await SecureStore.deleteItemAsync('ulist_access_token');
-      await SecureStore.deleteItemAsync('ulist_refresh_token');
+      await storage.deleteItem('ulist_access_token');
+      await storage.deleteItem('ulist_refresh_token');
     } catch {}
     set({ user: null });
   },
 
   initializeAuth: async () => {
     try {
-      const savedLanguage = await SecureStore.getItemAsync('ulist_user_language');
+      const savedLanguage = await storage.getItem('ulist_user_language');
       if (savedLanguage === 'en' || savedLanguage === 'hi') {
         set({ language: savedLanguage });
       }
 
-      const savedCity = await SecureStore.getItemAsync('ulist_user_city');
+      const savedCity = await storage.getItem('ulist_user_city');
       if (savedCity) {
         set({ selectedCity: savedCity });
       }
 
-      const token = await SecureStore.getItemAsync('ulist_access_token');
+      const token = await storage.getItem('ulist_access_token');
       if (token) {
         const res = await api.get('/users/me');
         if (res.data.success) {

@@ -195,18 +195,6 @@ export const ContactUsScreen: React.FC<{ navigation: any }> = ({ navigation }) =
                 <Text style={styles.sendBtnText}>SEND</Text>
               )}
             </TouchableOpacity>
-
-            {/* Quick Helpline Support Footer */}
-            <View style={styles.supportFooter}>
-              <View style={styles.supportItem}>
-                <MaterialCommunityIcons name="phone" size={18} color={theme.colors.primary} />
-                <Text style={styles.supportText}>Helpline: 1800 123 456</Text>
-              </View>
-              <View style={styles.supportItem}>
-                <MaterialCommunityIcons name="email-outline" size={18} color={theme.colors.primary} />
-                <Text style={styles.supportText}>support@ulist.in</Text>
-              </View>
-            </View>
           </View>
         )}
       </ScrollView>

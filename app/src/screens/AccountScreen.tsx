@@ -1,12 +1,42 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Linking, Share, Platform } from 'react-native';
 import { theme } from '../theme';
 import { useAuthStore } from '../store/authStore';
 import { api } from '../services/api';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { translations } from '../utils/translations';
 
 export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const { user, logout } = useAuthStore();
+  const { user, logout, language } = useAuthStore();
+  const t = translations[language] || translations.en;
+
+  const handleInviteFriends = async () => {
+    try {
+      const shareUrl = 'https://u-list-app.vercel.app';
+      const message = `Check out Ulist - Buy and Sell anything near you with ease! Download or visit: ${shareUrl}`;
+      if (Platform.OS === 'web' && typeof navigator !== 'undefined' && (navigator as any).share) {
+        await (navigator as any).share({
+          title: 'Ulist - List It. Sell It. Cash It!',
+          text: message,
+          url: shareUrl,
+        });
+      } else if (Platform.OS === 'web') {
+        if (typeof navigator !== 'undefined' && navigator.clipboard) {
+          await navigator.clipboard.writeText(`${message}`);
+          Alert.alert('Link Copied', 'Invite link copied to clipboard!');
+        } else {
+          Alert.alert('Invite Link', shareUrl);
+        }
+      } else {
+        await Share.share({
+          message,
+          title: 'Ulist - List It. Sell It. Cash It!',
+        });
+      }
+    } catch {
+      // User cancelled share
+    }
+  };
 
   const handleDeleteAccount = () => {
     Alert.alert(
@@ -47,13 +77,13 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
             </>
           ) : (
             <>
-              <Text style={styles.name}>Welcome to Ulist</Text>
-              <Text style={styles.email}>Log in to manage ads and chat</Text>
+              <Text style={styles.name}>{t.welcomeToUlist}</Text>
+              <Text style={styles.email}>{t.loginSubtitle}</Text>
               <TouchableOpacity
                 style={styles.loginBtn}
                 onPress={() => navigation.navigate('Login')}
               >
-                <Text style={styles.loginBtnText}>Log In / Register</Text>
+                <Text style={styles.loginBtnText}>{t.loginRegister}</Text>
               </TouchableOpacity>
             </>
           )}
@@ -67,7 +97,7 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
           onPress={() => navigation.navigate('MyAdsTab')}
         >
           <MaterialCommunityIcons name="tag-outline" size={22} color={theme.colors.text} />
-          <Text style={styles.menuText}>My Ads</Text>
+          <Text style={styles.menuText}>{t.myAds}</Text>
           <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.secondaryText} />
         </TouchableOpacity>
 
@@ -76,7 +106,7 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
           onPress={() => navigation.navigate('Favorites')}
         >
           <MaterialCommunityIcons name="heart-outline" size={22} color={theme.colors.text} />
-          <Text style={styles.menuText}>Favourites</Text>
+          <Text style={styles.menuText}>{t.favourites}</Text>
           <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.secondaryText} />
         </TouchableOpacity>
 
@@ -85,7 +115,37 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
           onPress={() => navigation.navigate('ContactUs')}
         >
           <MaterialCommunityIcons name="headset" size={22} color={theme.colors.text} />
-          <Text style={styles.menuText}>Help & Contact Us</Text>
+          <Text style={styles.menuText}>{t.helpAndSupport}</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.secondaryText} />
+        </TouchableOpacity>
+
+        {/* Invite friends to Ulist (OLX-style item) */}
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={handleInviteFriends}
+          activeOpacity={0.7}
+        >
+          <MaterialCommunityIcons name="account-multiple-plus-outline" size={22} color={theme.colors.text} />
+          <View style={styles.menuItemStacked}>
+            <Text style={styles.menuTextStacked}>{t.inviteFriends}</Text>
+            <Text style={styles.menuSubtextStacked}>{t.inviteSubtitle}</Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.secondaryText} />
+        </TouchableOpacity>
+
+        {/* Language Selection Option */}
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => navigation.navigate('Language')}
+          activeOpacity={0.7}
+        >
+          <MaterialCommunityIcons name="translate" size={22} color={theme.colors.text} />
+          <View style={styles.menuItemStacked}>
+            <Text style={styles.menuTextStacked}>{t.selectLanguage}</Text>
+            <Text style={styles.menuSubtextStacked}>
+              {language === 'hi' ? 'हिंदी (Hindi)' : 'English'}
+            </Text>
+          </View>
           <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.secondaryText} />
         </TouchableOpacity>
 
@@ -94,7 +154,7 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
           onPress={() => Linking.openURL('https://u-list-api.onrender.com/privacy')}
         >
           <MaterialCommunityIcons name="shield-check-outline" size={22} color={theme.colors.text} />
-          <Text style={styles.menuText}>Privacy Policy</Text>
+          <Text style={styles.menuText}>{t.privacyPolicy}</Text>
           <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.secondaryText} />
         </TouchableOpacity>
 
@@ -103,7 +163,7 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
           onPress={() => Linking.openURL('https://u-list-api.onrender.com/terms')}
         >
           <MaterialCommunityIcons name="file-document-outline" size={22} color={theme.colors.text} />
-          <Text style={styles.menuText}>Terms of Service</Text>
+          <Text style={styles.menuText}>{t.termsOfService}</Text>
           <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.secondaryText} />
         </TouchableOpacity>
 
@@ -112,7 +172,7 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
           onPress={() => navigation.navigate('AboutUs')}
         >
           <MaterialCommunityIcons name="information-outline" size={22} color={theme.colors.text} />
-          <Text style={styles.menuText}>About Us</Text>
+          <Text style={styles.menuText}>{t.aboutUs}</Text>
           <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.secondaryText} />
         </TouchableOpacity>
 
@@ -120,12 +180,12 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
           <>
             <TouchableOpacity style={styles.menuItem} onPress={logout}>
               <MaterialCommunityIcons name="logout" size={22} color={theme.colors.error} />
-              <Text style={[styles.menuText, { color: theme.colors.error }]}>Log Out</Text>
+              <Text style={[styles.menuText, { color: theme.colors.error }]}>{t.logOut}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.menuItem} onPress={handleDeleteAccount}>
               <MaterialCommunityIcons name="delete-forever-outline" size={22} color={theme.colors.error} />
-              <Text style={[styles.menuText, { color: theme.colors.error }]}>Delete Account</Text>
+              <Text style={[styles.menuText, { color: theme.colors.error }]}>{t.deleteAccount}</Text>
             </TouchableOpacity>
           </>
         )}
@@ -200,5 +260,19 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.size.body,
     fontWeight: theme.typography.weight.medium,
     color: theme.colors.text,
+  },
+  menuItemStacked: {
+    flex: 1,
+    marginLeft: 14,
+  },
+  menuTextStacked: {
+    fontSize: theme.typography.size.body,
+    fontWeight: theme.typography.weight.medium,
+    color: theme.colors.text,
+  },
+  menuSubtextStacked: {
+    fontSize: theme.typography.size.caption,
+    color: theme.colors.secondaryText,
+    marginTop: 2,
   },
 });

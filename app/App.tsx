@@ -23,13 +23,18 @@ import { FavoritesScreen } from './src/screens/FavoritesScreen';
 import { SellerProfileScreen } from './src/screens/SellerProfileScreen';
 import { ContactUsScreen } from './src/screens/ContactUsScreen';
 import { AboutUsScreen } from './src/screens/AboutUsScreen';
+import { LanguageScreen } from './src/screens/LanguageScreen';
 import { OfflineNotice } from './src/components/OfflineNotice';
+import { translations } from './src/utils/translations';
 
 const queryClient = new QueryClient();
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function BottomTabs() {
+  const { language } = useAuthStore();
+  const t = translations[language] || translations.en;
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -37,12 +42,12 @@ function BottomTabs() {
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.secondaryText,
         tabBarStyle: {
-          height: 64,
-          paddingTop: 8,
-          paddingBottom: 8,
+          height: 60,
+          paddingTop: 6,
+          paddingBottom: 6,
           backgroundColor: theme.colors.background,
           borderTopWidth: 1,
-          borderTopColor: theme.colors.border,
+          borderTopColor: '#EBEBEB',
           boxSizing: 'content-box',
         },
         tabBarItemStyle: {
@@ -63,7 +68,7 @@ function BottomTabs() {
         name="HomeTab"
         component={HomeScreen}
         options={{
-          tabBarLabel: 'Home',
+          tabBarLabel: t.home,
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons name="home-outline" color={color} size={24} />
           ),
@@ -73,7 +78,7 @@ function BottomTabs() {
         name="ChatsTab"
         component={ChatsScreen}
         options={{
-          tabBarLabel: 'Chats',
+          tabBarLabel: t.chats,
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons name="chat-outline" color={color} size={24} />
           ),
@@ -83,10 +88,12 @@ function BottomTabs() {
         name="SellTab"
         component={PostAdScreen}
         options={{
-          tabBarLabel: 'Sell',
+          tabBarLabel: t.sell,
           tabBarIcon: () => (
-            <View style={styles.sellButton}>
-              <MaterialCommunityIcons name="currency-inr" color="#FFFFFF" size={26} />
+            <View style={styles.sellButtonWrapper}>
+              <View style={styles.sellButton}>
+                <MaterialCommunityIcons name="currency-inr" color="#FFFFFF" size={26} />
+              </View>
             </View>
           ),
         }}
@@ -95,7 +102,7 @@ function BottomTabs() {
         name="MyAdsTab"
         component={MyAdsScreen}
         options={{
-          tabBarLabel: 'My Ads',
+          tabBarLabel: t.myAds,
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons name="heart-outline" color={color} size={24} />
           ),
@@ -105,7 +112,7 @@ function BottomTabs() {
         name="AccountTab"
         component={AccountScreen}
         options={{
-          tabBarLabel: 'Account',
+          tabBarLabel: t.account,
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons name="account-outline" color={color} size={24} />
           ),
@@ -201,6 +208,14 @@ export default function App() {
             component={AboutUsScreen}
             options={{ title: 'About Us' }}
           />
+          <Stack.Screen
+            name="Language"
+            component={LanguageScreen}
+            options={{
+              title: 'भाषा चुनें / SELECT LANGUAGE',
+              headerTitleStyle: { fontWeight: '700', fontSize: 16 },
+            }}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </QueryClientProvider>
@@ -208,6 +223,10 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  sellButtonWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   sellButton: {
     width: 52,
     height: 52,
@@ -215,14 +234,16 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: -26,
+    // Lowered so the top border of the bottom nav cuts across the exact equator (midpoint) of the circle:
+    // With 52 height, half is 26px above the tab bar top edge.
+    marginTop: -28,
     marginBottom: 0,
-    elevation: 6,
+    elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.25,
     shadowRadius: 4,
-    borderWidth: 3,
+    borderWidth: 3.5,
     borderColor: '#FFFFFF',
   },
 });

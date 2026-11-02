@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
 import { api } from '../services/api';
+import { LanguageCode } from '../utils/translations';
 
 interface User {
   _id: string;
@@ -14,8 +15,10 @@ interface User {
 interface AuthState {
   user: User | null;
   selectedCity: string;
+  language: LanguageCode;
   isLoading: boolean;
   setCity: (city: string) => void;
+  setLanguage: (lang: LanguageCode) => void;
   setUser: (user: User | null) => void;
   logout: () => Promise<void>;
   initializeAuth: () => Promise<void>;
@@ -24,7 +27,15 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   selectedCity: 'India',
+  language: 'en',
   isLoading: true,
+
+  setLanguage: async (lang) => {
+    set({ language: lang });
+    try {
+      await SecureStore.setItemAsync('ulist_user_language', lang);
+    } catch {}
+  },
 
   setCity: async (city) => {
     set({ selectedCity: city });
@@ -45,6 +56,11 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   initializeAuth: async () => {
     try {
+      const savedLanguage = await SecureStore.getItemAsync('ulist_user_language');
+      if (savedLanguage === 'en' || savedLanguage === 'hi') {
+        set({ language: savedLanguage });
+      }
+
       const savedCity = await SecureStore.getItemAsync('ulist_user_city');
       if (savedCity) {
         set({ selectedCity: savedCity });

@@ -11,6 +11,7 @@ import { useAuthStore } from '../store/authStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppDownloadBanner } from '../components/AppDownloadBanner';
 import { getRecentSearches, clearRecentSearches } from '../services/recentSearches';
+import { translations } from '../utils/translations';
 
 // Realistic Indian 3D product category images matching OLX India style
 const CATEGORY_IMAGES: Record<string, string> = {
@@ -29,7 +30,8 @@ const CATEGORY_IMAGES: Record<string, string> = {
 };
 
 export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const { selectedCity, setCity } = useAuthStore();
+  const { selectedCity, setCity, language } = useAuthStore();
+  const t = translations[language] || translations.en;
   const [refreshing, setRefreshing] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [showLocationPrompt, setShowLocationPrompt] = useState(true);
@@ -208,14 +210,14 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   onPress={() => navigation.navigate('Search')}
                 >
                   <MaterialCommunityIcons name="magnify" size={20} color={theme.colors.secondaryText} />
-                  <Text style={styles.searchPlaceholder} numberOfLines={1}>Find Cars, Mobile Phones and more...</Text>
+                  <Text style={styles.searchPlaceholder} numberOfLines={1}>{t.searchPlaceholder}</Text>
                 </TouchableOpacity>
               </View>
             </View>
 
             {/* Categories 4-Column Grid */}
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Browse Categories</Text>
+              <Text style={styles.sectionTitle}>{t.browseCategories}</Text>
             </View>
             <View style={styles.categoriesGrid}>
               {categories.slice(0, 12).map((cat: any) => {
@@ -258,7 +260,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
                 <View style={styles.locationBannerLeft}>
                   <Text style={styles.locationBannerText}>
-                    Want better recommendations? Turn on your location & we'll show ads nearby.
+                    {t.wantBetterRecommendations}
                   </Text>
                   <TouchableOpacity
                     style={styles.locationBannerButton}
@@ -267,7 +269,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                     activeOpacity={0.85}
                   >
                     <Text style={styles.locationBannerBtnText}>
-                      {locating ? 'Detecting...' : 'Turn on location'}
+                      {locating ? t.detecting : t.turnOnLocation}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -282,7 +284,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
             {/* Fresh Recommendations Header */}
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Fresh recommendations</Text>
+              <Text style={styles.sectionTitle}>{t.freshRecommendations}</Text>
             </View>
 
             {isFetching && ads.length === 0 && (

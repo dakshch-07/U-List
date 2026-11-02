@@ -151,7 +151,7 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
 
         <TouchableOpacity
           style={styles.menuItem}
-          onPress={() => Linking.openURL('https://u-list-api.onrender.com/privacy')}
+          onPress={() => navigation.navigate('PrivacyPolicy')}
         >
           <MaterialCommunityIcons name="shield-check-outline" size={22} color={theme.colors.text} />
           <Text style={styles.menuText}>{t.privacyPolicy}</Text>

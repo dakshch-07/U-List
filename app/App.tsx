@@ -24,6 +24,7 @@ import { SellerProfileScreen } from './src/screens/SellerProfileScreen';
 import { ContactUsScreen } from './src/screens/ContactUsScreen';
 import { AboutUsScreen } from './src/screens/AboutUsScreen';
 import { PrivacyPolicyScreen } from './src/screens/PrivacyPolicyScreen';
+import { TermsOfServiceScreen } from './src/screens/TermsOfServiceScreen';
 import { LanguageScreen } from './src/screens/LanguageScreen';
 import { OfflineNotice } from './src/components/OfflineNotice';
 import { translations } from './src/utils/translations';
@@ -213,6 +214,11 @@ export default function App() {
             name="PrivacyPolicy"
             component={PrivacyPolicyScreen}
             options={{ title: 'Privacy Policy' }}
+          />
+          <Stack.Screen
+            name="TermsOfService"
+            component={TermsOfServiceScreen}
+            options={{ title: 'Terms of Service' }}
           />
           <Stack.Screen
             name="Language"

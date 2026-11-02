@@ -294,10 +294,191 @@ app.get('/terms', (_req, res) => {
   res.send(`
     <!DOCTYPE html>
     <html lang="en">
-    <head><meta charset="UTF-8"><title>Ulist - Terms of Service</title><style>body{font-family:system-ui,-apple-system,sans-serif;max-width:800px;margin:40px auto;line-height:1.6;padding:0 20px;color:#1b1b1b;}</style></head>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>ULIST – BY WISHCRAFT | TERMS OF SERVICE & CONDITIONS OF USE</title>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 840px; margin: 30px auto; line-height: 1.7; padding: 0 20px; color: #1f2937; }
+        .header { border-bottom: 2px solid #D9480F; padding-bottom: 16px; margin-bottom: 24px; }
+        .brand { font-size: 14px; font-weight: 800; color: #D9480F; letter-spacing: 1.5px; }
+        h1 { font-size: 26px; font-weight: 800; color: #111827; margin: 6px 0; }
+        .meta { font-size: 13px; color: #6b7280; font-weight: 500; }
+        h2 { font-size: 17px; font-weight: 700; color: #0F2942; margin-top: 28px; margin-bottom: 8px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
+        h3 { font-size: 15px; font-weight: 600; color: #374151; margin-top: 14px; margin-bottom: 4px; }
+        p { font-size: 14px; margin: 8px 0; color: #374151; }
+        ul { margin: 6px 0 12px 20px; padding: 0; }
+        li { font-size: 14px; color: #4b5563; margin-bottom: 4px; }
+        .highlight { font-weight: 700; color: #D9480F; }
+        .bold { font-weight: 700; }
+        .contact-box { background: #f8fafc; border-left: 4px solid #0F2942; padding: 14px 18px; border-radius: 6px; margin-top: 12px; }
+        .disclaimer-box { background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 8px; padding: 20px; margin-top: 36px; }
+        .disclaimer-title { font-size: 17px; font-weight: 800; color: #b45309; margin-bottom: 6px; }
+        .disclaimer-box ol { margin: 0 0 14px 20px; padding: 0; }
+        .disclaimer-box li { font-size: 13px; color: #78350f; line-height: 1.6; margin-bottom: 8px; }
+        .footer-brand { text-align: center; margin-top: 24px; padding-top: 14px; border-top: 1px solid #fde68a; }
+        .footer-brand h4 { margin: 0; font-size: 16px; color: #0F2942; font-weight: 800; }
+        .footer-brand p { margin: 4px 0 0; font-size: 14px; color: #D9480F; font-weight: 700; }
+        .footer-brand small { display: block; font-size: 12px; color: #6b7280; font-style: italic; margin-top: 2px; }
+      </style>
+    </head>
     <body>
-      <h1>Terms & Conditions</h1>
-      <p>By registering on Ulist, you agree not to post fraudulent listings, illegal substances, or infringing intellectual property. Violators will face immediate profile suspension.</p>
+      <div class="header">
+        <div class="brand">ULIST – BY WISHCRAFT</div>
+        <h1>TERMS OF SERVICE & CONDITIONS OF USE</h1>
+        <div class="meta"><strong>Effective Date:</strong> 2 November 2026 | <strong>Last Updated:</strong> 2 November 2026</div>
+      </div>
+
+      <h2>1. ABOUT ULIST</h2>
+      <p>ULIST is a digital classified advertisements and product-listing platform operated under the brand name <strong>ULIST – by WishCraft</strong> ("ULIST", "we", "our" or "us").</p>
+      <p>ULIST provides an online platform where independent individuals, sellers, buyers and businesses can list, discover, advertise, buy, sell and connect regarding new, used, pre-owned, old, unused, surplus or extra products.</p>
+      <p>ULIST primarily acts as a platform facilitating connections between independent advertisers and interested buyers.</p>
+      <p class="highlight">ULIST IS NOT THE OWNER, SELLER, MANUFACTURER, DISTRIBUTOR, BROKER OR GUARANTOR OF PRODUCTS LISTED BY INDEPENDENT USERS.</p>
+      <p>By accessing, registering or using ULIST, you acknowledge that you have read, understood and agreed to these Terms of Service.</p>
+
+      <h2>2. ACCEPTANCE OF TERMS</h2>
+      <p>By using ULIST, you agree:</p>
+      <ul>
+        <li>To comply with these Terms of Service.</li>
+        <li>To provide accurate information during registration.</li>
+        <li>To use the platform only for lawful purposes.</li>
+        <li>To respect the rights of other users.</li>
+        <li>Not to misuse the platform for fraudulent or misleading activities.</li>
+        <li>To comply with all applicable Indian laws and regulations.</li>
+      </ul>
+      <p>If you do not agree with these terms, you must discontinue using ULIST.</p>
+
+      <h2>3. ROLE OF ULIST – A PLATFORM FOR INDEPENDENT ADVERTISEMENTS</h2>
+      <p>ULIST provides a digital space where independent individuals and businesses can publish product advertisements and connect with potential buyers.</p>
+      <p>All advertisements are independently created and submitted by users.</p>
+      <p><strong>ULIST does not:</strong></p>
+      <ul>
+        <li>Own or possess the products advertised.</li>
+        <li>Purchase or resell products listed by users.</li>
+        <li>Guarantee the identity or credibility of every advertiser.</li>
+        <li>Independently verify ownership of every advertised product.</li>
+        <li>Guarantee product quality, condition, authenticity or functionality.</li>
+        <li>Guarantee advertised prices or product availability.</li>
+        <li>Participate in negotiations between buyers and sellers.</li>
+        <li>Guarantee the successful completion of any transaction.</li>
+        <li>Provide warranties or after-sales services for independently advertised products.</li>
+      </ul>
+      <p>The appearance of an advertisement on ULIST does not mean that ULIST has inspected, approved, certified or endorsed the product or advertiser.</p>
+
+      <h2>4. INDEPENDENT ADVERTISER RESPONSIBILITIES</h2>
+      <p>Every individual or business posting an advertisement on ULIST is solely responsible for the advertisement and the product being offered.</p>
+      <p><strong>Advertisers must ensure that:</strong></p>
+      <ol>
+        <li>They have the legal right and authority to advertise and sell the product.</li>
+        <li>Product descriptions are accurate and not misleading.</li>
+        <li>Photographs and videos genuinely represent the advertised product.</li>
+        <li>The stated price and product availability are accurate.</li>
+        <li>Products are not stolen, counterfeit, prohibited or unlawfully obtained.</li>
+        <li>Advertisements comply with applicable laws.</li>
+        <li>They do not misuse another person's personal information, photographs or intellectual property.</li>
+      </ol>
+      <p>Advertisers shall be responsible for any claims, disputes, losses or legal proceedings arising from their advertisements or transactions. ULIST reserves the right to remove, restrict or suspend advertisements that violate its policies or applicable law.</p>
+
+      <h2>5. BUYER RESPONSIBILITIES</h2>
+      <p>Buyers using ULIST must exercise independent judgment and conduct appropriate checks before entering into any transaction.</p>
+      <p><strong>Buyers are advised to:</strong></p>
+      <ul>
+        <li>Verify the seller's identity and contact information.</li>
+        <li>Personally inspect products wherever practical.</li>
+        <li>Check product condition, authenticity and ownership.</li>
+        <li>Verify all product specifications and descriptions.</li>
+        <li>Agree on the final price and payment terms directly with the seller.</li>
+        <li>Obtain appropriate proof of payment and transaction documentation.</li>
+        <li>Avoid sharing OTPs, passwords, banking credentials or confidential information.</li>
+        <li>Avoid making advance payments to unknown individuals without appropriate verification.</li>
+      </ul>
+      <p>Buyers acknowledge that any purchase or transaction with an independent advertiser is undertaken at their own discretion and risk.</p>
+
+      <h2>6. TRANSACTIONS BETWEEN BUYERS AND SELLERS</h2>
+      <p>All negotiations, agreements, payments, product inspections, collections, deliveries and other transaction-related arrangements are strictly between the buyer and the independent advertiser.</p>
+      <p>ULIST is not a party to such transactions. Unless expressly introduced as a separate service with applicable terms, ULIST does not collect purchase money, act as an escrow, guarantee delivery, process refunds, or resolve private commercial disputes.</p>
+
+      <h2>7. PROHIBITED ADVERTISEMENTS AND ACTIVITIES</h2>
+      <p>Users shall not publish advertisements or engage in activities involving:</p>
+      <ul>
+        <li>Stolen or unlawfully obtained goods.</li>
+        <li>Counterfeit or imitation products represented as genuine.</li>
+        <li>Illegal or prohibited products, weapons, or explosives.</li>
+        <li>Narcotics or prohibited substances.</li>
+        <li>Fraudulent schemes or misleading offers.</li>
+        <li>Fake advertisements or impersonation.</li>
+        <li>Products infringing intellectual property rights.</li>
+        <li>Obscene, defamatory, threatening or unlawful content.</li>
+        <li>Any product or service prohibited under applicable Indian laws.</li>
+      </ul>
+
+      <h2>8. USER ACCOUNTS AND SECURITY</h2>
+      <p>Users are responsible for maintaining the confidentiality of their login credentials. Users must provide accurate registration details, protect accounts, and promptly notify ULIST of any unauthorised access.</p>
+
+      <h2>9. ADVERTISEMENT APPROVAL AND REMOVAL</h2>
+      <p>ULIST reserves the right to moderate the platform, remove prohibited advertisements, restrict misleading listings, and suspend accounts that repeatedly violate platform policies.</p>
+
+      <h2>10. FEES, PAID LISTINGS AND PROMOTIONAL SERVICES</h2>
+      <p>ULIST may introduce free and paid advertisement services, premium listings, featured advertisements, promotional packages or subscription-based services. Promotional visibility does not constitute product verification or endorsement.</p>
+
+      <h2>11. INTELLECTUAL PROPERTY RIGHTS</h2>
+      <p>The ULIST name, logo, branding, website design, and application interface are owned by or licensed to ULIST and/or WishCraft. Users may not copy or exploit these materials without prior written permission.</p>
+
+      <h2>12. THIRD-PARTY LINKS AND SERVICES</h2>
+      <p>ULIST may provide links to independent third-party services. ULIST is not responsible for the content, security, or practices of third-party platforms.</p>
+
+      <h2>13. LIMITATION OF LIABILITY</h2>
+      <p>To the maximum extent permitted by applicable law, ULIST, WishCraft and their respective personnel shall not be liable for losses, claims, damages or disputes arising from independent advertisements, defective products, buyer-seller disputes, or non-delivery.</p>
+      <p class="highlight">ULIST PROVIDES A PLATFORM FOR INDEPENDENT LISTINGS AND CONNECTIONS. IT DOES NOT GUARANTEE THE PERFORMANCE, CONDUCT OR TRANSACTIONAL COMMITMENTS OF INDEPENDENT USERS.</p>
+
+      <h2>14. INDEMNIFICATION</h2>
+      <p>Users agree to indemnify and hold harmless ULIST, WishCraft and their respective personnel against third-party claims, losses, damages and reasonable legal expenses arising from their unlawful advertisements, fraudulent transactions, or breach of these Terms.</p>
+
+      <h2>15. SUSPENSION AND TERMINATION</h2>
+      <p>ULIST reserves the right, subject to applicable law, to suspend or terminate user accounts and remove advertisements that violate policies.</p>
+
+      <h2>16. PLATFORM AVAILABILITY</h2>
+      <p>ULIST endeavours to maintain reliable platform services, though continuous and uninterrupted availability cannot be guaranteed.</p>
+
+      <h2>17. PRIVACY AND PERSONAL INFORMATION</h2>
+      <p>The collection, use, and processing of personal information are governed by the ULIST Privacy Policy in accordance with relevant Indian data protection laws.</p>
+
+      <h2>18. GRIEVANCE REDRESSAL AND COMPLAINTS</h2>
+      <p>Complaints and policy violations may be reported to:</p>
+      <div class="contact-box">
+        <strong>ULIST – by WishCraft</strong><br>
+        Website: <a href="https://u-list-app.vercel.app">https://u-list-app.vercel.app</a><br>
+        Email: <a href="mailto:support@ulist.in">support@ulist.in</a><br>
+        Platform: Digital Intermediary Classifieds & Marketplace
+      </div>
+
+      <h2>19. GOVERNING LAW AND JURISDICTION</h2>
+      <p>These Terms of Service shall be governed by the laws of India.</p>
+
+      <h2>20. CHANGES TO THESE TERMS</h2>
+      <p>ULIST reserves the right to revise or update these Terms from time to time. Continued use of ULIST following updates constitutes acceptance.</p>
+
+      <h2>21. SEVERABILITY & 22. ENTIRE AGREEMENT</h2>
+      <p>If any provision is held unenforceable, the remaining provisions remain valid. These Terms, together with the Privacy Policy and Disclaimer, constitute the entire agreement.</p>
+
+      <div class="disclaimer-box">
+        <div class="disclaimer-title">FINAL USER ACKNOWLEDGEMENT</div>
+        <p>By registering, accessing or using ULIST, you acknowledge and agree that:</p>
+        <ol>
+          <li>ULIST is a platform for independent advertisements and product listings.</li>
+          <li>Advertisements are posted by independent individuals and businesses.</li>
+          <li>Advertisers are responsible for the accuracy, legality and authenticity of their listings.</li>
+          <li>Buyers and sellers are responsible for independently verifying products and transaction details.</li>
+          <li>ULIST does not guarantee the quality, authenticity, ownership, availability or delivery of independently advertised products.</li>
+          <li>Transactions between buyers and sellers are conducted at their own discretion and risk.</li>
+          <li>Users must comply with these Terms of Service and applicable laws.</li>
+        </ol>
+        <div class="footer-brand">
+          <h4>ULIST – BY WISHCRAFT</h4>
+          <p>List It. Sell It. Cash It!</p>
+          <small>Your Unused Things. Someone's Next Favourite Find.</small>
+        </div>
+      </div>
     </body>
     </html>
   `);

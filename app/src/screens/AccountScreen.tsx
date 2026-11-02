@@ -160,7 +160,7 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
 
         <TouchableOpacity
           style={styles.menuItem}
-          onPress={() => Linking.openURL('https://u-list-api.onrender.com/terms')}
+          onPress={() => navigation.navigate('TermsOfService')}
         >
           <MaterialCommunityIcons name="file-document-outline" size={22} color={theme.colors.text} />
           <Text style={styles.menuText}>{t.termsOfService}</Text>

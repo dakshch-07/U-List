@@ -144,105 +144,6 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       {/* Top Banner on Web */}
       <AppDownloadBanner />
 
-      {/* Top Location and Brand Header matching OLX style */}
-      <View style={styles.header}>
-        <View style={styles.topRow}>
-          {/* Left: Location dropdown + Tagline */}
-          <View style={styles.locationTaglineCol}>
-            <TouchableOpacity style={styles.citySelector} onPress={() => navigation.navigate('CityPicker')}>
-              <MaterialCommunityIcons name="map-marker" size={17} color={theme.colors.primary} />
-              <Text style={styles.cityName} numberOfLines={1}>
-                {selectedCity}
-              </Text>
-              <MaterialCommunityIcons name="chevron-down" size={15} color={theme.colors.text} />
-            </TouchableOpacity>
-
-            <View style={styles.taglineBadge}>
-              <Text style={styles.taglineText} numberOfLines={1}>
-                List It. Sell It. Cash It!
-              </Text>
-            </View>
-          </View>
-
-          {/* Right: Wishlist Heart, Notifications Bell, Brand Logo */}
-          <View style={styles.topRightActions}>
-            <TouchableOpacity
-              style={styles.headerIconButton}
-              onPress={() => navigation.navigate('Favorites')}
-              accessibilityLabel="Wishlist"
-            >
-              <MaterialCommunityIcons name="heart-outline" size={20} color={theme.colors.text} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.headerIconButton}
-              onPress={() => alert('No new notifications')}
-              accessibilityLabel="Notifications"
-            >
-              <MaterialCommunityIcons name="bell-outline" size={20} color={theme.colors.text} />
-            </TouchableOpacity>
-
-            <View style={styles.brandContainer}>
-              <Image
-                source={require('../../assets/logo.png')}
-                style={styles.brandLogo}
-                resizeMode="contain"
-              />
-            </View>
-          </View>
-        </View>
-
-        {/* Search Bar Row below */}
-        <View style={styles.searchRow}>
-          <TouchableOpacity
-            style={styles.searchBar}
-            activeOpacity={0.9}
-            onPress={() => navigation.navigate('Search')}
-          >
-            <MaterialCommunityIcons name="magnify" size={20} color={theme.colors.secondaryText} />
-            <Text style={styles.searchPlaceholder} numberOfLines={1}>Find Cars, Mobile Phones and more...</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Recent Searches Horizontal Row */}
-        {recentSearches.length > 0 && (
-          <View style={styles.recentSearchesContainer}>
-            <View style={styles.recentSearchesHeader}>
-              <View style={styles.recentSearchesTitleRow}>
-                <MaterialCommunityIcons name="history" size={15} color={theme.colors.secondaryText} />
-                <Text style={styles.recentSearchesTitle}>Recent Searches</Text>
-              </View>
-              <TouchableOpacity
-                onPress={async () => {
-                  await clearRecentSearches();
-                  setRecentSearches([]);
-                }}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Text style={styles.recentClearText}>Clear</Text>
-              </TouchableOpacity>
-            </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.recentChipsScroll}
-            >
-              {recentSearches.map((item, idx) => (
-                <TouchableOpacity
-                  key={`${item}-${idx}`}
-                  style={styles.recentChip}
-                  activeOpacity={0.7}
-                  onPress={() => navigation.navigate('Search', { initialQuery: item })}
-                >
-                  <MaterialCommunityIcons name="magnify" size={13} color="#666" style={{ marginRight: 4 }} />
-                  <Text style={styles.recentChipText} numberOfLines={1}>{item}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        )}
-      </View>
-
       <FlatList
         data={ads}
         numColumns={2}
@@ -251,6 +152,67 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <>
+            {/* Top Location, Tagline, Icons and Brand Header inside ListHeaderComponent so it scrolls away naturally */}
+            <View style={styles.header}>
+              <View style={styles.topRow}>
+                {/* Left: Location dropdown + Tagline */}
+                <View style={styles.locationTaglineCol}>
+                  <TouchableOpacity style={styles.citySelector} onPress={() => navigation.navigate('CityPicker')}>
+                    <MaterialCommunityIcons name="map-marker" size={17} color={theme.colors.primary} />
+                    <Text style={styles.cityName} numberOfLines={1}>
+                      {selectedCity}
+                    </Text>
+                    <MaterialCommunityIcons name="chevron-down" size={15} color={theme.colors.text} />
+                  </TouchableOpacity>
+
+                  <View style={styles.taglineBadge}>
+                    <Text style={styles.taglineText} numberOfLines={1}>
+                      List It. Sell It. Cash It!
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Right: Wishlist Heart, Notifications Bell, Brand Logo */}
+                <View style={styles.topRightActions}>
+                  <TouchableOpacity
+                    style={styles.headerIconButton}
+                    onPress={() => navigation.navigate('Favorites')}
+                    accessibilityLabel="Wishlist"
+                  >
+                    <MaterialCommunityIcons name="heart-outline" size={20} color={theme.colors.text} />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.headerIconButton}
+                    onPress={() => alert('No new notifications')}
+                    accessibilityLabel="Notifications"
+                  >
+                    <MaterialCommunityIcons name="bell-outline" size={20} color={theme.colors.text} />
+                  </TouchableOpacity>
+
+                  <View style={styles.brandContainer}>
+                    <Image
+                      source={require('../../assets/logo.png')}
+                      style={styles.brandLogo}
+                      resizeMode="contain"
+                    />
+                  </View>
+                </View>
+              </View>
+
+              {/* Search Bar Row below */}
+              <View style={styles.searchRow}>
+                <TouchableOpacity
+                  style={styles.searchBar}
+                  activeOpacity={0.9}
+                  onPress={() => navigation.navigate('Search')}
+                >
+                  <MaterialCommunityIcons name="magnify" size={20} color={theme.colors.secondaryText} />
+                  <Text style={styles.searchPlaceholder} numberOfLines={1}>Find Cars, Mobile Phones and more...</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
             {/* Categories 4-Column Grid */}
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Browse Categories</Text>
@@ -359,11 +321,9 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   header: {
-    paddingHorizontal: 10,
-    paddingTop: 10,
+    paddingHorizontal: 8,
+    paddingTop: 4,
     paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
     backgroundColor: theme.colors.background,
   },
   topRow: {

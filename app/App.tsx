@@ -60,8 +60,9 @@ function BottomTabs() {
         tabBarLabelStyle: {
           fontSize: 11.4,
           fontWeight: '600',
-          lineHeight: 13.5,
-          paddingTop: 3,
+          lineHeight: 13,
+          paddingTop: 1,
+          marginTop: -1,
         },
       }}
     >
@@ -105,7 +106,7 @@ function BottomTabs() {
         options={{
           tabBarLabel: t.myAds,
           tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="heart-outline" color={color} size={22.5} />
+            <MaterialCommunityIcons name="format-list-bulleted" color={color} size={22.5} />
           ),
         }}
       />

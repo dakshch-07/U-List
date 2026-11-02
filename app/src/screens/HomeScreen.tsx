@@ -158,27 +158,18 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             <View style={styles.header}>
               {/* Row 1: Location & Brand Actions */}
               <View style={styles.topRow}>
-                {/* Left Group: Location dropdown & Tagline Badge */}
-                <View style={styles.topLeftGroup}>
-                  <TouchableOpacity
-                    style={styles.citySelector}
-                    onPress={() => navigation.navigate('CityPicker')}
-                    activeOpacity={0.7}
-                  >
-                    <MaterialCommunityIcons name="map-marker" size={17} color={theme.colors.primary} />
-                    <Text style={styles.cityName} numberOfLines={1} ellipsizeMode="tail">
-                      {selectedCity}
-                    </Text>
-                    <MaterialCommunityIcons name="chevron-down" size={15} color={theme.colors.text} />
-                  </TouchableOpacity>
-
-                  {/* Tagline Badge: Guaranteed full text visibility without ellipsis */}
-                  <View style={styles.taglineBadge}>
-                    <Text style={styles.taglineText}>
-                      List It. Sell It. Cash It!
-                    </Text>
-                  </View>
-                </View>
+                {/* Left: Location Dropdown with full city name visibility */}
+                <TouchableOpacity
+                  style={styles.citySelector}
+                  onPress={() => navigation.navigate('CityPicker')}
+                  activeOpacity={0.7}
+                >
+                  <MaterialCommunityIcons name="map-marker" size={18} color={theme.colors.primary} />
+                  <Text style={styles.cityName}>
+                    {selectedCity}
+                  </Text>
+                  <MaterialCommunityIcons name="chevron-down" size={16} color={theme.colors.text} />
+                </TouchableOpacity>
 
                 {/* Right: Wishlist Heart, Notifications Bell, Brand Logo */}
                 <View style={styles.topRightActions}>
@@ -342,23 +333,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 8,
   },
-  topLeftGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    marginRight: 6,
-  },
   citySelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    maxWidth: 120,
-    flexShrink: 1,
     marginRight: 6,
   },
   cityName: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: theme.typography.weight.bold,
-    marginHorizontal: 2,
+    marginHorizontal: 3,
     color: theme.colors.text,
   },
   taglineBadge: {

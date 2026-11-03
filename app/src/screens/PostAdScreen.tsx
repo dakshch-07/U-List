@@ -147,25 +147,37 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const activeMyAdsCount = myAds.filter((a: any) => a.status === 'active' || a.status === 'pending').length;
 
   const pickImage = async () => {
-    if (images.length >= 8) {
-      Alert.alert('Limit reached', 'You can upload up to 8 photos');
+    const remainingSlots = 8 - images.length;
+    if (remainingSlots <= 0) {
+      if (typeof window !== 'undefined' && window.alert) {
+        window.alert('Limit reached: You can upload up to 8 photos');
+      } else {
+        Alert.alert('Limit reached', 'You can upload up to 8 photos');
+      }
       return;
     }
 
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission required', 'Please grant photos permission to upload pictures');
+      if (typeof window !== 'undefined' && window.alert) {
+        window.alert('Permission required: Please grant photos permission to upload pictures');
+      } else {
+        Alert.alert('Permission required', 'Please grant photos permission to upload pictures');
+      }
       return;
     }
 
     const res = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsMultipleSelection: false,
+      allowsMultipleSelection: true,
+      selectionLimit: remainingSlots,
       quality: 0.7,
     });
 
     if (!res.canceled && res.assets && res.assets.length > 0) {
-      setImages([...images, res.assets[0].uri]);
+      const newUris = res.assets.map((asset) => asset.uri);
+      // Combine and cap at 8 images
+      setImages((prev) => [...prev, ...newUris].slice(0, 8));
     }
   };
 

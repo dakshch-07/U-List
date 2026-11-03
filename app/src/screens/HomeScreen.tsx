@@ -122,13 +122,23 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     },
   });
 
-  // Fresh ads query
+  // Fresh ads query (with fallback to All India if user city has no ads)
   const { data: adsData, refetch, isFetching } = useQuery({
     queryKey: ['ads', selectedCity],
     queryFn: async () => {
       const res = await api.get('/ads', {
         params: { city: selectedCity, limit: 20 },
       });
+      // If user selected a specific city and no ads were found, seamlessly load India-wide fresh recommendations
+      if ((!res.data.data?.items || res.data.data.items.length === 0) && selectedCity !== 'India' && selectedCity !== 'All India') {
+        const fallbackRes = await api.get('/ads', {
+          params: { city: 'All India', limit: 20 },
+        });
+        return {
+          ...fallbackRes.data.data,
+          isFallback: true,
+        };
+      }
       return res.data.data;
     },
   });

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { theme } from '../theme';
-import { formatINR, formatDateAgo } from '../utils/formatters';
+import { formatINR, formatDateAgo, getFullImageUrl } from '../utils/formatters';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface AdCardProps {
@@ -12,7 +12,7 @@ interface AdCardProps {
 }
 
 export const AdCard: React.FC<AdCardProps> = ({ ad, onPress, onFavoritePress, isFavorite }) => {
-  const imageUrl = ad.images && ad.images.length > 0 ? ad.images[0].url : 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=600&q=80';
+  const imageUrl = getFullImageUrl(ad.images && ad.images.length > 0 ? ad.images[0].url : undefined);
 
   return (
     <TouchableOpacity activeOpacity={0.8} style={styles.card} onPress={onPress}>

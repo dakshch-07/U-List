@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Share, Lin
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { theme } from '../theme';
-import { formatINR, formatDateAgo } from '../utils/formatters';
+import { formatINR, formatDateAgo, getFullImageUrl } from '../utils/formatters';
 import { useAuthStore } from '../store/authStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -121,6 +121,8 @@ export const AdDetailScreen: React.FC<{ route: any; navigation: any }> = ({ rout
     }
   };
 
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+
   if (isLoading || !ad) {
     return (
       <View style={styles.loading}>
@@ -129,14 +131,39 @@ export const AdDetailScreen: React.FC<{ route: any; navigation: any }> = ({ rout
     );
   }
 
-  const imageUrl = ad.images && ad.images.length > 0 ? ad.images[0].url : 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80';
+  const rawImages = ad.images && ad.images.length > 0 ? ad.images : [{ url: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80' }];
+  const currentImageUrl = getFullImageUrl(rawImages[activeImageIndex]?.url || rawImages[0]?.url);
 
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        {/* Cover Photo */}
+        {/* Cover Photo & Carousel */}
         <View style={styles.imageContainer}>
-          <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
+          <Image source={{ uri: currentImageUrl }} style={styles.image} resizeMode="cover" />
+
+          {/* Multiple Images Dots / Thumbnail Navigation */}
+          {rawImages.length > 1 && (
+            <View style={styles.imagePagination}>
+              {rawImages.map((_: any, idx: number) => (
+                <TouchableOpacity
+                  key={idx}
+                  onPress={() => setActiveImageIndex(idx)}
+                  style={[
+                    styles.paginationDot,
+                    activeImageIndex === idx && styles.paginationDotActive,
+                  ]}
+                />
+              ))}
+            </View>
+          )}
+
+          {rawImages.length > 1 && (
+            <View style={styles.imageBadgeCount}>
+              <MaterialCommunityIcons name="camera" size={12} color="#FFFFFF" />
+              <Text style={styles.imageBadgeText}>{activeImageIndex + 1}/{rawImages.length}</Text>
+            </View>
+          )}
+
           <View style={styles.topActions}>
             <TouchableOpacity
               style={styles.actionCircle}
@@ -359,6 +386,43 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: '100%',
+  },
+  imagePagination: {
+    position: 'absolute',
+    bottom: 12,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+  },
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+  },
+  paginationDotActive: {
+    width: 18,
+    backgroundColor: theme.colors.primary,
+  },
+  imageBadgeCount: {
+    position: 'absolute',
+    bottom: 12,
+    right: 14,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  imageBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
   },
   topActions: {
     position: 'absolute',

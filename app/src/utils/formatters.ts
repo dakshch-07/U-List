@@ -3,6 +3,21 @@ export const formatINR = (val?: number): string => {
   return '₹' + val.toLocaleString('en-IN');
 };
 
+const BACKEND_HOST = 'https://u-list-api.onrender.com';
+
+export const getFullImageUrl = (url?: string): string => {
+  if (!url) {
+    return 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80';
+  }
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  if (url.startsWith('/')) {
+    return `${BACKEND_HOST}${url}`;
+  }
+  return `${BACKEND_HOST}/${url}`;
+};
+
 export const formatDateAgo = (dateStr: string): string => {
   const d = new Date(dateStr);
   const now = new Date();

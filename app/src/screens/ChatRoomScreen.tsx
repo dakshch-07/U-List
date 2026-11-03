@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { theme } from '../theme';
 import { useAuthStore } from '../store/authStore';
-import { formatINR } from '../utils/formatters';
+import { formatINR, getFullImageUrl } from '../utils/formatters';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { io, Socket } from 'socket.io-client';
 
@@ -132,7 +132,7 @@ export const ChatRoomScreen: React.FC<{ route: any; navigation: any }> = ({ rout
       {ad && (
         <View style={styles.adHeader}>
           <Image
-            source={{ uri: ad.images?.[0]?.url || 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=400&q=80' }}
+            source={{ uri: getFullImageUrl(ad.images?.[0]?.url) }}
             style={styles.adThumb}
           />
           <View style={{ flex: 1, marginLeft: 10 }}>

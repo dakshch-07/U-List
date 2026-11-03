@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { theme } from '../theme';
+import { getFullImageUrl } from '../utils/formatters';
 import { useAuthStore } from '../store/authStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -55,7 +56,7 @@ export const ChatsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           >
             <Image
               source={{
-                uri: item.ad?.images?.[0]?.url || 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=400&q=80',
+                uri: getFullImageUrl(item.ad?.images?.[0]?.url),
               }}
               style={styles.thumbnail}
             />

@@ -238,6 +238,7 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
       const res = await api.post('/ads', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 180000, // 3 minutes specifically for multi-photo uploads
       });
 
       // Clear draft upon successful post

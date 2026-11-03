@@ -6,7 +6,7 @@ export const BASE_URL = 'https://u-list-api.onrender.com/api/v1';
 
 export const api = axios.create({
   baseURL: BASE_URL,
-  timeout: 15000,
+  timeout: 120000, // 120 seconds generous timeout for cold starts and multi-image uploads
 });
 
 api.interceptors.request.use(async (config) => {

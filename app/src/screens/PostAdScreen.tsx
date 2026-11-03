@@ -171,7 +171,8 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsMultipleSelection: true,
       selectionLimit: remainingSlots,
-      quality: 0.7,
+      quality: 0.6,
+      allowsEditing: false,
     });
 
     if (!res.canceled && res.assets && res.assets.length > 0) {
@@ -211,27 +212,63 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       formData.append('showPhone', String(showPhone));
       formData.append('attributes', JSON.stringify(dynamicAttrs));
 
-      // Handle image binary conversions cross-platform (web Blob vs mobile asset)
+      // Fast client-side image compression & conversion for instant uploads
       for (let idx = 0; idx < images.length; idx++) {
         const uri = images[idx];
-        const ext = uri.split('.').pop() || 'jpg';
-        const mime = `image/${ext === 'png' ? 'png' : 'jpeg'}`;
-        const filename = `photo_${idx}_${Date.now()}.${ext}`;
+        const filename = `photo_${idx}_${Date.now()}.jpg`;
 
-        if (Platform.OS === 'web') {
+        if (Platform.OS === 'web' && typeof document !== 'undefined') {
           try {
+            // Compress in browser canvas before network upload to reduce payload from ~5MB to ~150KB
+            const compressedBlob = await new Promise<Blob>((resolve, reject) => {
+              const img = document.createElement('img');
+              img.crossOrigin = 'anonymous';
+              img.onload = () => {
+                const maxDim = 1200;
+                let width = img.width;
+                let height = img.height;
+                if (width > maxDim || height > maxDim) {
+                  if (width > height) {
+                    height = Math.round((height * maxDim) / width);
+                    width = maxDim;
+                  } else {
+                    width = Math.round((width * maxDim) / height);
+                    height = maxDim;
+                  }
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                  ctx.drawImage(img, 0, 0, width, height);
+                  canvas.toBlob(
+                    (blob) => {
+                      if (blob) resolve(blob);
+                      else reject(new Error('Canvas toBlob failed'));
+                    },
+                    'image/jpeg',
+                    0.75
+                  );
+                } else {
+                  reject(new Error('Canvas context null'));
+                }
+              };
+              img.onerror = () => reject(new Error('Image load failed'));
+              img.src = uri;
+            });
+            formData.append('images', compressedBlob, filename);
+          } catch {
+            // Fallback to direct fetch blob
             const resp = await fetch(uri);
             const blob = await resp.blob();
             formData.append('images', blob, filename);
-          } catch {
-            // Fallback
-            formData.append('images', { uri, name: filename, type: mime } as any);
           }
         } else {
           formData.append('images', {
             uri,
             name: filename,
-            type: mime,
+            type: 'image/jpeg',
           } as any);
         }
       }

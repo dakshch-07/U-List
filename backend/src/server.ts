@@ -664,11 +664,11 @@ async function startServer() {
     console.log('[Bootstrap] Admin password synced for:', adminEmail);
   }
 
-  // Check if seed update is needed (e.g. realistic images across all 12 categories)
-  const count = await Ad.countDocuments();
-  const needsReSeed = await Ad.findOne({ 'images.publicId': 'demo_1' });
-  if (count === 0 || needsReSeed) {
-    console.log('[Bootstrap] Running initial/refreshed seed with realistic category images...');
+  // Check if initial categories/settings seed is needed (ONLY if DB has 0 categories, NEVER overwrite user ads)
+  const { Category } = await import('./models/Category');
+  const catCount = await Category.countDocuments();
+  if (catCount === 0) {
+    console.log('[Bootstrap] Running initial categories & settings setup...');
     await runSeed();
   }
 

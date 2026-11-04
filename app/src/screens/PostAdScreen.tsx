@@ -738,8 +738,8 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               >
                 <View style={styles.planRibbonRow}>
                   <View style={[styles.planRibbon, { backgroundColor: '#2563EB' }]}>
-                    <MaterialCommunityIcons name="thumb-up" size={11} color="#FFFFFF" />
-                    <Text style={styles.planRibbonText}>Guaranteed Sale</Text>
+                    <MaterialCommunityIcons name="star" size={11} color="#FFFFFF" />
+                    <Text style={styles.planRibbonText}>Top Visibility</Text>
                   </View>
                 </View>
 
@@ -751,9 +751,9 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   />
                   <View style={{ flex: 1, marginLeft: 10 }}>
                     <Text style={styles.planNameText}>
-                      Guaranteed Sale : 30 Days - Highlight Tag
+                      Boost Ad : 30 Days - Highlight Tag
                     </Text>
-                    <Text style={styles.planSubnoteText}>*Min. 15 replies or money back</Text>
+                    <Text style={styles.planSubnoteText}>Get up to 10x more buyer responses</Text>
                   </View>
                   <View style={{ alignItems: 'flex-end' }}>
                     <Text style={styles.planPriceText}>₹99</Text>

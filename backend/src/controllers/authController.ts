@@ -120,8 +120,9 @@ const generateTokens = (userId: string) => {
   const accessSecret = process.env.JWT_ACCESS_SECRET || 'ulist_super_secret_access_jwt_key_2026_production';
   const refreshSecret = process.env.JWT_REFRESH_SECRET || 'ulist_super_secret_refresh_jwt_key_2026_production';
 
-  const accessToken = jwt.sign({ userId }, accessSecret, { expiresIn: '15m' });
-  const refreshToken = jwt.sign({ userId }, refreshSecret, { expiresIn: '30d' });
+  // 1-year persistent access token so users never get logged out automatically
+  const accessToken = jwt.sign({ userId }, accessSecret, { expiresIn: '365d' });
+  const refreshToken = jwt.sign({ userId }, refreshSecret, { expiresIn: '365d' });
 
   return { accessToken, refreshToken };
 };

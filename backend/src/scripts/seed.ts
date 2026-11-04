@@ -710,8 +710,12 @@ export async function runSeed(): Promise<void> {
     { key: 'whatsapp_number', value: '+919876543210', description: 'Official WhatsApp support number' },
   ]);
 
-  // Seed Ads (60 realistic demo ads)
-  await Ad.deleteMany({});
+  // Seed Ads only if no ads exist in DB, never delete live user ads
+  const existingAdsCount = await Ad.countDocuments();
+  if (existingAdsCount > 0) {
+    console.log(`[Seed] DB already has ${existingAdsCount} ads. Skipping ads wipe to preserve live user ads.`);
+    return;
+  }
   const adsToInsert: any[] = [];
   const validityDays = 30;
 

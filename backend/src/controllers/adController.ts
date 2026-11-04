@@ -178,14 +178,23 @@ export const createAd = async (req: AuthenticatedRequest, res: Response): Promis
   try {
     const userId = req.user!._id;
 
-    // Check max active ads per user (5 free ads in any category)
+    // Check max active ads per user (5 free ads in any category + purchased paid ad credits)
     const maxAdsSetting = await Setting.findOne({ key: 'max_active_ads_per_user' });
-    const maxAds = maxAdsSetting?.value || 5;
+    const freeMaxAds = maxAdsSetting?.value ?? 5;
+    const userDoc = await import('../models/User').then((m) => m.User.findById(userId));
+    const paidCredits = userDoc?.paidAdsCredits || 0;
+    const allowedLimit = freeMaxAds + paidCredits;
+
     const activeAdsCount = await Ad.countDocuments({ user: userId, status: { $in: ['active', 'pending'] } });
-    if (activeAdsCount >= maxAds) {
-      res.status(400).json({
+    if (activeAdsCount >= allowedLimit) {
+      res.status(402).json({
         success: false,
-        message: `You have reached the limit of ${maxAds} free ads. Upgrade or renew to post more.`,
+        requiresPayment: true,
+        extraAdPrice: 29,
+        freeLimit: freeMaxAds,
+        totalAllowed: allowedLimit,
+        activeCount: activeAdsCount,
+        message: `You have used your ${freeMaxAds} Free Ads limit. Additional ads cost ₹29 per ad. Please pay to post this ad.`,
       });
       return;
     }

@@ -31,6 +31,7 @@ import {
   sendMessage,
 } from '../controllers/chatController';
 import { createReport } from '../controllers/reportController';
+import { getPaymentConfig, createOrder, verifyPayment } from '../controllers/paymentController';
 import { authenticate, optionalAuth, requireAdmin } from '../middleware/auth';
 import { upload, processImages } from '../middleware/upload';
 import { authLimiter, postAdLimiter } from '../middleware/rateLimiters';
@@ -89,6 +90,11 @@ router.post('/conversations/:id/messages', authenticate, sendMessage);
 
 // Reports routes
 router.post('/reports', authenticate, createReport);
+
+// Payments & Razorpay routes
+router.get('/payments/config', authenticate, getPaymentConfig);
+router.post('/payments/create-order', authenticate, createOrder);
+router.post('/payments/verify', authenticate, verifyPayment);
 
 // Admin routes
 router.get('/admin/stats', authenticate, requireAdmin, getDashboardStats);

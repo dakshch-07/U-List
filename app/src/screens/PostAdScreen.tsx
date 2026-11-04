@@ -7,6 +7,7 @@ import { api } from '../services/api';
 import { theme } from '../theme';
 import { useAuthStore } from '../store/authStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { initiateRazorpayPayment } from '../services/paymentService';
 
 export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { user, selectedCity } = useAuthStore();
@@ -289,6 +290,40 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       setCreatedAdData(res.data?.data || null);
       setIsSuccessModalVisible(true);
     } catch (err: any) {
+      if (err.response?.status === 402 || err.response?.data?.requiresPayment) {
+        // Free quota of 5 ads exceeded -> Prompt to pay ₹29 for 6th ad onwards
+        Alert.alert(
+          '5 Free Ads Limit Reached',
+          'You have posted 5 free ads. Additional listings are ₹29 per ad. Proceed to pay via Razorpay to post this ad?',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Pay ₹29 Now',
+              onPress: () => {
+                initiateRazorpayPayment({
+                  type: 'extra_ad',
+                  userName: user?.name,
+                  userEmail: user?.email,
+                  userPhone: user?.phone,
+                  onSuccess: async () => {
+                    Alert.alert('Payment Successful!', '₹29 received. Your extra ad credit has been added. Submitting your ad now...');
+                    queryClient.invalidateQueries({ queryKey: ['myAds'] });
+                    // Automatically re-trigger ad submission now that credit is purchased
+                    handleSubmitAd();
+                  },
+                  onFailure: (pErr) => {
+                    if (pErr?.message !== 'Payment cancelled by user') {
+                      Alert.alert('Payment Incomplete', pErr?.message || 'Could not complete payment.');
+                    }
+                  },
+                });
+              },
+            },
+          ]
+        );
+        return;
+      }
+
       const errMsg = err.response?.data?.message || err.message || 'Could not post ad. Please try again.';
       if (typeof window !== 'undefined' && window.alert) {
         window.alert(`Submission Error: ${errMsg}`);
@@ -693,13 +728,12 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 </View>
               </View>
 
-              {/* Plan 1: 30 Days Guaranteed Sale */}
+              {/* Plan 1: Highlighted Ad 30 Days */}
               <TouchableOpacity
                 style={[
                   styles.planOptionCard,
-                  selectedHighlightPlan === '30_days' && styles.planOptionCardActive,
+                  styles.planOptionCardActive,
                 ]}
-                onPress={() => setSelectedHighlightPlan('30_days')}
                 activeOpacity={0.85}
               >
                 <View style={styles.planRibbonRow}>
@@ -711,9 +745,9 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
                 <View style={styles.planMainRow}>
                   <MaterialCommunityIcons
-                    name={selectedHighlightPlan === '30_days' ? 'radiobox-marked' : 'radiobox-blank'}
+                    name="radiobox-marked"
                     size={22}
-                    color={selectedHighlightPlan === '30_days' ? '#005CA8' : '#94A3B8'}
+                    color="#005CA8"
                   />
                   <View style={{ flex: 1, marginLeft: 10 }}>
                     <Text style={styles.planNameText}>
@@ -722,44 +756,8 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                     <Text style={styles.planSubnoteText}>*Min. 15 replies or money back</Text>
                   </View>
                   <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={styles.planPriceText}>₹399</Text>
-                    <Text style={styles.planPriceCrossed}>₹665</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-
-              {/* Plan 2: 15 Days Best Value */}
-              <TouchableOpacity
-                style={[
-                  styles.planOptionCard,
-                  selectedHighlightPlan === '15_days' && styles.planOptionCardActive,
-                  { marginTop: 14 },
-                ]}
-                onPress={() => setSelectedHighlightPlan('15_days')}
-                activeOpacity={0.85}
-              >
-                <View style={styles.planRibbonRow}>
-                  <View style={[styles.planRibbon, { backgroundColor: '#3B82F6' }]}>
-                    <MaterialCommunityIcons name="eye" size={11} color="#FFFFFF" />
-                    <Text style={styles.planRibbonText}>Best value</Text>
-                  </View>
-                </View>
-
-                <View style={styles.planMainRow}>
-                  <MaterialCommunityIcons
-                    name={selectedHighlightPlan === '15_days' ? 'radiobox-marked' : 'radiobox-blank'}
-                    size={22}
-                    color={selectedHighlightPlan === '15_days' ? '#005CA8' : '#94A3B8'}
-                  />
-                  <View style={{ flex: 1, marginLeft: 10 }}>
-                    <Text style={styles.planNameText}>
-                      15 Days - Highlight Tag
-                    </Text>
-                    <Text style={styles.planSubnoteText}>Get 6x more replies</Text>
-                  </View>
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={styles.planPriceText}>₹249</Text>
-                    <Text style={styles.planPriceCrossed}>₹415</Text>
+                    <Text style={styles.planPriceText}>₹99</Text>
+                    <Text style={styles.planPriceCrossed}>₹299</Text>
                   </View>
                 </View>
               </TouchableOpacity>
@@ -771,29 +769,37 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             <TouchableOpacity
               style={styles.sellFasterPayBtn}
               onPress={() => {
-                Alert.alert(
-                  'Highlight Ad Package',
-                  `Payment for ${selectedHighlightPlan === '30_days' ? '30 Days (₹399)' : '15 Days (₹249)'} Highlight Tag initiated. Admin approval will activate the HIGHLIGHTED badge immediately.`,
-                  [
-                    {
-                      text: 'OK',
-                      onPress: () => {
-                        setIsSuccessModalVisible(false);
-                        setStep(1);
-                        setTitle('');
-                        setDescription('');
-                        setPrice('');
-                        setImages([]);
-                        navigation.navigate('MyAdsTab');
-                      },
-                    },
-                  ]
-                );
+                if (!createdAdData?._id) {
+                  Alert.alert('Error', 'Ad ID missing. Please view ad in My Ads.');
+                  return;
+                }
+                initiateRazorpayPayment({
+                  type: 'highlight_ad',
+                  adId: createdAdData._id,
+                  userName: user?.name,
+                  userEmail: user?.email,
+                  userPhone: user?.phone,
+                  onSuccess: () => {
+                    Alert.alert('Success!', '₹99 received! Your ad is now HIGHLIGHTED for 30 days.');
+                    queryClient.invalidateQueries({ queryKey: ['ads'] });
+                    queryClient.invalidateQueries({ queryKey: ['myAds'] });
+                    setIsSuccessModalVisible(false);
+                    setStep(1);
+                    setTitle('');
+                    setDescription('');
+                    setPrice('');
+                    setImages([]);
+                    navigation.navigate('MyAdsTab');
+                  },
+                  onFailure: (pErr) => {
+                    if (pErr?.message !== 'Payment cancelled by user') {
+                      Alert.alert('Payment Incomplete', pErr?.message || 'Could not complete payment.');
+                    }
+                  },
+                });
               }}
             >
-              <Text style={styles.sellFasterPayBtnText}>
-                Pay {selectedHighlightPlan === '30_days' ? '₹399' : '₹249'}
-              </Text>
+              <Text style={styles.sellFasterPayBtnText}>Pay ₹99</Text>
             </TouchableOpacity>
 
             <TouchableOpacity

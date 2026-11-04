@@ -10,6 +10,7 @@ export interface IUser extends Document {
   status: 'active' | 'blocked';
   pushToken?: string;
   blockedUsers: Types.ObjectId[];
+  paidAdsCredits: number; // Extra paid ad credits purchased beyond 5 free ads
   createdAt: Date;
   lastSeen: Date;
 }
@@ -24,6 +25,7 @@ const UserSchema = new Schema<IUser>(
     role: { type: String, enum: ['user', 'admin'], default: 'user', index: true },
     status: { type: String, enum: ['active', 'blocked'], default: 'active', index: true },
     pushToken: { type: String, default: '' },
+    paidAdsCredits: { type: Number, default: 0 },
     blockedUsers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     lastSeen: { type: Date, default: Date.now },
   },

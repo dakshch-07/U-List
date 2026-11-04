@@ -156,6 +156,18 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       {/* Top Banner on Web */}
       <AppDownloadBanner />
 
+      {/* Sticky Fixed Search Bar Row on top: Clients can search items anytime while scrolling */}
+      <View style={styles.stickySearchWrapper}>
+        <TouchableOpacity
+          style={styles.searchBar}
+          activeOpacity={0.9}
+          onPress={() => navigation.navigate('Search')}
+        >
+          <MaterialCommunityIcons name="magnify" size={20} color={theme.colors.secondaryText} />
+          <Text style={styles.searchPlaceholder} numberOfLines={1}>{t.searchPlaceholder}</Text>
+        </TouchableOpacity>
+      </View>
+
       <FlatList
         data={ads}
         numColumns={2}
@@ -164,9 +176,8 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <>
-            {/* Top Location, Tagline, Icons and Brand Header inside ListHeaderComponent so it scrolls away naturally */}
+            {/* Top Location, Brand & Icons Header (scrolls naturally above categories) */}
             <View style={styles.header}>
-              {/* Row 1: Location & Brand Actions */}
               <View style={styles.topRow}>
                 {/* Left: Location Dropdown with full city name visibility */}
                 <TouchableOpacity
@@ -207,18 +218,6 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                     />
                   </View>
                 </View>
-              </View>
-
-              {/* Search Bar Row below */}
-              <View style={styles.searchRow}>
-                <TouchableOpacity
-                  style={styles.searchBar}
-                  activeOpacity={0.9}
-                  onPress={() => navigation.navigate('Search')}
-                >
-                  <MaterialCommunityIcons name="magnify" size={20} color={theme.colors.secondaryText} />
-                  <Text style={styles.searchPlaceholder} numberOfLines={1}>{t.searchPlaceholder}</Text>
-                </TouchableOpacity>
               </View>
             </View>
 
@@ -392,6 +391,20 @@ const styles = StyleSheet.create({
   brandLogo: {
     width: 76,
     height: 32,
+  },
+  stickySearchWrapper: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    zIndex: 99,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 3,
   },
   searchRow: {
     flexDirection: 'row',

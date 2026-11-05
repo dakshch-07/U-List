@@ -9,6 +9,38 @@ import { useAuthStore } from '../store/authStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { initiateRazorpayPayment } from '../services/paymentService';
 
+// Realistic 3D Indian product images matching OLX India style
+const CATEGORY_IMAGES: Record<string, any> = {
+  cars: require('../../assets/categories/cars.jpg'),
+  properties: require('../../assets/categories/properties.jpg'),
+  mobiles: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=200&q=80',
+  jobs: require('../../assets/categories/jobs.jpg'),
+  bikes: require('../../assets/categories/bikes.jpg'),
+  electronics: require('../../assets/categories/electronics.jpg'),
+  'commercial-vehicles': require('../../assets/categories/commercial-vehicles.jpg'),
+  furniture: require('../../assets/categories/furniture.jpg'),
+  fashion: require('../../assets/categories/fashion.jpg'),
+  'books-sports': require('../../assets/categories/books-sports.jpg'),
+  pets: require('../../assets/categories/pets.jpg'),
+  services: require('../../assets/categories/services.jpg'),
+};
+
+// Category fallback icons with brand colors
+const CATEGORY_ICONS: Record<string, { icon: string; color: string }> = {
+  cars: { icon: 'car-side', color: '#EF4444' },
+  properties: { icon: 'office-building', color: '#10B981' },
+  mobiles: { icon: 'cellphone', color: '#3B82F6' },
+  jobs: { icon: 'briefcase', color: '#D97706' },
+  bikes: { icon: 'motorbike', color: '#6366F1' },
+  electronics: { icon: 'television-classic', color: '#8B5CF6' },
+  'commercial-vehicles': { icon: 'truck', color: '#F59E0B' },
+  furniture: { icon: 'sofa', color: '#92400E' },
+  fashion: { icon: 'tshirt-crew', color: '#EC4899' },
+  'books-sports': { icon: 'guitar-acoustic', color: '#F97316' },
+  pets: { icon: 'dog', color: '#A855F7' },
+  services: { icon: 'wrench', color: '#64748B' },
+};
+
 export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { user, selectedCity } = useAuthStore();
   const queryClient = useQueryClient();
@@ -362,10 +394,10 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             activeOpacity={0.7}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.text} />
+            <MaterialCommunityIcons name="arrow-left" size={24} color="#0F172A" />
           </TouchableOpacity>
           <Text style={styles.stepTitle}>
-            {step === 1 && 'Step 1: Choose Category'}
+            {step === 1 && 'Categories'}
             {step === 2 && 'Step 2: Key Details'}
             {step === 3 && 'Step 3: Upload Photos'}
             {step === 4 && 'Step 4: Price & Contact'}
@@ -374,24 +406,42 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         <Text style={styles.stepProgress}>{step}/4</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scroll}>
-        {/* Step 1: Category Picker */}
+      <ScrollView contentContainerStyle={step === 1 ? styles.categoriesScroll : styles.scroll}>
+        {/* Step 1: Clean 2-Column Grid Category Picker (OLX Style with realistic 3D image + name) */}
         {step === 1 && (
-          <View>
-            {categories.map((cat: any) => (
-              <TouchableOpacity
-                key={cat._id}
-                style={styles.categoryRow}
-                onPress={() => {
-                  setSelectedCategory(cat);
-                  setStep(2);
-                }}
-              >
-                <MaterialCommunityIcons name={cat.icon || 'tag'} size={24} color={theme.colors.primary} />
-                <Text style={styles.categoryName}>{cat.name}</Text>
-                <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.secondaryText} />
-              </TouchableOpacity>
-            ))}
+          <View style={styles.categoriesGrid}>
+            {categories.map((cat: any) => {
+              const imgSource = CATEGORY_IMAGES[cat.slug];
+              const iconMeta = CATEGORY_ICONS[cat.slug] || { icon: 'tag-outline', color: '#D9480F' };
+              return (
+                <TouchableOpacity
+                  key={cat._id}
+                  style={styles.categoryCard}
+                  activeOpacity={0.82}
+                  onPress={() => {
+                    setSelectedCategory(cat);
+                    setStep(2);
+                  }}
+                >
+                  <View style={styles.categoryImageContainer}>
+                    {imgSource ? (
+                      <Image
+                        source={typeof imgSource === 'string' ? { uri: imgSource } : imgSource}
+                        style={styles.categoryImg}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View style={[styles.categoryIconCircle, { backgroundColor: iconMeta.color + '15' }]}>
+                        <MaterialCommunityIcons name={(cat.icon || iconMeta.icon) as any} size={32} color={iconMeta.color} />
+                      </View>
+                    )}
+                  </View>
+                  <Text style={styles.categoryLabel} numberOfLines={2}>
+                    {cat.name}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         )}
 
@@ -879,6 +929,58 @@ const styles = StyleSheet.create({
   scroll: {
     padding: 16,
   },
+  categoriesScroll: {
+    padding: 0,
+    backgroundColor: '#FFFFFF',
+  },
+  categoriesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+  },
+  categoryCard: {
+    width: '50%',
+    paddingVertical: 22,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    borderRightWidth: 1,
+    borderRightColor: '#F1F5F9',
+    backgroundColor: '#FFFFFF',
+  },
+  categoryImageContainer: {
+    width: 68,
+    height: 68,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+    backgroundColor: '#FAFAFA',
+    overflow: 'hidden',
+  },
+  categoryImg: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 14,
+  },
+  categoryIconCircle: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  categoryLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#1E293B',
+    textAlign: 'center',
+    lineHeight: 18,
+    paddingHorizontal: 4,
+  },
   categoryRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1029,7 +1131,7 @@ const styles = StyleSheet.create({
   backStepButtonText: {
     marginLeft: 4,
     color: theme.colors.text,
-    fontWeight: theme.typography.weight.semibold,
+    fontWeight: '600',
     fontSize: theme.typography.size.body,
   },
   modalOverlay: {
@@ -1121,7 +1223,7 @@ const styles = StyleSheet.create({
   },
   modalSecondaryBtnText: {
     color: theme.colors.secondaryText,
-    fontWeight: theme.typography.weight.semibold,
+    fontWeight: '600',
     fontSize: theme.typography.size.body,
   },
   freeAdsCounterBox: {

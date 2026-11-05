@@ -337,7 +337,7 @@ export default function App() {
             <Stack.Screen
               name="Login"
               component={LoginScreen}
-              options={{ title: 'Sign In / Register' }}
+              options={{ headerShown: false }}
             />
             <Stack.Screen
               name="ChatRoom"

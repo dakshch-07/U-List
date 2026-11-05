@@ -161,52 +161,8 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         onOpenCityPicker={() => navigation.navigate('CityPicker')}
       />
 
-      {/* Top Header with City selector & Brand Logo + Sticky Search Bar together in one clean sticky top container */}
-      <View style={styles.stickyTopContainer}>
-        {/* Row 1: Location & Brand Actions */}
-        <View style={styles.topRow}>
-          {/* Left: Location Dropdown with full city name visibility */}
-          <TouchableOpacity
-            style={styles.citySelector}
-            onPress={() => navigation.navigate('CityPicker')}
-            activeOpacity={0.7}
-          >
-            <MaterialCommunityIcons name="map-marker" size={18} color={theme.colors.primary} />
-            <Text style={styles.cityName}>
-              {selectedCity}
-            </Text>
-            <MaterialCommunityIcons name="chevron-down" size={16} color={theme.colors.text} />
-          </TouchableOpacity>
-
-          {/* Right: Wishlist Heart, Notifications Bell, Brand Logo */}
-          <View style={styles.topRightActions}>
-            <TouchableOpacity
-              style={styles.headerIconButton}
-              onPress={() => navigation.navigate('Favorites')}
-              accessibilityLabel="Wishlist"
-            >
-              <MaterialCommunityIcons name="heart-outline" size={20} color={theme.colors.text} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.headerIconButton}
-              onPress={() => alert('No new notifications')}
-              accessibilityLabel="Notifications"
-            >
-              <MaterialCommunityIcons name="bell-outline" size={20} color={theme.colors.text} />
-            </TouchableOpacity>
-
-            <View style={styles.brandContainer}>
-              <Image
-                source={require('../../assets/logo.png')}
-                style={styles.brandLogo}
-                resizeMode="contain"
-              />
-            </View>
-          </View>
-        </View>
-
-        {/* Row 2: Search Bar */}
+      {/* Sticky Search Bar only: Sticks at the top when scrolling */}
+      <View style={styles.stickySearchContainer}>
         <View style={styles.searchRow}>
           <TouchableOpacity
             style={styles.searchBar}
@@ -227,6 +183,48 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <>
+            {/* Top Header: Location, Wishlist, Notifications, Logo - Scrolls UP naturally with the page */}
+            <View style={styles.scrollableTopRow}>
+              {/* Left: Location Dropdown with full city name visibility */}
+              <TouchableOpacity
+                style={styles.citySelector}
+                onPress={() => navigation.navigate('CityPicker')}
+                activeOpacity={0.7}
+              >
+                <MaterialCommunityIcons name="map-marker" size={18} color={theme.colors.primary} />
+                <Text style={styles.cityName}>
+                  {selectedCity}
+                </Text>
+                <MaterialCommunityIcons name="chevron-down" size={16} color={theme.colors.text} />
+              </TouchableOpacity>
+
+              {/* Right: Wishlist Heart, Notifications Bell, Brand Logo */}
+              <View style={styles.topRightActions}>
+                <TouchableOpacity
+                  style={styles.headerIconButton}
+                  onPress={() => navigation.navigate('Favorites')}
+                  accessibilityLabel="Wishlist"
+                >
+                  <MaterialCommunityIcons name="heart-outline" size={20} color={theme.colors.text} />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.headerIconButton}
+                  onPress={() => alert('No new notifications')}
+                  accessibilityLabel="Notifications"
+                >
+                  <MaterialCommunityIcons name="bell-outline" size={20} color={theme.colors.text} />
+                </TouchableOpacity>
+
+                <View style={styles.brandContainer}>
+                  <Image
+                    source={require('../../assets/logo.png')}
+                    style={styles.brandLogo}
+                    resizeMode="contain"
+                  />
+                </View>
+              </View>
+            </View>
             {/* Categories 4-Column Grid */}
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>{t.browseCategories}</Text>
@@ -340,19 +338,27 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  stickyTopContainer: {
+  stickySearchContainer: {
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: 10,
-    paddingTop: 6,
-    paddingBottom: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: '#F1F5F9',
     zIndex: 99,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 3,
+  },
+  scrollableTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 4,
+    paddingTop: 6,
+    paddingBottom: 8,
+    backgroundColor: '#FFFFFF',
   },
   topRow: {
     flexDirection: 'row',

@@ -10,7 +10,9 @@ import { EmptyState } from '../components/EmptyState';
 import { useAuthStore } from '../store/authStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppDownloadBanner } from '../components/AppDownloadBanner';
+import { LocationPromptModal } from '../components/LocationPromptModal';
 import { getRecentSearches, clearRecentSearches } from '../services/recentSearches';
+import { storage } from '../utils/storage';
 import { translations } from '../utils/translations';
 
 // Realistic Indian 3D product category images matching OLX India style
@@ -34,19 +36,17 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const t = translations[language] || translations.en;
   const [refreshing, setRefreshing] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
-  const [showLocationPrompt, setShowLocationPrompt] = useState(true);
+  const [showLocationModal, setShowLocationModal] = useState(false);
   const [locating, setLocating] = useState(false);
 
   useEffect(() => {
-    // Check if location prompt was dismissed
-    if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
-      if (localStorage.getItem('ulist_dismiss_location_prompt') === 'true') {
-        setShowLocationPrompt(false);
+    // Check if location modal was already answered once
+    (async () => {
+      const alreadyDone = await storage.getItem('ulist_location_modal_done');
+      if (!alreadyDone && (!selectedCity || selectedCity === 'India')) {
+        setShowLocationModal(true);
       }
-    }
-    if (selectedCity && selectedCity !== 'India') {
-      setShowLocationPrompt(false);
-    }
+    })();
   }, [selectedCity]);
 
   const handleDismissLocationPrompt = () => {
@@ -153,6 +153,13 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      {/* OLX-Style "Where is your location?" First-Open Fullscreen Modal */}
+      <LocationPromptModal
+        visible={showLocationModal}
+        onClose={() => setShowLocationModal(false)}
+        onOpenCityPicker={() => navigation.navigate('CityPicker')}
+      />
+
       {/* Top Header with City selector & Brand Logo + Sticky Search Bar together in one clean sticky top container */}
       <View style={styles.stickyTopContainer}>
         {/* Row 1: Location & Brand Actions */}

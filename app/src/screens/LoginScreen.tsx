@@ -4,6 +4,7 @@ import { storage } from '../utils/storage';
 import { api } from '../services/api';
 import { theme } from '../theme';
 import { useAuthStore } from '../store/authStore';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { setUser } = useAuthStore();
@@ -19,7 +20,7 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const handleSendOtp = async () => {
     const cleanPhone = phone.replace(/[^0-9]/g, '');
     if (cleanPhone.length < 10) {
-      const msg = `Please enter 10 digits (Currently entered: ${cleanPhone.length} digits)`;
+      const msg = `Please enter a valid 10-digit number (Entered: ${cleanPhone.length})`;
       if (typeof window !== 'undefined' && window.alert) {
         window.alert(msg);
       } else {
@@ -35,7 +36,6 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       setOtpHint(receivedOtp);
       setStep('otp');
 
-      // Show alert on web/mobile for clarity
       const infoMsg = `OTP sent! Demo code is: ${receivedOtp} (or use 1234)`;
       if (typeof window !== 'undefined' && window.alert) {
         window.alert(infoMsg);
@@ -107,253 +107,351 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-      <View style={styles.brandBox}>
-        <Image
-          source={require('../../assets/logo.png')}
-          style={styles.logoImage}
-          resizeMode="contain"
-        />
-        <Text style={styles.brandSubtitle}>
-          {step === 'phone'
-            ? 'Enter your phone number to sign in or register'
-            : `Enter 4-digit code sent to +91 ${phone}`}
-        </Text>
-      </View>
+      {/* Outer Card with Elevation & Rounded border */}
+      <View style={styles.authCard}>
+        {/* Brand Header */}
+        <View style={styles.brandBox}>
+          <Image
+            source={require('../../assets/logo.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
+          <Text style={styles.brandSubtitle}>
+            {step === 'phone'
+              ? 'Enter your phone number to sign in or register'
+              : `Enter 4-digit code sent to +91 ${phone}`}
+          </Text>
+        </View>
 
-      {step === 'phone' ? (
-        <>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Your Name (Optional)</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. Rahul Sharma"
-              value={name}
-              onChangeText={setName}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Mobile Number</Text>
-            <View style={styles.phoneInputRow}>
-              <View style={styles.countryCodeBadge}>
-                <Text style={styles.countryCodeText}>🇮🇳 +91</Text>
+        {step === 'phone' ? (
+          <>
+            {/* Name Input */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Your Name <Text style={styles.optionalText}>(Optional)</Text></Text>
+              <View style={styles.inputWrapper}>
+                <MaterialCommunityIcons name="account-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.inputWithIcon}
+                  placeholder="e.g. Rahul Sharma"
+                  placeholderTextColor="#9CA3AF"
+                  value={name}
+                  onChangeText={setName}
+                />
               </View>
+            </View>
+
+            {/* Phone Number Input */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Mobile Number <Text style={styles.requiredAsterisk}>*</Text></Text>
+              <View style={styles.phoneInputRow}>
+                <View style={styles.countryCodeBadge}>
+                  <Text style={styles.countryCodeFlag}>🇮🇳</Text>
+                  <Text style={styles.countryCodeText}>+91</Text>
+                </View>
+                <TextInput
+                  style={styles.phoneInput}
+                  placeholder="Enter 10-digit number"
+                  placeholderTextColor="#9CA3AF"
+                  keyboardType="phone-pad"
+                  maxLength={10}
+                  value={phone}
+                  onChangeText={setPhone}
+                  autoFocus
+                />
+              </View>
+            </View>
+
+            {/* Continue with OTP Button */}
+            <TouchableOpacity
+              style={[styles.submitButton, loading && { opacity: 0.8 }]}
+              onPress={handleSendOtp}
+              disabled={loading}
+              activeOpacity={0.88}
+            >
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <View style={styles.btnRow}>
+                  <Text style={styles.submitText}>Continue with OTP</Text>
+                  <MaterialCommunityIcons name="arrow-right" size={18} color="#FFFFFF" style={{ marginLeft: 6 }} />
+                </View>
+              )}
+            </TouchableOpacity>
+
+            <View style={styles.secureNoticeRow}>
+              <MaterialCommunityIcons name="shield-check-outline" size={16} color="#16A34A" />
+              <Text style={styles.secureNoticeText}>100% Safe & Secure verification</Text>
+            </View>
+
+            <Text style={styles.termsNotice}>
+              By continuing, you confirm that you agree with Ulist's{' '}
+              <Text style={styles.termsLink}>Terms of Service</Text> and{' '}
+              <Text style={styles.termsLink}>Privacy Policy</Text>.
+            </Text>
+          </>
+        ) : (
+          <>
+            {otpHint && (
+              <View style={styles.demoBadge}>
+                <MaterialCommunityIcons name="information-outline" size={18} color="#D97706" style={{ marginRight: 6 }} />
+                <Text style={styles.demoBadgeText}>
+                  Test OTP: <Text style={styles.boldText}>{otpHint}</Text> (or use 1234)
+                </Text>
+              </View>
+            )}
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Enter 4-digit OTP</Text>
               <TextInput
-                style={styles.phoneInput}
-                placeholder="Enter 10-digit number"
-                keyboardType="phone-pad"
-                maxLength={10}
-                value={phone}
-                onChangeText={setPhone}
+                style={styles.otpInput}
+                placeholder="• • • •"
+                placeholderTextColor="#D1D5DB"
+                keyboardType="number-pad"
+                maxLength={4}
+                value={otp}
+                onChangeText={setOtp}
                 autoFocus
               />
             </View>
-          </View>
 
-          <TouchableOpacity
-            style={[styles.submitButton, loading && { opacity: 0.7 }]}
-            onPress={handleSendOtp}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.submitText}>Continue with OTP</Text>
-            )}
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.submitButton, loading && { opacity: 0.8 }]}
+              onPress={handleVerifyOtp}
+              disabled={loading}
+              activeOpacity={0.88}
+            >
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <View style={styles.btnRow}>
+                  <Text style={styles.submitText}>Verify & Login</Text>
+                  <MaterialCommunityIcons name="check-circle-outline" size={18} color="#FFFFFF" style={{ marginLeft: 6 }} />
+                </View>
+              )}
+            </TouchableOpacity>
 
-          <Text style={styles.termsNotice}>
-            By continuing, you confirm that you agree with Ulist's Terms and Conditions and Privacy Policy.
-          </Text>
-        </>
-      ) : (
-        <>
-          {otpHint && (
-            <View style={styles.demoBadge}>
-              <Text style={styles.demoBadgeText}>
-                Demo / Test OTP: <Text style={styles.boldText}>{otpHint}</Text> (or use 1234)
-              </Text>
-            </View>
-          )}
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Enter 4-digit OTP</Text>
-            <TextInput
-              style={styles.otpInput}
-              placeholder="••••"
-              keyboardType="number-pad"
-              maxLength={6}
-              value={otp}
-              onChangeText={setOtp}
-              autoFocus
-            />
-          </View>
-
-          <TouchableOpacity
-            style={[styles.submitButton, loading && { opacity: 0.7 }]}
-            onPress={handleVerifyOtp}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.submitText}>Verify & Login</Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.switchButton}
-            onPress={() => {
-              setStep('phone');
-              setOtp('');
-              setOtpHint(null);
-            }}
-          >
-            <Text style={styles.switchText}>Change phone number</Text>
-          </TouchableOpacity>
-        </>
-      )}
+            <TouchableOpacity
+              style={styles.switchButton}
+              onPress={() => {
+                setStep('phone');
+                setOtp('');
+                setOtpHint(null);
+              }}
+              activeOpacity={0.7}
+            >
+              <MaterialCommunityIcons name="pencil-outline" size={16} color="#D9480F" style={{ marginRight: 4 }} />
+              <Text style={styles.switchText}>Change phone number</Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </View>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 24,
-    backgroundColor: theme.colors.background,
+    paddingHorizontal: 20,
+    paddingVertical: 32,
+    backgroundColor: '#F8FAFC',
     flexGrow: 1,
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  authCard: {
+    width: '100%',
+    maxWidth: 420,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingHorizontal: 24,
+    paddingVertical: 32,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 3,
   },
   brandBox: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 28,
   },
   logoImage: {
-    width: 140,
-    height: 52,
-    marginBottom: 8,
-  },
-  brandTitle: {
-    fontSize: theme.typography.size.title,
-    fontWeight: theme.typography.weight.bold,
-    color: theme.colors.primary,
-    letterSpacing: -0.5,
+    width: 150,
+    height: 56,
+    marginBottom: 10,
   },
   brandSubtitle: {
-    fontSize: theme.typography.size.body,
-    color: theme.colors.secondaryText,
-    marginTop: 6,
+    fontSize: 14,
+    color: '#64748B',
+    marginTop: 4,
     textAlign: 'center',
+    lineHeight: 20,
   },
   inputGroup: {
-    marginBottom: 16,
+    marginBottom: 18,
   },
   label: {
-    fontSize: theme.typography.size.caption,
-    fontWeight: theme.typography.weight.medium,
-    color: theme.colors.text,
-    marginBottom: 6,
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#1E293B',
+    marginBottom: 7,
   },
-  input: {
-    backgroundColor: theme.colors.surface,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.sm,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: theme.typography.size.body,
-    color: theme.colors.text,
+  optionalText: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: '#94A3B8',
+  },
+  requiredAsterisk: {
+    color: '#DC2626',
+    fontWeight: '700',
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    height: 48,
+  },
+  inputIcon: {
+    marginRight: 8,
+  },
+  inputWithIcon: {
+    flex: 1,
+    fontSize: 14.5,
+    color: '#0F172A',
+    height: '100%',
   },
   phoneInputRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    borderRadius: 10,
+    backgroundColor: '#F8FAFC',
+    overflow: 'hidden',
+    height: 48,
   },
   countryCodeBadge: {
-    backgroundColor: '#F3F4F6',
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRightWidth: 0,
-    borderTopLeftRadius: theme.borderRadius.sm,
-    borderBottomLeftRadius: theme.borderRadius.sm,
-    paddingHorizontal: 12,
-    height: 48,
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 12,
+    height: '100%',
+    borderRightWidth: 1.5,
+    borderRightColor: '#E2E8F0',
+  },
+  countryCodeFlag: {
+    fontSize: 16,
+    marginRight: 6,
   },
   countryCodeText: {
-    fontSize: theme.typography.size.body,
-    fontWeight: '600',
-    color: theme.colors.text,
+    fontSize: 14.5,
+    fontWeight: '700',
+    color: '#1E293B',
   },
   phoneInput: {
     flex: 1,
-    backgroundColor: theme.colors.surface,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderTopRightRadius: theme.borderRadius.sm,
-    borderBottomRightRadius: theme.borderRadius.sm,
     paddingHorizontal: 14,
-    height: 48,
-    fontSize: 16,
-    color: theme.colors.text,
-    letterSpacing: 1,
+    fontSize: 15.5,
+    color: '#0F172A',
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    height: '100%',
   },
   otpInput: {
-    backgroundColor: theme.colors.surface,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.sm,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    borderRadius: 10,
     paddingHorizontal: 14,
-    height: 52,
-    fontSize: 24,
-    fontWeight: '700',
+    height: 54,
+    fontSize: 26,
+    fontWeight: '800',
     textAlign: 'center',
-    letterSpacing: 10,
-    color: theme.colors.primary,
+    letterSpacing: 14,
+    color: '#D9480F',
   },
   submitButton: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.sm,
-    paddingVertical: 14,
+    backgroundColor: '#D9480F',
+    borderRadius: 10,
+    height: 48,
     alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 10,
+    shadowColor: '#D9480F',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.28,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  btnRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   submitText: {
-    color: '#fff',
-    fontSize: theme.typography.size.body,
-    fontWeight: theme.typography.weight.bold,
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
+  secureNoticeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+  },
+  secureNoticeText: {
+    fontSize: 12,
+    color: '#16A34A',
+    fontWeight: '600',
+    marginLeft: 5,
   },
   switchButton: {
     marginTop: 16,
+    flexDirection: 'row',
     alignItems: 'center',
-    padding: 8,
+    justifyContent: 'center',
+    paddingVertical: 8,
   },
   switchText: {
-    color: theme.colors.primary,
-    fontSize: theme.typography.size.body,
-    fontWeight: theme.typography.weight.medium,
+    color: '#D9480F',
+    fontSize: 14,
+    fontWeight: '700',
   },
   demoBadge: {
-    backgroundColor: '#FEF3C7',
+    flexDirection: 'row',
+    backgroundColor: '#FFFBEB',
     borderWidth: 1,
-    borderColor: '#F59E0B',
-    padding: 10,
-    borderRadius: theme.borderRadius.sm,
-    marginBottom: 16,
+    borderColor: '#FDE68A',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    marginBottom: 18,
     alignItems: 'center',
   },
   demoBadgeText: {
     fontSize: 13,
     color: '#92400E',
+    flex: 1,
   },
   boldText: {
     fontWeight: '700',
   },
   termsNotice: {
-    fontSize: 12,
-    color: theme.colors.secondaryText,
+    fontSize: 11.5,
+    color: '#94A3B8',
     textAlign: 'center',
     marginTop: 20,
-    lineHeight: 18,
+    lineHeight: 17,
+  },
+  termsLink: {
+    color: '#64748B',
+    textDecorationLine: 'underline',
   },
 });

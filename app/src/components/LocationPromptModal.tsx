@@ -94,9 +94,9 @@ export const LocationPromptModal: React.FC<LocationPromptModalProps> = ({
         <View style={styles.radarOuterRing}>
           <View style={styles.radarMiddleRing}>
             <View style={styles.radarInnerCircle}>
-              {/* Google Maps / OLX Style Location Pin */}
+              {/* Ulist Signature Orange Location Pin */}
               <View style={styles.pinWrapper}>
-                <MaterialCommunityIcons name="map-marker" size={72} color="#1D4ED8" />
+                <MaterialCommunityIcons name="map-marker" size={74} color="#D9480F" />
                 <View style={styles.pinCenterDot} />
               </View>
             </View>
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
     width: 250,
     height: 250,
     borderRadius: 125,
-    backgroundColor: 'rgba(219, 234, 254, 0.45)', // very light blue ring
+    backgroundColor: 'rgba(255, 237, 213, 0.45)', // very light warm orange ring
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 42,
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     width: 190,
     height: 190,
     borderRadius: 95,
-    backgroundColor: 'rgba(191, 219, 254, 0.65)', // middle blue ring
+    backgroundColor: 'rgba(254, 215, 170, 0.65)', // middle orange ring
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     width: 130,
     height: 130,
     borderRadius: 65,
-    backgroundColor: 'rgba(147, 197, 253, 0.75)', // inner circular core
+    backgroundColor: 'rgba(253, 186, 116, 0.75)', // inner circular core
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     width: 17,
     height: 17,
     borderRadius: 8.5,
-    backgroundColor: '#FBBF24', // Yellow inner dot matching user image
+    backgroundColor: '#FFFFFF', // Clean white center eye inside orange marker
   },
   heading: {
     fontSize: 22,
@@ -226,15 +226,15 @@ const styles = StyleSheet.create({
   findButton: {
     width: '100%',
     height: 50,
-    borderRadius: 6,
-    backgroundColor: '#00479A', // Deep authentic blue
+    borderRadius: 8,
+    backgroundColor: '#D9480F', // Ulist Brand Vibrant Orange
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
     elevation: 3,
-    shadowColor: '#00479A',
+    shadowColor: '#D9480F',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.25,
     shadowRadius: 4,
   },
   btnContentRow: {
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   otherLocationText: {
-    color: '#00479A',
+    color: '#D9480F',
     fontSize: 15,
     fontWeight: '700',
     marginBottom: 3,
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
   underline: {
     width: '100%',
     height: 2,
-    backgroundColor: '#00479A',
+    backgroundColor: '#D9480F',
     borderRadius: 1,
   },
 });

@@ -103,7 +103,7 @@ export const ChatsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             <MaterialCommunityIcons
               name="star-check"
               size={14}
-              color={activeFilter === 'verified' ? '#00479A' : '#7C3AED'}
+              color={activeFilter === 'verified' ? '#D9480F' : '#EA580C'}
               style={{ marginRight: 4 }}
             />
             <Text style={[styles.chipText, activeFilter === 'verified' && styles.chipTextActive]}>
@@ -172,19 +172,13 @@ export const ChatsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         )}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            {/* Friendly Avatar with Magnifying Glass Illustration (Ulist Theme) */}
+            {/* Friendly Warm Orange Theme Illustration */}
             <View style={styles.illustrationWrapper}>
-              <View style={styles.avatarHead}>
-                <View style={styles.avatarHair} />
-                <View style={styles.avatarFace}>
-                  <View style={styles.avatarEye} />
-                </View>
+              <View style={styles.bubbleCircle}>
+                <MaterialCommunityIcons name="chat-processing-outline" size={54} color="#D9480F" />
               </View>
-              <View style={styles.avatarBody} />
-              {/* Magnifying Glass */}
-              <View style={styles.magnifier}>
-                <View style={styles.magnifierLens} />
-                <View style={styles.magnifierHandle} />
+              <View style={styles.bubbleMini}>
+                <MaterialCommunityIcons name="star-four-points" size={18} color="#EA580C" />
               </View>
             </View>
 
@@ -234,7 +228,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   tabBtnActive: {
-    borderBottomColor: '#00479A',
+    borderBottomColor: '#D9480F',
   },
   tabBtnText: {
     fontSize: 13,
@@ -243,7 +237,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   tabBtnTextActive: {
-    color: '#00479A',
+    color: '#D9480F',
   },
   activeTabIndicator: {
     position: 'absolute',
@@ -251,7 +245,7 @@ const styles = StyleSheet.create({
     left: 16,
     right: 16,
     height: 3,
-    backgroundColor: '#00479A',
+    backgroundColor: '#D9480F',
     borderRadius: 2,
   },
   quickFilterSection: {
@@ -283,8 +277,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   chipActive: {
-    borderColor: '#00479A',
-    backgroundColor: '#EFF6FF',
+    borderColor: '#D9480F',
+    backgroundColor: '#FFF7ED',
   },
   chipText: {
     fontSize: 13,
@@ -292,7 +286,7 @@ const styles = StyleSheet.create({
     color: '#334155',
   },
   chipTextActive: {
-    color: '#00479A',
+    color: '#D9480F',
     fontWeight: '700',
   },
   listContent: {
@@ -346,7 +340,7 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   unreadBadge: {
-    backgroundColor: '#00479A',
+    backgroundColor: '#D9480F',
     borderRadius: 10,
     paddingHorizontal: 7,
     paddingVertical: 2,
@@ -364,71 +358,35 @@ const styles = StyleSheet.create({
     marginTop: 30,
   },
   illustrationWrapper: {
-    width: 140,
-    height: 140,
+    width: 130,
+    height: 130,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
     marginBottom: 24,
   },
-  avatarHead: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#FBBF24',
-    position: 'relative',
-    overflow: 'hidden',
+  bubbleCircle: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: '#FFF7ED',
+    borderWidth: 2,
+    borderColor: '#FFEDD5',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  avatarHair: {
+  bubbleMini: {
     position: 'absolute',
-    top: 0,
-    width: 64,
-    height: 30,
-    backgroundColor: '#00479A',
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-  },
-  avatarFace: {
-    position: 'absolute',
-    bottom: 14,
-    right: 18,
-  },
-  avatarEye: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#00479A',
-  },
-  avatarBody: {
-    width: 90,
-    height: 48,
-    borderRadius: 45,
-    backgroundColor: '#00479A',
-    marginTop: -8,
-  },
-  magnifier: {
-    position: 'absolute',
-    right: 14,
-    top: 26,
+    top: 6,
+    right: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FFFBEB',
+    borderWidth: 1.5,
+    borderColor: '#FEF3C7',
     alignItems: 'center',
-  },
-  magnifierLens: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 6,
-    borderColor: '#E2E8F0',
-    backgroundColor: 'rgba(219, 234, 254, 0.5)',
-  },
-  magnifierHandle: {
-    width: 10,
-    height: 22,
-    borderRadius: 5,
-    backgroundColor: '#F59E0B',
-    transform: [{ rotate: '-45deg' }],
-    marginTop: -4,
-    marginLeft: 26,
+    justifyContent: 'center',
   },
   emptyHeading: {
     fontSize: 20,
@@ -446,15 +404,15 @@ const styles = StyleSheet.create({
   startMessagingBtn: {
     width: '100%',
     maxWidth: 280,
-    height: 46,
-    borderRadius: 6,
-    backgroundColor: '#00479A',
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: '#D9480F',
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 2,
-    shadowColor: '#00479A',
+    shadowColor: '#D9480F',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.18,
+    shadowOpacity: 0.25,
     shadowRadius: 3,
   },
   startMessagingBtnText: {
@@ -482,14 +440,20 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   primaryButton: {
-    backgroundColor: '#00479A',
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    borderRadius: 6,
+    backgroundColor: '#D9480F',
+    paddingHorizontal: 28,
+    paddingVertical: 12,
+    borderRadius: 8,
+    elevation: 2,
+    shadowColor: '#D9480F',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
   },
   primaryButtonText: {
     color: '#FFFFFF',
     fontWeight: '700',
+    fontSize: 15,
   },
 });
 

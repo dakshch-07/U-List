@@ -60,7 +60,14 @@ export const getAdminAds = async (req: Request, res: Response): Promise<void> =>
     const { status, category, city, search, isFeatured, isPaid, page = '1', limit = '15' } = req.query;
     const query: any = {};
 
-    if (status && status !== 'all') query.status = status;
+    if (status && status !== 'all') {
+      query.status = status;
+    } else if (!status) {
+      query.status = { $ne: 'deleted' };
+    } else if (status === 'all') {
+      // Exclude soft-deleted dummy ads from default list
+      query.status = { $ne: 'deleted' };
+    }
     if (category) query.category = category;
     if (city) query.city = city;
     if (isFeatured === 'true') query.isFeatured = true;

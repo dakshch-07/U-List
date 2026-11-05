@@ -298,8 +298,7 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               <Text style={styles.label}>Enter 4-digit OTP</Text>
               <TextInput
                 style={styles.otpInput}
-                placeholder="• • • •"
-                placeholderTextColor="#D1D5DB"
+                placeholder=""
                 keyboardType="number-pad"
                 maxLength={4}
                 value={otp}

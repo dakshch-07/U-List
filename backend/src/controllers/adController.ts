@@ -62,18 +62,16 @@ export const getAds = async (req: Request, res: Response): Promise<void> => {
       }
     });
 
-    // Sorting
-    let sortObj: any = { isFeatured: -1 };
+    // Sorting: user-posted newest listings come first, with featured items prioritized
+    let sortObj: any = { isFeatured: -1, createdAt: -1 };
     if (sort === 'price_asc') {
-      sortObj.price = 1;
+      sortObj = { isFeatured: -1, price: 1, createdAt: -1 };
     } else if (sort === 'price_desc') {
-      sortObj.price = -1;
-    } else {
-      sortObj.createdAt = -1;
+      sortObj = { isFeatured: -1, price: -1, createdAt: -1 };
     }
 
     const pageNum = Math.max(1, parseInt(page as string, 10));
-    const limitNum = Math.min(50, Math.max(1, parseInt(limit as string, 10)));
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit as string, 10)));
     const skip = (pageNum - 1) * limitNum;
 
     const [items, total] = await Promise.all([

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, TextInput, Image, ScrollView, Platform, Alert } from 'react-native';
 import * as Location from 'expo-location';
 import { useQuery } from '@tanstack/react-query';
+import { useFocusEffect } from '@react-navigation/native';
 import { api } from '../services/api';
 import { theme } from '../theme';
 import { AdCard } from '../components/AdCard';
@@ -128,12 +129,12 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     queryKey: ['ads', selectedCity],
     queryFn: async () => {
       const res = await api.get('/ads', {
-        params: { city: selectedCity, limit: 20 },
+        params: { city: selectedCity, limit: 50 },
       });
       // If user selected a specific city and no ads were found, seamlessly load India-wide fresh recommendations
       if ((!res.data.data?.items || res.data.data.items.length === 0) && selectedCity !== 'India' && selectedCity !== 'All India') {
         const fallbackRes = await api.get('/ads', {
-          params: { city: 'All India', limit: 20 },
+          params: { city: 'All India', limit: 50 },
         });
         return {
           ...fallbackRes.data.data,
@@ -142,7 +143,15 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       }
       return res.data.data;
     },
+    staleTime: 0,
   });
+
+  // Re-fetch latest ads automatically whenever user focuses on Home tab
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [selectedCity, refetch])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);

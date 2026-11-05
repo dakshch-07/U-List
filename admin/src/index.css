@@ -96,6 +96,38 @@ a:hover {
   display: none;
 }
 
+.mobile-quick-nav {
+  display: flex;
+  overflow-x: auto;
+  background: #FFFFFF;
+  border-bottom: 1px solid #E3E3E3;
+  padding: 8px 12px;
+  gap: 8px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.mobile-quick-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-nav-pill {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid #E5E7EB;
+  background: #F9FAFB;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.mobile-nav-pill.active {
+  background: #D9480F;
+  border-color: #D9480F;
+  color: #FFFFFF;
+}
+
 /* Mobile & Tablet Styles */
 @media (max-width: 768px) {
   .menu-toggle-btn {

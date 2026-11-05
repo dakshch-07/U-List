@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet, Platform, BackHandler } from 'react-native';
 import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -140,12 +140,42 @@ export default function App() {
           navigationRef.current?.navigate('AdDetail', { adId: urlAdId });
         }, 500);
       }
+
+      // Sync browser history with React Navigation on Web so mobile back button steps back instead of exiting
+      const handlePopState = () => {
+        if (navigationRef.current && navigationRef.current.canGoBack()) {
+          navigationRef.current.goBack();
+        }
+      };
+      window.addEventListener('popstate', handlePopState);
+
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+      };
     }
+
+    // Android Hardware Back Button step-wise navigation handler
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (navigationRef.current && navigationRef.current.canGoBack()) {
+        navigationRef.current.goBack();
+        return true; // Prevents app from closing
+      }
+      return false; // Exit app only if at the root screen
+    });
+
+    return () => backHandler.remove();
   }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
-      <NavigationContainer ref={navigationRef}>
+      <NavigationContainer
+        ref={navigationRef}
+        onStateChange={() => {
+          if (Platform.OS === 'web' && typeof window !== 'undefined' && window.history) {
+            window.history.pushState(null, '', window.location.href);
+          }
+        }}
+      >
         <OfflineNotice />
         <Stack.Navigator
           screenOptions={{

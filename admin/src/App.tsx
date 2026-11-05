@@ -14,9 +14,39 @@ export default function App() {
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState('');
 
-  // Admin section navigation
+  // Admin section navigation with browser history support for mobile back button
   const [activeTab, setActiveTab] = useState<'dashboard' | 'ads' | 'highlighted' | 'paid' | 'users' | 'categories' | 'reports' | 'inquiries'>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Sync activeTab with URL hash so mobile physical back button steps back between tabs
+  useEffect(() => {
+    const handlePopState = () => {
+      const hash = window.location.hash.replace('#', '') as any;
+      if (['dashboard', 'ads', 'highlighted', 'paid', 'users', 'categories', 'reports', 'inquiries'].includes(hash)) {
+        setActiveTab(hash);
+      } else {
+        setActiveTab('dashboard');
+      }
+      setIsSidebarOpen(false);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    // Initialize tab from current hash if present
+    const initHash = window.location.hash.replace('#', '') as any;
+    if (initHash && ['dashboard', 'ads', 'highlighted', 'paid', 'users', 'categories', 'reports', 'inquiries'].includes(initHash)) {
+      setActiveTab(initHash);
+    }
+
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const switchTab = (tab: typeof activeTab) => {
+    setActiveTab(tab);
+    setIsSidebarOpen(false);
+    if (window.location.hash !== `#${tab}`) {
+      window.history.pushState(null, '', `#${tab}`);
+    }
+  };
 
   // Stats state
   const [stats, setStats] = useState<any>(null);
@@ -374,19 +404,17 @@ export default function App() {
           ].map((item) => (
             <button
               key={item.id}
-              onClick={() => {
-                setActiveTab(item.id as any);
-                setIsSidebarOpen(false);
-              }}
+              onClick={() => switchTab(item.id as any)}
               style={{
                 width: '100%',
                 textAlign: 'left',
-                padding: '10px 20px',
+                padding: '12px 20px',
                 background: activeTab === item.id ? '#FFF1ED' : 'transparent',
                 color: activeTab === item.id ? '#D9480F' : '#1B1B1B',
                 border: 'none',
                 borderLeft: activeTab === item.id ? '4px solid #D9480F' : '4px solid transparent',
-                fontWeight: activeTab === item.id ? 500 : 400,
+                fontWeight: activeTab === item.id ? 600 : 400,
+                fontSize: '15px',
                 cursor: 'pointer',
               }}
             >
@@ -416,8 +444,27 @@ export default function App() {
             >
               ☰
             </button>
+            {activeTab !== 'dashboard' && (
+              <button
+                onClick={() => switchTab('dashboard')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '18px',
+                  padding: '4px 8px',
+                  color: '#D9480F',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+                title="Back to Dashboard"
+              >
+                ←
+              </button>
+            )}
             <div style={{ fontWeight: 600, fontSize: '16px' }}>
-              {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+              {activeTab === 'dashboard' ? 'Overview' : activeTab === 'ads' ? 'Ads Moderation' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
             </div>
           </div>
           {message && (
@@ -426,8 +473,28 @@ export default function App() {
             </div>
           )}
           <div style={{ color: '#6B6B6B', fontSize: '12px' }}>
-            Live API
+            Admin Panel
           </div>
+        </div>
+
+        {/* Quick Mobile Category / Section Tabs */}
+        <div className="mobile-quick-nav">
+          {[
+            { id: 'dashboard', label: '📊 Dashboard' },
+            { id: 'ads', label: '📝 Ads' },
+            { id: 'highlighted', label: '⭐ Highlighted' },
+            { id: 'paid', label: '💰 Paid' },
+            { id: 'inquiries', label: '✉ Inquiries' },
+            { id: 'users', label: '👥 Users' },
+          ].map((item) => (
+            <button
+              key={item.id}
+              onClick={() => switchTab(item.id as any)}
+              className={`mobile-nav-pill ${activeTab === item.id ? 'active' : ''}`}
+            >
+              {item.label}
+            </button>
+          ))}
         </div>
 
         <div className="admin-main-content" style={{ padding: '24px' }}>

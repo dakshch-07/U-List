@@ -13,7 +13,13 @@ api.interceptors.request.use(async (config) => {
   try {
     const token = await storage.getItem('ulist_access_token');
     if (token) {
+      if (!config.headers) {
+        config.headers = {} as any;
+      }
       config.headers.Authorization = `Bearer ${token}`;
+      if (typeof (config.headers as any).set === 'function') {
+        (config.headers as any).set('Authorization', `Bearer ${token}`);
+      }
     }
   } catch {
     // Non-blocking

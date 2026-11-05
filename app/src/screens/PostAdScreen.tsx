@@ -306,8 +306,26 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         }
       }
 
+      // Check token prior to submission
+      const token = await storage.getItem('ulist_access_token');
+      if (!token) {
+        const msg = 'Session expired or not logged in. Please sign in to submit your ad.';
+        if (typeof window !== 'undefined' && window.alert) {
+          window.alert(msg);
+        } else {
+          Alert.alert('Login Required', msg);
+        }
+        navigation.navigate('Login');
+        return;
+      }
+
+      const authHeader = { Authorization: `Bearer ${token}` };
+
       const res = await api.post('/ads', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          ...authHeader,
+        },
         timeout: 180000, // 3 minutes specifically for multi-photo uploads
       });
 

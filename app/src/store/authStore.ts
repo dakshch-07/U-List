@@ -68,18 +68,23 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
 
       // 1. Immediately hydrate cached user so app never shows "Sign In / Register" on startup
+      const token = await storage.getItem('ulist_access_token');
       const cachedUserStr = await storage.getItem('ulist_cached_user');
-      if (cachedUserStr) {
+
+      // If user exists in cache AND we have a valid token, hydrate immediately
+      if (cachedUserStr && token) {
         try {
           const parsed = JSON.parse(cachedUserStr);
           if (parsed && parsed._id) {
             set({ user: parsed, isLoading: false });
           }
         } catch {}
+      } else if (!token) {
+        // No token present: clear any stale cached user so user can sign in cleanly
+        set({ user: null, isLoading: false });
       }
 
       // 2. Verify / refresh with backend in background
-      const token = await storage.getItem('ulist_access_token');
       if (token) {
         try {
           const res = await api.get('/users/me');
@@ -88,8 +93,30 @@ export const useAuthStore = create<AuthState>((set) => ({
             await storage.setItem('ulist_cached_user', JSON.stringify(res.data.data));
           }
         } catch (apiErr: any) {
-          // If offline, keep the cached user intact! Never log out on network glitch/exit.
-          console.warn('[Auth] Background sync error (kept session):', apiErr.message);
+          // If 401 or token is invalid, attempt silent refresh
+          if (apiErr.response?.status === 401) {
+            const refreshToken = await storage.getItem('ulist_refresh_token');
+            if (refreshToken) {
+              try {
+                const refreshRes = await api.post('/auth/refresh', { refreshToken });
+                if (refreshRes.data?.data?.accessToken) {
+                  await storage.setItem('ulist_access_token', refreshRes.data.data.accessToken);
+                  if (refreshRes.data.data.user) {
+                    set({ user: refreshRes.data.data.user });
+                    await storage.setItem('ulist_cached_user', JSON.stringify(refreshRes.data.data.user));
+                  }
+                }
+              } catch {
+                set({ user: null });
+                await storage.deleteItem('ulist_access_token');
+                await storage.deleteItem('ulist_refresh_token');
+                await storage.deleteItem('ulist_cached_user');
+              }
+            } else {
+              set({ user: null });
+              await storage.deleteItem('ulist_cached_user');
+            }
+          }
         }
       }
     } catch {

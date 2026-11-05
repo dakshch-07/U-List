@@ -710,53 +710,9 @@ export async function runSeed(): Promise<void> {
     { key: 'whatsapp_number', value: '+919876543210', description: 'Official WhatsApp support number' },
   ]);
 
-  // Seed Ads only if no ads exist in DB, never delete live user ads
-  const existingAdsCount = await Ad.countDocuments();
-  if (existingAdsCount > 0) {
-    console.log(`[Seed] DB already has ${existingAdsCount} ads. Skipping ads wipe to preserve live user ads.`);
-    return;
-  }
-  const adsToInsert: any[] = [];
-  const validityDays = 30;
-
-  for (let i = 0; i < 60; i++) {
-    const template = DEMO_ADS_SPEC[i % DEMO_ADS_SPEC.length];
-    const cityObj = CITIES_DATA[i % CITIES_DATA.length];
-    const user = demoUsers[i % demoUsers.length];
-    const categoryDoc = categoryMap.get(template.cat) || categoryMap.get('cars');
-
-    const isFeatured = i % 5 === 0;
-    const isSold = i === 13 || i === 27;
-
-    adsToInsert.push({
-      user: user._id,
-      category: categoryDoc._id,
-      subcategory: null,
-      title: `${template.title} #${i + 1}`,
-      description: template.desc,
-      price: template.price,
-      salary: template.salary,
-      attributes: template.attrs,
-      images: [
-        { url: template.img || PLACEHOLDER_IMG, publicId: `demo_${template.cat}_${i}` },
-      ],
-      city: cityObj.name,
-      locality: template.locality,
-      geo: { lat: cityObj.lat, lng: cityObj.lng },
-      contactName: user.name,
-      phone: user.phone,
-      showPhone: true,
-      status: isSold ? 'sold' : 'active',
-      isFeatured,
-      featuredUntil: isFeatured ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : undefined,
-      views: Math.floor(Math.random() * 85) + 5,
-      expiresAt: new Date(Date.now() + validityDays * 24 * 60 * 60 * 1000),
-      createdAt: new Date(Date.now() - (i * 4 * 60 * 60 * 1000)),
-    });
-  }
-
-  await Ad.insertMany(adsToInsert);
-  console.log(`[Seed] Seeded ${adsToInsert.length} realistic classified ads across Indian cities`);
+  // Seed Ads: User has requested complete 0-state with NO demo ads.
+  console.log('[Seed] Preserving clean database with 0 demo ads.');
+  return;
 
   console.log('[Seed] Seeding completed successfully!');
 }

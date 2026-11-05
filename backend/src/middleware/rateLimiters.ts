@@ -13,7 +13,7 @@ export const authLimiter = rateLimit({
 
 export const postAdLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 15, // 15 ad submissions per hour
+  max: 60, // 60 ad submissions per hour
   message: {
     success: false,
     message: 'Posting limit reached for this hour, please try again later',

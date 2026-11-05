@@ -170,20 +170,6 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         onOpenCityPicker={() => navigation.navigate('CityPicker')}
       />
 
-      {/* Sticky Search Bar only: Sticks at the top when scrolling */}
-      <View style={styles.stickySearchContainer}>
-        <View style={styles.searchRow}>
-          <TouchableOpacity
-            style={styles.searchBar}
-            activeOpacity={0.9}
-            onPress={() => navigation.navigate('Search')}
-          >
-            <MaterialCommunityIcons name="magnify" size={20} color={theme.colors.secondaryText} />
-            <Text style={styles.searchPlaceholder} numberOfLines={1}>{t.searchPlaceholder}</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
       <FlatList
         data={ads}
         numColumns={2}
@@ -232,6 +218,20 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                     resizeMode="contain"
                   />
                 </View>
+              </View>
+            </View>
+
+            {/* Sticky Search Bar: Scrolls naturally until top=0, then STICKS at the top */}
+            <View style={styles.stickySearchContainer}>
+              <View style={styles.searchRow}>
+                <TouchableOpacity
+                  style={styles.searchBar}
+                  activeOpacity={0.9}
+                  onPress={() => navigation.navigate('Search')}
+                >
+                  <MaterialCommunityIcons name="magnify" size={20} color={theme.colors.secondaryText} />
+                  <Text style={styles.searchPlaceholder} numberOfLines={1}>{t.searchPlaceholder}</Text>
+                </TouchableOpacity>
               </View>
             </View>
             {/* Categories 4-Column Grid */}
@@ -348,12 +348,14 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   stickySearchContainer: {
+    position: 'sticky' as any,
+    top: 0,
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: 12,
+    paddingHorizontal: 4,
     paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
-    zIndex: 99,
+    zIndex: 100,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,

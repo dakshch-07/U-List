@@ -1,31 +1,49 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshControl, Image } from 'react-native';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useFocusEffect } from '@react-navigation/native';
 import { api } from '../services/api';
 import { theme } from '../theme';
-import { formatINR, formatDateAgo } from '../utils/formatters';
+import { formatINR, formatDateAgo, getFullImageUrl } from '../utils/formatters';
 import { useAuthStore } from '../store/authStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { storage } from '../utils/storage';
 
 export const MyAdsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { user } = useAuthStore();
+  const queryClient = useQueryClient();
   const [tab, setTab] = useState<'active' | 'pending' | 'sold' | 'rejected'>('active');
 
-  const { data: ads = [], refetch } = useQuery({
-    queryKey: ['myAds', tab],
+  const { data: ads = [], refetch, isFetching } = useQuery({
+    queryKey: ['myAds', tab, user?._id],
     queryFn: async () => {
-      if (!user) return [];
-      const res = await api.get('/ads/mine', { params: { status: tab } });
-      return res.data.data;
+      const token = await storage.getItem('ulist_access_token');
+      if (!token) return [];
+      const res = await api.get('/ads/mine', {
+        params: { status: tab },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return Array.isArray(res.data?.data) ? res.data.data : [];
     },
     enabled: !!user,
+    staleTime: 0,
   });
+
+  // Re-fetch fresh data every time user focuses on My Ads screen
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        refetch();
+      }
+    }, [user, tab, refetch])
+  );
 
   const handleMarkSold = async (id: string) => {
     try {
       await api.post(`/ads/${id}/sold`);
       Alert.alert('Status updated', 'Ad marked as sold');
       refetch();
+      queryClient.invalidateQueries({ queryKey: ['myAds'] });
     } catch {
       Alert.alert('Error', 'Failed to update status');
     }
@@ -41,6 +59,7 @@ export const MyAdsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           try {
             await api.delete(`/ads/${id}`);
             refetch();
+            queryClient.invalidateQueries({ queryKey: ['myAds'] });
           } catch {
             Alert.alert('Error', 'Failed to delete');
           }
@@ -86,42 +105,82 @@ export const MyAdsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         data={ads}
         keyExtractor={(item) => item._id}
         contentContainerStyle={styles.list}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.adTitle} numberOfLines={1}>{item.title}</Text>
-                <Text style={styles.adPrice}>{formatINR(item.price)}</Text>
-                <Text style={styles.adMeta}>
-                  Views: {item.views} • Posted {formatDateAgo(item.createdAt)}
-                </Text>
-                {item.rejectReason ? (
-                  <Text style={styles.rejectReason}>Reason: {item.rejectReason}</Text>
-                ) : null}
+        refreshControl={
+          <RefreshControl
+            refreshing={isFetching}
+            onRefresh={refetch}
+            colors={[theme.colors.primary]}
+            tintColor={theme.colors.primary}
+          />
+        }
+        renderItem={({ item }) => {
+          const imgUrl = item.images?.[0]?.url ? getFullImageUrl(item.images[0].url) : null;
+          return (
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                {imgUrl ? (
+                  <Image source={{ uri: imgUrl }} style={styles.adThumb} resizeMode="cover" />
+                ) : (
+                  <View style={styles.adThumbFallback}>
+                    <MaterialCommunityIcons name="image-outline" size={24} color="#94A3B8" />
+                  </View>
+                )}
+                <View style={{ flex: 1, marginLeft: 12 }}>
+                  <Text style={styles.adTitle} numberOfLines={1}>{item.title}</Text>
+                  <Text style={styles.adPrice}>{formatINR(item.price)}</Text>
+                  <Text style={styles.adMeta}>
+                    Views: {item.views || 0} • Posted {formatDateAgo(item.createdAt)}
+                  </Text>
+                  {tab === 'pending' && (
+                    <View style={styles.pendingBadge}>
+                      <MaterialCommunityIcons name="clock-outline" size={13} color="#D97706" />
+                      <Text style={styles.pendingBadgeText}>Pending Admin Review</Text>
+                    </View>
+                  )}
+                  {item.rejectReason ? (
+                    <Text style={styles.rejectReason}>Reason: {item.rejectReason}</Text>
+                  ) : null}
+                </View>
+              </View>
+
+              <View style={styles.actionRow}>
+                {tab === 'active' && (
+                  <TouchableOpacity
+                    style={styles.actionBtn}
+                    onPress={() => handleMarkSold(item._id)}
+                  >
+                    <Text style={styles.actionBtnText}>Mark as Sold</Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                  style={[styles.actionBtn, { borderColor: theme.colors.error }]}
+                  onPress={() => handleDelete(item._id)}
+                >
+                  <Text style={[styles.actionBtnText, { color: theme.colors.error }]}>Delete</Text>
+                </TouchableOpacity>
               </View>
             </View>
-
-            <View style={styles.actionRow}>
-              {tab === 'active' && (
-                <TouchableOpacity
-                  style={styles.actionBtn}
-                  onPress={() => handleMarkSold(item._id)}
-                >
-                  <Text style={styles.actionBtnText}>Mark as Sold</Text>
-                </TouchableOpacity>
-              )}
-              <TouchableOpacity
-                style={[styles.actionBtn, { borderColor: theme.colors.error }]}
-                onPress={() => handleDelete(item._id)}
-              >
-                <Text style={[styles.actionBtnText, { color: theme.colors.error }]}>Delete</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
+          );
+        }}
         ListEmptyComponent={
           <View style={styles.empty}>
+            <MaterialCommunityIcons
+              name={tab === 'pending' ? 'clock-check-outline' : 'tag-off-outline'}
+              size={48}
+              color="#CBD5E1"
+            />
             <Text style={styles.emptyText}>No {tab} ads found.</Text>
+            {tab === 'pending' && (
+              <Text style={styles.emptySubtext}>
+                When you post an ad, it undergoes a quick review by our admin team and will appear here until approved.
+              </Text>
+            )}
+            <TouchableOpacity
+              style={[styles.primaryButton, { marginTop: 16 }]}
+              onPress={() => navigation.navigate('SellTab')}
+            >
+              <Text style={styles.primaryButtonText}>Post an Ad</Text>
+            </TouchableOpacity>
           </View>
         }
       />
@@ -244,7 +303,47 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
-    fontSize: theme.typography.size.body,
+    fontSize: theme.typography.size.subheading,
+    fontWeight: theme.typography.weight.bold,
+    color: theme.colors.text,
+    marginTop: 12,
+  },
+  emptySubtext: {
+    fontSize: theme.typography.size.caption,
     color: theme.colors.secondaryText,
+    textAlign: 'center',
+    marginTop: 6,
+    lineHeight: 18,
+    maxWidth: 280,
+  },
+  adThumb: {
+    width: 80,
+    height: 80,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: '#F1F5F9',
+  },
+  adThumbFallback: {
+    width: 80,
+    height: 80,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pendingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
+    marginTop: 6,
+    gap: 4,
+  },
+  pendingBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#D97706',
   },
 });

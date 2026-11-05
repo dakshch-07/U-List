@@ -18,6 +18,7 @@ export const ChatsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       return res.data.data;
     },
     enabled: !!user,
+    refetchInterval: 3000, // Poll every 3 seconds so incoming chats and badges update live
   });
 
   if (!user) {

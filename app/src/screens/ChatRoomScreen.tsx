@@ -23,35 +23,39 @@ export const ChatRoomScreen: React.FC<{ route: any; navigation: any }> = ({ rout
   const flatListRef = useRef<FlatList>(null);
   const socketRef = useRef<Socket | null>(null);
 
-  // Fetch conversation messages
+  // Fetch conversation messages with auto polling fallback
   const { data: messages = [] } = useQuery({
     queryKey: ['messages', conversationId],
     queryFn: async () => {
       const res = await api.get(`/conversations/${conversationId}/messages`);
       return res.data.data;
     },
-    refetchInterval: 3000,
+    refetchInterval: 2000, // Fast 2-second auto-refresh for real-time responsiveness
   });
 
   // Setup Socket.io
   useEffect(() => {
-    const socket = io('https://u-list-api.onrender.com', {
-      query: { userId: user?._id },
-    });
-    socketRef.current = socket;
-
-    socket.emit('join_conversation', conversationId);
-
-    socket.on('message:new', (newMsg: any) => {
-      queryClient.setQueryData(['messages', conversationId], (old: any = []) => {
-        if (old.some((m: any) => m._id === newMsg._id)) return old;
-        return [...old, newMsg];
+    try {
+      const socket = io('https://u-list-api.onrender.com', {
+        transports: ['websocket', 'polling'],
+        query: { userId: user?._id },
       });
-    });
+      socketRef.current = socket;
 
-    return () => {
-      socket.disconnect();
-    };
+      socket.emit('join_conversation', conversationId);
+
+      socket.on('message:new', (newMsg: any) => {
+        queryClient.setQueryData(['messages', conversationId], (old: any = []) => {
+          if (old.some((m: any) => m._id === newMsg._id)) return old;
+          return [...old, newMsg];
+        });
+        queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      });
+
+      return () => {
+        socket.disconnect();
+      };
+    } catch {}
   }, [conversationId]);
 
   const sendMutation = useMutation({

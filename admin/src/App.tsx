@@ -14,37 +14,56 @@ export default function App() {
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState('');
 
-  // Admin section navigation with browser history support for mobile back button
+  // Admin section navigation with browser history support & double-back exit confirmation
   const [activeTab, setActiveTab] = useState<'dashboard' | 'ads' | 'highlighted' | 'paid' | 'users' | 'categories' | 'reports' | 'inquiries'>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const lastAdminExitPress = React.useRef<number>(0);
 
   // Sync activeTab with URL hash so mobile physical back button steps back between tabs
   useEffect(() => {
+    // Set initial history state
+    if (!window.history.state?.ulistAdmin) {
+      window.history.replaceState({ ulistAdmin: true, tab: 'dashboard' }, '', window.location.href);
+    }
+
     const handlePopState = () => {
       const hash = window.location.hash.replace('#', '') as any;
-      if (['dashboard', 'ads', 'highlighted', 'paid', 'users', 'categories', 'reports', 'inquiries'].includes(hash)) {
+      if (['ads', 'highlighted', 'paid', 'users', 'categories', 'reports', 'inquiries'].includes(hash)) {
         setActiveTab(hash);
+        setIsSidebarOpen(false);
       } else {
-        setActiveTab('dashboard');
+        // At dashboard / root
+        if (activeTab !== 'dashboard') {
+          setActiveTab('dashboard');
+          setIsSidebarOpen(false);
+        } else {
+          // Double press back to leave admin panel
+          const now = Date.now();
+          if (now - lastAdminExitPress.current < 2500) {
+            window.history.back();
+          } else {
+            lastAdminExitPress.current = now;
+            window.history.pushState({ ulistAdmin: true, tab: 'dashboard' }, '', '#dashboard');
+            alert('Press back again to exit Admin Panel');
+          }
+        }
       }
-      setIsSidebarOpen(false);
     };
 
     window.addEventListener('popstate', handlePopState);
-    // Initialize tab from current hash if present
     const initHash = window.location.hash.replace('#', '') as any;
     if (initHash && ['dashboard', 'ads', 'highlighted', 'paid', 'users', 'categories', 'reports', 'inquiries'].includes(initHash)) {
       setActiveTab(initHash);
     }
 
     return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+  }, [activeTab]);
 
   const switchTab = (tab: typeof activeTab) => {
     setActiveTab(tab);
     setIsSidebarOpen(false);
     if (window.location.hash !== `#${tab}`) {
-      window.history.pushState(null, '', `#${tab}`);
+      window.history.pushState({ ulistAdmin: true, tab }, '', `#${tab}`);
     }
   };
 

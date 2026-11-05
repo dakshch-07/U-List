@@ -127,6 +127,8 @@ function BottomTabs() {
 export default function App() {
   const { initializeAuth } = useAuthStore();
   const navigationRef = useRef<any>(null);
+  const isNavigatingRef = useRef<boolean>(false);
+  const lastExitPressRef = useRef<number>(0);
 
   useEffect(() => {
     initializeAuth();
@@ -141,12 +143,39 @@ export default function App() {
         }, 500);
       }
 
-      // Sync browser history with React Navigation on Web so mobile back button steps back instead of exiting
-      const handlePopState = () => {
+      // Ensure root URL has an initial history entry
+      if (!window.history.state?.ulistApp) {
+        window.history.replaceState({ ulistApp: true, index: 0 }, '', window.location.href);
+      }
+
+      // Web/Mobile Browser Back Button handler
+      const handlePopState = (_e: PopStateEvent) => {
+        // If navigation was triggered internally, skip
+        if (isNavigatingRef.current) return;
+
         if (navigationRef.current && navigationRef.current.canGoBack()) {
+          isNavigatingRef.current = true;
           navigationRef.current.goBack();
+          setTimeout(() => {
+            isNavigatingRef.current = false;
+          }, 100);
+        } else {
+          // At root Home Screen: Double back check to prevent accidental exit
+          const now = Date.now();
+          if (now - lastExitPressRef.current < 2500) {
+            // User confirmed exit by pressing back twice
+            window.history.back();
+          } else {
+            lastExitPressRef.current = now;
+            // Push history state back so the browser stays inside the app
+            window.history.pushState({ ulistApp: true, index: 0 }, '', window.location.href);
+            if (typeof window !== 'undefined' && window.alert) {
+              window.alert('Press back again to exit Ulist');
+            }
+          }
         }
       };
+
       window.addEventListener('popstate', handlePopState);
 
       return () => {
@@ -154,13 +183,26 @@ export default function App() {
       };
     }
 
-    // Android Hardware Back Button step-wise navigation handler
+    // Android Native Hardware Back Button handler
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
       if (navigationRef.current && navigationRef.current.canGoBack()) {
         navigationRef.current.goBack();
-        return true; // Prevents app from closing
+        return true; // Stepped back, do not close app
       }
-      return false; // Exit app only if at the root screen
+
+      // User is at root Home screen: Require double press to exit
+      const now = Date.now();
+      if (now - lastExitPressRef.current < 2500) {
+        return false; // Exit app on second press within 2.5 seconds
+      }
+
+      lastExitPressRef.current = now;
+      if (Platform.OS === 'android') {
+        import('react-native').then(({ ToastAndroid }) => {
+          ToastAndroid.show('Press back again to exit Ulist', ToastAndroid.SHORT);
+        });
+      }
+      return true; // Intercept first back press at root
     });
 
     return () => backHandler.remove();
@@ -171,8 +213,8 @@ export default function App() {
       <NavigationContainer
         ref={navigationRef}
         onStateChange={() => {
-          if (Platform.OS === 'web' && typeof window !== 'undefined' && window.history) {
-            window.history.pushState(null, '', window.location.href);
+          if (Platform.OS === 'web' && typeof window !== 'undefined' && window.history && !isNavigatingRef.current) {
+            window.history.pushState({ ulistApp: true, timestamp: Date.now() }, '', window.location.href);
           }
         }}
       >

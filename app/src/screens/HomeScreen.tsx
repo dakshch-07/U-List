@@ -153,19 +153,62 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* Top Banner on Web */}
-      <AppDownloadBanner />
+      {/* Top Header with City selector & Brand Logo + Sticky Search Bar together in one clean sticky top container */}
+      <View style={styles.stickyTopContainer}>
+        {/* Row 1: Location & Brand Actions */}
+        <View style={styles.topRow}>
+          {/* Left: Location Dropdown with full city name visibility */}
+          <TouchableOpacity
+            style={styles.citySelector}
+            onPress={() => navigation.navigate('CityPicker')}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons name="map-marker" size={18} color={theme.colors.primary} />
+            <Text style={styles.cityName}>
+              {selectedCity}
+            </Text>
+            <MaterialCommunityIcons name="chevron-down" size={16} color={theme.colors.text} />
+          </TouchableOpacity>
 
-      {/* Sticky Fixed Search Bar Row on top: Clients can search items anytime while scrolling */}
-      <View style={styles.stickySearchWrapper}>
-        <TouchableOpacity
-          style={styles.searchBar}
-          activeOpacity={0.9}
-          onPress={() => navigation.navigate('Search')}
-        >
-          <MaterialCommunityIcons name="magnify" size={20} color={theme.colors.secondaryText} />
-          <Text style={styles.searchPlaceholder} numberOfLines={1}>{t.searchPlaceholder}</Text>
-        </TouchableOpacity>
+          {/* Right: Wishlist Heart, Notifications Bell, Brand Logo */}
+          <View style={styles.topRightActions}>
+            <TouchableOpacity
+              style={styles.headerIconButton}
+              onPress={() => navigation.navigate('Favorites')}
+              accessibilityLabel="Wishlist"
+            >
+              <MaterialCommunityIcons name="heart-outline" size={20} color={theme.colors.text} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.headerIconButton}
+              onPress={() => alert('No new notifications')}
+              accessibilityLabel="Notifications"
+            >
+              <MaterialCommunityIcons name="bell-outline" size={20} color={theme.colors.text} />
+            </TouchableOpacity>
+
+            <View style={styles.brandContainer}>
+              <Image
+                source={require('../../assets/logo.png')}
+                style={styles.brandLogo}
+                resizeMode="contain"
+              />
+            </View>
+          </View>
+        </View>
+
+        {/* Row 2: Search Bar */}
+        <View style={styles.searchRow}>
+          <TouchableOpacity
+            style={styles.searchBar}
+            activeOpacity={0.9}
+            onPress={() => navigation.navigate('Search')}
+          >
+            <MaterialCommunityIcons name="magnify" size={20} color={theme.colors.secondaryText} />
+            <Text style={styles.searchPlaceholder} numberOfLines={1}>{t.searchPlaceholder}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <FlatList
@@ -176,51 +219,6 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <>
-            {/* Top Location, Brand & Icons Header (scrolls naturally above categories) */}
-            <View style={styles.header}>
-              <View style={styles.topRow}>
-                {/* Left: Location Dropdown with full city name visibility */}
-                <TouchableOpacity
-                  style={styles.citySelector}
-                  onPress={() => navigation.navigate('CityPicker')}
-                  activeOpacity={0.7}
-                >
-                  <MaterialCommunityIcons name="map-marker" size={18} color={theme.colors.primary} />
-                  <Text style={styles.cityName}>
-                    {selectedCity}
-                  </Text>
-                  <MaterialCommunityIcons name="chevron-down" size={16} color={theme.colors.text} />
-                </TouchableOpacity>
-
-                {/* Right: Wishlist Heart, Notifications Bell, Brand Logo */}
-                <View style={styles.topRightActions}>
-                  <TouchableOpacity
-                    style={styles.headerIconButton}
-                    onPress={() => navigation.navigate('Favorites')}
-                    accessibilityLabel="Wishlist"
-                  >
-                    <MaterialCommunityIcons name="heart-outline" size={20} color={theme.colors.text} />
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.headerIconButton}
-                    onPress={() => alert('No new notifications')}
-                    accessibilityLabel="Notifications"
-                  >
-                    <MaterialCommunityIcons name="bell-outline" size={20} color={theme.colors.text} />
-                  </TouchableOpacity>
-
-                  <View style={styles.brandContainer}>
-                    <Image
-                      source={require('../../assets/logo.png')}
-                      style={styles.brandLogo}
-                      resizeMode="contain"
-                    />
-                  </View>
-                </View>
-              </View>
-            </View>
-
             {/* Categories 4-Column Grid */}
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>{t.browseCategories}</Text>
@@ -334,17 +332,25 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  header: {
-    paddingHorizontal: 8,
-    paddingTop: 4,
+  stickyTopContainer: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 10,
+    paddingTop: 6,
     paddingBottom: 8,
-    backgroundColor: theme.colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    zIndex: 99,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 3,
   },
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   citySelector: {
     flexDirection: 'row',
@@ -392,35 +398,19 @@ const styles = StyleSheet.create({
     width: 76,
     height: 32,
   },
-  stickySearchWrapper: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 12,
-    paddingTop: 8,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    zIndex: 99,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
-    elevation: 3,
-  },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
   },
   searchBar: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.surface,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.sm,
+    backgroundColor: '#F3F4F6',
+    borderWidth: 0,
+    borderRadius: 8,
     paddingHorizontal: 12,
-    height: 44,
+    height: 42,
   },
   searchPlaceholder: {
     marginLeft: 8,

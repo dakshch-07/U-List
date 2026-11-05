@@ -664,12 +664,12 @@ async function startServer() {
     console.log('[Bootstrap] Admin password synced for:', adminEmail);
   }
 
-  // Check if categories or baseline sample ads (2 per category) are needed
+  // Check if categories or baseline sample ads (4 per category = 48 total) are needed
   const { Category } = await import('./models/Category');
   const catCount = await Category.countDocuments();
   const adCount = await Ad.countDocuments({ status: { $ne: 'deleted' } });
-  if (catCount === 0 || adCount === 0) {
-    console.log('[Bootstrap] Initializing categories & 2 sample ads per category...');
+  if (catCount === 0 || adCount < 48) {
+    console.log('[Bootstrap] Initializing categories & 4 sample ads per category...');
     await runSeed();
   }
 

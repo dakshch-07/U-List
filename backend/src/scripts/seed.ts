@@ -710,9 +710,9 @@ export async function runSeed(): Promise<void> {
     { key: 'whatsapp_number', value: '+919876543210', description: 'Official WhatsApp support number' },
   ]);
 
-  // Seed exactly 2 sample ads per category (24 total) so new visitors see a lively marketplace
+  // Seed exactly 4 sample ads per category (48 total) so new visitors see a lively marketplace
   const existingAdsCount = await Ad.countDocuments({ status: { $ne: 'deleted' } });
-  if (existingAdsCount >= 24) {
+  if (existingAdsCount >= 48) {
     console.log(`[Seed] DB already has ${existingAdsCount} ads. Skipping sample ads seeding.`);
     return;
   }
@@ -853,8 +853,301 @@ export async function runSeed(): Promise<void> {
     },
   ];
 
-  // 12 primary templates + 12 secondary templates = exactly 2 per category (24 ads)
-  const combinedSpecs = [...DEMO_ADS_SPEC, ...SECOND_SAMPLE_ADS];
+  // Batch 3 & 4 (2 more authentic ads for each of the 12 categories -> 4 ads each)
+  const ADDITIONAL_SAMPLE_ADS: any[] = [
+    // 1. CARS (+2)
+    {
+      cat: 'cars',
+      title: 'Honda City ZX CVT Automatic 2021 Sunroof, Leather Seats',
+      desc: 'Top-end ZX variant, radiant red metallic, full company service record, zero dep insurance valid till Nov 2027.',
+      price: 1120000,
+      city: 'Mumbai',
+      locality: 'Bandra Kurla Complex',
+      attrs: { brand: 'Honda', year: 2021, fuel: 'Petrol', transmission: 'Automatic', km_driven: 29000, owners: '1' },
+      isFeatured: false,
+      img: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80',
+    },
+    {
+      cat: 'cars',
+      title: 'Tata Nexon Fearless Plus S Petrol Manual 2023 360 Camera',
+      desc: 'Daytona grey, dual-tone roof, 10.25 inch touchscreen, ventilated seats, air purifier, single owner driven.',
+      price: 1180000,
+      city: 'Pune',
+      locality: 'Kothrud',
+      attrs: { brand: 'Tata', year: 2023, fuel: 'Petrol', transmission: 'Manual', km_driven: 14200, owners: '1' },
+      isFeatured: true,
+      img: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80',
+    },
+
+    // 2. PROPERTIES (+2)
+    {
+      cat: 'properties',
+      title: '1 BHK Semi-Furnished Flat with Balcony near Metro Station',
+      desc: 'Prime location, piped gas, lift with power backup, 24/7 security and BMC water supply. Low maintenance society.',
+      price: 5200000,
+      city: 'Mumbai',
+      locality: 'Borivali West',
+      attrs: { property_type: 'Apartment', bedrooms: '1', area_sqft: 580, furnishing: 'Semi-furnished', listed_by: 'Owner' },
+      isFeatured: false,
+      img: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80',
+    },
+    {
+      cat: 'properties',
+      title: 'Commercial Office Space / Showroom 1200 sqft on Main Road',
+      desc: 'Corner property with huge glass frontage, reserved basement parking, high footfall, ideal for clinic, bank, or showroom.',
+      price: 18500000,
+      city: 'Delhi',
+      locality: 'Connaught Place Outer Circle',
+      attrs: { property_type: 'Showroom / Office', area_sqft: 1200, furnishing: 'Unfurnished', listed_by: 'Dealer' },
+      isFeatured: true,
+      img: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80',
+    },
+
+    // 3. MOBILES (+2)
+    {
+      cat: 'mobiles',
+      title: 'OnePlus 12 5G (512GB / 16GB RAM) Emerald Green with 100W SuperVOOC',
+      desc: 'Snapdragon 8 Gen 3 flagship, Hasselblad cameras, 2K 120Hz display, scratchless condition with box and bill.',
+      price: 520000,
+      city: 'Bengaluru',
+      locality: 'Koramangala 5th Block',
+      attrs: { brand: 'OnePlus', model: 'OnePlus 12', storage: '512GB', condition: 'Like New' },
+      isFeatured: true,
+      img: 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=800&q=80',
+    },
+    {
+      cat: 'mobiles',
+      title: 'Apple iPad Air 5th Gen M1 (64GB WiFi) Space Grey with Folio Case',
+      desc: 'Superfast Apple M1 chip, 10.9 inch Liquid Retina, stereo speakers, rarely used for Netflix, flawless battery health.',
+      price: 38000,
+      city: 'Pune',
+      locality: 'Aundh',
+      attrs: { brand: 'Apple', model: 'iPad Air 5th Gen', storage: '64GB', condition: 'Like New' },
+      isFeatured: false,
+      img: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&w=800&q=80',
+    },
+
+    // 4. JOBS (+2)
+    {
+      cat: 'jobs',
+      title: 'Accountant / Tally Prime Executive for Trading Firm',
+      desc: 'Looking for B.Com graduate with 2+ years experience in GST return filing, TDS, bank reconciliation, and Tally Prime.',
+      price: 0,
+      salary: { from: 22000, to: 30000, period: 'Monthly' },
+      city: 'Ahmedabad',
+      locality: 'SG Highway',
+      attrs: { salary_from: 22000, salary_to: 30000, salary_period: 'Monthly', position_type: 'Full-time', experience: '1-3 years' },
+      isFeatured: false,
+      img: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80',
+    },
+    {
+      cat: 'jobs',
+      title: 'Full Stack React & Node.js Developer (Remote / Hybrid)',
+      desc: 'Immediate hiring for product startup. Requirements: TypeScript, React Native or Next.js, MongoDB, REST APIs. Competitive package.',
+      price: 0,
+      salary: { from: 50000, to: 80000, period: 'Monthly' },
+      city: 'Hyderabad',
+      locality: 'HITEC City',
+      attrs: { salary_from: 50000, salary_to: 80000, salary_period: 'Monthly', position_type: 'Full-time', experience: '2-5 years' },
+      isFeatured: true,
+      img: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80',
+    },
+
+    // 5. BIKES (+2)
+    {
+      cat: 'bikes',
+      title: 'Hero Xpulse 200 4V Pro Edition 2023 with Rally Kit',
+      desc: 'Trail ready offroad motorcycle, adjustable suspension, Maxxis knobby tyres, handlebar risers, zero accidental record.',
+      price: 138000,
+      city: 'Delhi',
+      locality: 'Saket',
+      attrs: { brand: 'Hero', model: 'Xpulse 200 4V', year: 2023, km_driven: 9400, owners: '1' },
+      isFeatured: true,
+      img: 'https://images.unsplash.com/photo-1558981408-db0ecd8a1ee4?auto=format&fit=crop&w=800&q=80',
+    },
+    {
+      cat: 'bikes',
+      title: 'TVS Jupiter 125 Disc SmartXonnect 2022 All-in-One Scooter',
+      desc: 'Front disc brake, Bluetooth navigation, LED headlamp, 33L underseat storage fits 2 helmets, very smooth family scooter.',
+      price: 68000,
+      city: 'Mumbai',
+      locality: 'Goregaon East',
+      attrs: { brand: 'TVS', model: 'Jupiter 125', year: 2022, km_driven: 11200, owners: '1' },
+      isFeatured: false,
+      img: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=80',
+    },
+
+    // 6. ELECTRONICS & APPLIANCES (+2)
+    {
+      cat: 'electronics',
+      title: 'IFB 8 Kg 5 Star Fully Automatic Front Load Washing Machine',
+      desc: 'Steam wash technology, 1400 RPM spin, Aqua Energie, in warranty with original invoice and drain pipes.',
+      price: 24500,
+      city: 'Bengaluru',
+      locality: 'Whitefield',
+      attrs: { brand: 'IFB', condition: 'Used - Like New', years_used: 1 },
+      isFeatured: true,
+      img: 'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=800&q=80',
+    },
+    {
+      cat: 'electronics',
+      title: 'Daikin 1.5 Ton 5 Star Inverter Split AC with PM 2.5 Filter',
+      desc: 'Copper condenser coil, energy efficient, fast cooling even in 50°C, outdoor unit and remote included in working condition.',
+      price: 26000,
+      city: 'Chandigarh',
+      locality: 'Sector 35',
+      attrs: { brand: 'Daikin', condition: 'Used - Good', years_used: 2 },
+      isFeatured: false,
+      img: 'https://images.unsplash.com/photo-1585338107529-13afc5f02586?auto=format&fit=crop&w=800&q=80',
+    },
+
+    // 7. COMMERCIAL VEHICLES & SPARES (+2)
+    {
+      cat: 'commercial-vehicles',
+      title: 'Ashok Leyland Dost Plus 2021 Pickup Commercial Goods Vehicle',
+      desc: 'Power steering, factory body, high payload capacity, national goods permit, insurance valid up to 2027.',
+      price: 480000,
+      city: 'Kolkata',
+      locality: 'Dankuni Transport Nagar',
+      attrs: { vehicle_type: 'Pickup Truck', brand: 'Ashok Leyland', year: 2021 },
+      isFeatured: true,
+      img: 'https://images.unsplash.com/photo-1506015391300-4802dc74de2e?auto=format&fit=crop&w=800&q=80',
+    },
+    {
+      cat: 'commercial-vehicles',
+      title: 'Bajaj Maxima Z CNG Auto Rickshaw 2022 Passenger',
+      desc: 'Single owner driven, green CNG pass, high mileage, clean passenger seats, fitness valid till late 2027.',
+      price: 195000,
+      city: 'Delhi',
+      locality: 'Anand Vihar',
+      attrs: { vehicle_type: 'Three Wheeler / Auto', brand: 'Bajaj', year: 2022 },
+      isFeatured: false,
+      img: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=800&q=80',
+    },
+
+    // 8. FURNITURE (+2)
+    {
+      cat: 'furniture',
+      title: 'King Size Teak Wood Hydraulic Storage Bed with Mattress',
+      desc: 'Heavy pure teakwood bed with hydraulic box storage, Wakefit 8 inch memory foam orthopedic mattress included.',
+      price: 32000,
+      city: 'Mumbai',
+      locality: 'Juhu',
+      attrs: { material: 'Teak Wood', condition: 'Used - Like New' },
+      isFeatured: true,
+      img: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80',
+    },
+    {
+      cat: 'furniture',
+      title: 'Ergonomic High Back Mesh Office Chair with Adjustable Lumbar',
+      desc: 'Green Soul ergonomic swivel chair, 3D armrests, heavy duty metal base, pneumatic gas lift, under warranty.',
+      price: 6500,
+      city: 'Pune',
+      locality: 'Hinjewadi Phase 1',
+      attrs: { material: 'Breathable Mesh', condition: 'Like New' },
+      isFeatured: false,
+      img: 'https://images.unsplash.com/photo-1580481077194-c2c62c7e0c40?auto=format&fit=crop&w=800&q=80',
+    },
+
+    // 9. FASHION (+2)
+    {
+      cat: 'fashion',
+      title: 'Original Woodland Leather Rugged Trekking Boots (UK Size 8)',
+      desc: 'Genuine full grain nubuck leather boots, vibram rubber outsole for grip, worn twice for trek, like new condition.',
+      price: 2400,
+      city: 'Dehradun',
+      locality: 'Rajpur Road',
+      attrs: { type: 'Footwear / Boots', size: 'UK 8', condition: 'Used - Like New' },
+      isFeatured: false,
+      img: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80',
+    },
+    {
+      cat: 'fashion',
+      title: 'Pure Banarasi Katan Silk Saree with Zari Pallu and Blouse Piece',
+      desc: 'Royal blue traditional Banarasi silk saree with authentic silk mark tag, ideal for weddings and grand festive wear.',
+      price: 5800,
+      city: 'Varanasi',
+      locality: 'Godowlia',
+      attrs: { type: 'Silk Saree', size: 'Free Size', condition: 'Brand New' },
+      isFeatured: true,
+      img: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
+    },
+
+    // 10. BOOKS, SPORTS & HOBBIES (+2)
+    {
+      cat: 'books-sports',
+      title: 'Kobo Clara 2E Waterproof E-Reader with 16GB Storage & Warm Light',
+      desc: '6 inch glare-free HD screen, 16GB holds 12,000 books, weeks of battery life, with original origami sleep cover.',
+      price: 8900,
+      city: 'Bengaluru',
+      locality: 'Indiranagar',
+      attrs: { condition: 'Like New' },
+      isFeatured: false,
+      img: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80',
+    },
+    {
+      cat: 'books-sports',
+      title: 'Yonex Astrox 88D Pro Badminton Racket (4U G5) with BG65 String',
+      desc: 'Genuine Japan made Yonex racket strung at 26 lbs, full carbon graphite frame, comes with Yonex thermo bag.',
+      price: 8500,
+      city: 'Hyderabad',
+      locality: 'Kukatpally',
+      attrs: { condition: 'Used - Like New' },
+      isFeatured: true,
+      img: 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=800&q=80',
+    },
+
+    // 11. PETS (+2)
+    {
+      cat: 'pets',
+      title: 'Shih Tzu Puppy Tricolor Heavy Coat (60 Days Old)',
+      desc: 'Purebred champion bloodline Shih Tzu puppy, vaccinated, dewormed, vet verified booklet, very gentle and kid-friendly.',
+      price: 19000,
+      city: 'Jaipur',
+      locality: 'Vaishali Nagar',
+      attrs: { breed: 'Shih Tzu', age: '60 Days' },
+      isFeatured: true,
+      img: 'https://images.unsplash.com/photo-1535930891776-0c2dfb7fda1a?auto=format&fit=crop&w=800&q=80',
+    },
+    {
+      cat: 'pets',
+      title: 'Imported Curved Glass Aquarium 2.5 Feet with Filter & LED Light',
+      desc: 'Complete aquarium setup with SOBO power filter, underwater LED bar, decorative driftwood, and white river gravel.',
+      price: 4800,
+      city: 'Mumbai',
+      locality: 'Malad West',
+      attrs: { type: 'Aquarium & Fish', condition: 'Used - Good' },
+      isFeatured: false,
+      img: 'https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?auto=format&fit=crop&w=800&q=80',
+    },
+
+    // 12. SERVICES (+2)
+    {
+      cat: 'services',
+      title: 'Interior Painting & Waterproofing Services with Asian Paints Royale',
+      desc: 'Experienced painters, mechanized sanding, wall putty repairs, free site inspection and computerized color consultation.',
+      price: 1499,
+      city: 'Mumbai',
+      locality: 'Andheri West',
+      attrs: { service_type: 'Home Painting', price_type: 'Starting at' },
+      isFeatured: false,
+      img: 'https://images.unsplash.com/photo-1562259949-e8e7689d7828?auto=format&fit=crop&w=800&q=80',
+    },
+    {
+      cat: 'services',
+      title: 'Packers and Movers Relocation Service (Household & Bike Transport)',
+      desc: 'Safe packing with bubble wrap, corrugated sheets, dedicated covered container trucks, transit insurance available.',
+      price: 2999,
+      city: 'Delhi',
+      locality: 'South Extension',
+      attrs: { service_type: 'Packers & Movers', price_type: 'Starting at' },
+      isFeatured: true,
+      img: 'https://images.unsplash.com/photo-1600518464441-9154a4dea21b?auto=format&fit=crop&w=800&q=80',
+    },
+  ];
+
+  // 12 primary templates + 12 secondary templates + 24 additional templates = exactly 4 per category (48 ads)
+  const combinedSpecs = [...DEMO_ADS_SPEC, ...SECOND_SAMPLE_ADS, ...ADDITIONAL_SAMPLE_ADS];
   const adsToInsert: any[] = [];
   const validityDays = 30;
 

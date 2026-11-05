@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Platform, BackHandler } from 'react-native';
+import React, { useEffect, useRef, Component, ErrorInfo, ReactNode } from 'react';
+import { View, Text, StyleSheet, Platform, BackHandler, TouchableOpacity } from 'react-native';
 import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -32,6 +32,87 @@ import { translations } from './src/utils/translations';
 const queryClient = new QueryClient();
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+
+interface ErrorBoundaryProps {
+  children: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
+
+class AppErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('AppErrorBoundary caught:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={errorStyles.container}>
+          <Text style={errorStyles.title}>Something went wrong</Text>
+          <Text style={errorStyles.message}>{this.state.error?.message || 'Unexpected application error'}</Text>
+          <TouchableOpacity
+            style={errorStyles.btn}
+            onPress={() => {
+              if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                window.location.reload();
+              } else {
+                this.setState({ hasError: false });
+              }
+            }}
+          >
+            <Text style={errorStyles.btnText}>Reload App</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+const errorStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    backgroundColor: '#FFFFFF',
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 8,
+  },
+  message: {
+    fontSize: 14,
+    color: '#64748B',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  btn: {
+    backgroundColor: '#00479A',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 6,
+  },
+  btnText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 15,
+  },
+});
 
 function BottomTabs() {
   const { language } = useAuthStore();
@@ -209,100 +290,102 @@ export default function App() {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <NavigationContainer
-        ref={navigationRef}
-        onStateChange={() => {
-          if (Platform.OS === 'web' && typeof window !== 'undefined' && window.history && !isNavigatingRef.current) {
-            window.history.pushState({ ulistApp: true, timestamp: Date.now() }, '', window.location.href);
-          }
-        }}
-      >
-        <OfflineNotice />
-        <Stack.Navigator
-          screenOptions={{
-            headerStyle: { backgroundColor: theme.colors.background },
-            headerTintColor: theme.colors.text,
-            headerTitleStyle: { fontWeight: '700', fontSize: 16 },
-            headerShadowVisible: false,
+    <AppErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <NavigationContainer
+          ref={navigationRef}
+          onStateChange={() => {
+            if (Platform.OS === 'web' && typeof window !== 'undefined' && window.history && !isNavigatingRef.current) {
+              window.history.pushState({ ulistApp: true, timestamp: Date.now() }, '', window.location.href);
+            }
           }}
         >
-          <Stack.Screen
-            name="Main"
-            component={BottomTabs}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="CityPicker"
-            component={CityPickerScreen}
-            options={{ title: 'Select City' }}
-          />
-          <Stack.Screen
-            name="Search"
-            component={SearchScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="Category"
-            component={CategoryScreen}
-            options={({ route }: any) => ({ title: route.params?.category?.name || 'Category' })}
-          />
-          <Stack.Screen
-            name="AdDetail"
-            component={AdDetailScreen}
-            options={{ title: 'Listing Details' }}
-          />
-          <Stack.Screen
-            name="Login"
-            component={LoginScreen}
-            options={{ title: 'Sign In / Register' }}
-          />
-          <Stack.Screen
-            name="ChatRoom"
-            component={ChatRoomScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="Favorites"
-            component={FavoritesScreen}
-            options={{ title: 'My Favourites' }}
-          />
-          <Stack.Screen
-            name="SellerProfile"
-            component={SellerProfileScreen}
-            options={{ title: 'Seller Profile' }}
-          />
-          <Stack.Screen
-            name="ContactUs"
-            component={ContactUsScreen}
-            options={{ title: 'Help & Contact Us' }}
-          />
-          <Stack.Screen
-            name="AboutUs"
-            component={AboutUsScreen}
-            options={{ title: 'About Us' }}
-          />
-          <Stack.Screen
-            name="PrivacyPolicy"
-            component={PrivacyPolicyScreen}
-            options={{ title: 'Privacy Policy' }}
-          />
-          <Stack.Screen
-            name="TermsOfService"
-            component={TermsOfServiceScreen}
-            options={{ title: 'Terms of Service' }}
-          />
-          <Stack.Screen
-            name="Language"
-            component={LanguageScreen}
-            options={{
-              title: 'भाषा चुनें / SELECT LANGUAGE',
+          <OfflineNotice />
+          <Stack.Navigator
+            screenOptions={{
+              headerStyle: { backgroundColor: theme.colors.background },
+              headerTintColor: theme.colors.text,
               headerTitleStyle: { fontWeight: '700', fontSize: 16 },
+              headerShadowVisible: false,
             }}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </QueryClientProvider>
+          >
+            <Stack.Screen
+              name="Main"
+              component={BottomTabs}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="CityPicker"
+              component={CityPickerScreen}
+              options={{ title: 'Select City' }}
+            />
+            <Stack.Screen
+              name="Search"
+              component={SearchScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Category"
+              component={CategoryScreen}
+              options={({ route }: any) => ({ title: route.params?.category?.name || 'Category' })}
+            />
+            <Stack.Screen
+              name="AdDetail"
+              component={AdDetailScreen}
+              options={{ title: 'Listing Details' }}
+            />
+            <Stack.Screen
+              name="Login"
+              component={LoginScreen}
+              options={{ title: 'Sign In / Register' }}
+            />
+            <Stack.Screen
+              name="ChatRoom"
+              component={ChatRoomScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Favorites"
+              component={FavoritesScreen}
+              options={{ title: 'My Favourites' }}
+            />
+            <Stack.Screen
+              name="SellerProfile"
+              component={SellerProfileScreen}
+              options={{ title: 'Seller Profile' }}
+            />
+            <Stack.Screen
+              name="ContactUs"
+              component={ContactUsScreen}
+              options={{ title: 'Help & Contact Us' }}
+            />
+            <Stack.Screen
+              name="AboutUs"
+              component={AboutUsScreen}
+              options={{ title: 'About Us' }}
+            />
+            <Stack.Screen
+              name="PrivacyPolicy"
+              component={PrivacyPolicyScreen}
+              options={{ title: 'Privacy Policy' }}
+            />
+            <Stack.Screen
+              name="TermsOfService"
+              component={TermsOfServiceScreen}
+              options={{ title: 'Terms of Service' }}
+            />
+            <Stack.Screen
+              name="Language"
+              component={LanguageScreen}
+              options={{
+                title: 'भाषा चुनें / SELECT LANGUAGE',
+                headerTitleStyle: { fontWeight: '700', fontSize: 16 },
+              }}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </QueryClientProvider>
+    </AppErrorBoundary>
   );
 }
 

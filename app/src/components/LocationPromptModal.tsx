@@ -40,7 +40,7 @@ export const LocationPromptModal: React.FC<LocationPromptModalProps> = ({
       }
 
       const loc = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
+        accuracy: (Location as any)?.Accuracy?.Balanced || (Location as any)?.Accuracy?.Low || 3,
       });
 
       // Find nearest Indian city from backend list

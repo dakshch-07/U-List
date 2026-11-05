@@ -41,7 +41,7 @@ export const ChatsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   // Filter conversations by Buying (I am buyer) vs Selling (My Ad)
   const filteredByTab = conversations.filter((c: any) => {
-    const isMyAd = c.ad?.user === user._id || c.ad?.user?._id === user._id;
+    const isMyAd = c.ad?.user === user?._id || c.ad?.user?._id === user?._id;
     if (activeTab === 'selling') return isMyAd;
     return !isMyAd;
   });
@@ -101,7 +101,7 @@ export const ChatsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             onPress={() => setActiveFilter('verified')}
           >
             <MaterialCommunityIcons
-              name="sparkles"
+              name="star-check"
               size={14}
               color={activeFilter === 'verified' ? '#00479A' : '#7C3AED'}
               style={{ marginRight: 4 }}

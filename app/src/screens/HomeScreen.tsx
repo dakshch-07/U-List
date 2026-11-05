@@ -37,6 +37,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showLocationPrompt, setShowLocationPrompt] = useState(false);
   const [locating, setLocating] = useState(false);
 
   useEffect(() => {
@@ -424,12 +425,6 @@ const styles = StyleSheet.create({
     color: theme.colors.secondaryText,
     fontSize: theme.typography.size.body,
     flex: 1,
-  },
-  headerIconButton: {
-    width: 32,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   listContent: {
     padding: 8,

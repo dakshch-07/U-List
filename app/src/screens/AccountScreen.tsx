@@ -1,14 +1,83 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Linking, Share, Platform } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Linking, Share, Platform, Image, ActivityIndicator } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { theme } from '../theme';
 import { useAuthStore } from '../store/authStore';
 import { api } from '../services/api';
+import { storage } from '../utils/storage';
+import { getFullImageUrl } from '../utils/formatters';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { translations } from '../utils/translations';
 
 export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const { user, logout, language } = useAuthStore();
+  const { user, setUser, logout, language } = useAuthStore();
   const t = translations[language] || translations.en;
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  const handlePickAvatar = async () => {
+    if (!user) {
+      navigation.navigate('Login');
+      return;
+    }
+
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission required', 'Please grant photos permission to upload your profile picture.');
+        return;
+      }
+
+      const res = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+      });
+
+      if (res.canceled || !res.assets || res.assets.length === 0) {
+        return;
+      }
+
+      const asset = res.assets[0];
+      setUploadingAvatar(true);
+
+      const formData = new FormData();
+      const filename = `avatar_${Date.now()}.jpg`;
+
+      if (Platform.OS === 'web' && typeof document !== 'undefined') {
+        try {
+          const resp = await fetch(asset.uri);
+          const blob = await resp.blob();
+          formData.append('avatar', blob, filename);
+        } catch {
+          formData.append('avatar', asset.uri);
+        }
+      } else {
+        formData.append('avatar', {
+          uri: asset.uri,
+          name: filename,
+          type: 'image/jpeg',
+        } as any);
+      }
+
+      const token = await storage.getItem('ulist_access_token');
+      const response = await api.put('/users/me', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      if (response.data && response.data.data) {
+        setUser(response.data.data);
+        Alert.alert('Success', 'Profile picture updated successfully!');
+      }
+    } catch (err: any) {
+      Alert.alert('Upload Error', err.response?.data?.message || err.message || 'Failed to update profile picture');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const handleInviteFriends = async () => {
     try {
@@ -65,15 +134,41 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
     <ScrollView style={styles.container}>
       {/* Profile Header */}
       <View style={styles.header}>
-        <View style={styles.avatar}>
-          <MaterialCommunityIcons name="account" size={36} color={theme.colors.secondaryText} />
-        </View>
+        <TouchableOpacity
+          style={styles.avatarWrapper}
+          onPress={handlePickAvatar}
+          activeOpacity={0.8}
+        >
+          {user?.avatar ? (
+            <Image
+              source={{ uri: getFullImageUrl(user.avatar) }}
+              style={styles.avatarImage}
+            />
+          ) : (
+            <View style={styles.avatar}>
+              <MaterialCommunityIcons name="account" size={40} color={theme.colors.secondaryText} />
+            </View>
+          )}
+
+          {/* Camera upload badge */}
+          <View style={styles.cameraBadge}>
+            {uploadingAvatar ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <MaterialCommunityIcons name="camera" size={14} color="#FFFFFF" />
+            )}
+          </View>
+        </TouchableOpacity>
+
         <View style={{ flex: 1, marginLeft: 16 }}>
           {user ? (
             <>
               <Text style={styles.name}>{user.name}</Text>
               <Text style={styles.email}>{user.email}</Text>
               <Text style={styles.phone}>{user.phone}</Text>
+              <TouchableOpacity onPress={handlePickAvatar} style={styles.changePhotoTextBtn}>
+                <Text style={styles.changePhotoText}>Change Profile Photo</Text>
+              </TouchableOpacity>
             </>
           ) : (
             <>
@@ -207,13 +302,49 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.border,
     backgroundColor: theme.colors.surface,
   },
+  avatarWrapper: {
+    position: 'relative',
+  },
+  avatarImage: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#F3F4F6',
+  },
   avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: theme.colors.border,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  cameraBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: theme.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  changePhotoTextBtn: {
+    marginTop: 4,
+    alignSelf: 'flex-start',
+  },
+  changePhotoText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: theme.colors.primary,
   },
   name: {
     fontSize: theme.typography.size.subheading,

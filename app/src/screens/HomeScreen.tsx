@@ -38,7 +38,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [showLocationModal, setShowLocationModal] = useState(false);
-  const [showLocationPrompt, setShowLocationPrompt] = useState(false);
+  const [showLocationPrompt, setShowLocationPrompt] = useState(true);
   const [locating, setLocating] = useState(false);
 
   useEffect(() => {
@@ -49,6 +49,16 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         setShowLocationModal(true);
       }
     })();
+
+    // Check if location prompt banner was dismissed or city is already specific
+    if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
+      if (localStorage.getItem('ulist_dismiss_location_prompt') === 'true') {
+        setShowLocationPrompt(false);
+      }
+    }
+    if (selectedCity && selectedCity !== 'India' && selectedCity !== 'All India') {
+      setShowLocationPrompt(false);
+    }
   }, [selectedCity]);
 
   const handleDismissLocationPrompt = () => {
@@ -163,6 +173,9 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      {/* Top Download App Banner on Web */}
+      <AppDownloadBanner />
+
       {/* OLX-Style "Where is your location?" First-Open Fullscreen Modal */}
       <LocationPromptModal
         visible={showLocationModal}

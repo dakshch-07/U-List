@@ -81,6 +81,7 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       try {
         await storage.setItem('ulist_access_token', accessToken);
         await storage.setItem('ulist_refresh_token', refreshToken);
+        await storage.setItem('ulist_cached_user', JSON.stringify(user));
       } catch (e) {}
 
       setUser(user);

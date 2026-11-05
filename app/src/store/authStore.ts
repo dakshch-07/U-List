@@ -50,6 +50,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       await storage.deleteItem('ulist_access_token');
       await storage.deleteItem('ulist_refresh_token');
+      await storage.deleteItem('ulist_cached_user');
     } catch {}
     set({ user: null });
   },
@@ -66,15 +67,33 @@ export const useAuthStore = create<AuthState>((set) => ({
         set({ selectedCity: savedCity });
       }
 
+      // 1. Immediately hydrate cached user so app never shows "Sign In / Register" on startup
+      const cachedUserStr = await storage.getItem('ulist_cached_user');
+      if (cachedUserStr) {
+        try {
+          const parsed = JSON.parse(cachedUserStr);
+          if (parsed && parsed._id) {
+            set({ user: parsed, isLoading: false });
+          }
+        } catch {}
+      }
+
+      // 2. Verify / refresh with backend in background
       const token = await storage.getItem('ulist_access_token');
       if (token) {
-        const res = await api.get('/users/me');
-        if (res.data.success) {
-          set({ user: res.data.data });
+        try {
+          const res = await api.get('/users/me');
+          if (res.data?.success && res.data?.data) {
+            set({ user: res.data.data });
+            await storage.setItem('ulist_cached_user', JSON.stringify(res.data.data));
+          }
+        } catch (apiErr: any) {
+          // If offline, keep the cached user intact! Never log out on network glitch/exit.
+          console.warn('[Auth] Background sync error (kept session):', apiErr.message);
         }
       }
     } catch {
-      // Offline or session invalid
+      // Keep existing session
     } finally {
       set({ isLoading: false });
     }

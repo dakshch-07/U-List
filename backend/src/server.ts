@@ -664,11 +664,12 @@ async function startServer() {
     console.log('[Bootstrap] Admin password synced for:', adminEmail);
   }
 
-  // Check if initial categories/settings seed is needed (ONLY if DB has 0 categories, NEVER overwrite user ads)
+  // Check if categories or baseline sample ads (2 per category) are needed
   const { Category } = await import('./models/Category');
   const catCount = await Category.countDocuments();
-  if (catCount === 0) {
-    console.log('[Bootstrap] Running initial categories & settings setup...');
+  const adCount = await Ad.countDocuments({ status: { $ne: 'deleted' } });
+  if (catCount === 0 || adCount === 0) {
+    console.log('[Bootstrap] Initializing categories & 2 sample ads per category...');
     await runSeed();
   }
 

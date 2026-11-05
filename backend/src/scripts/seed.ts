@@ -710,9 +710,188 @@ export async function runSeed(): Promise<void> {
     { key: 'whatsapp_number', value: '+919876543210', description: 'Official WhatsApp support number' },
   ]);
 
-  // Seed Ads: User has requested complete 0-state with NO demo ads.
-  console.log('[Seed] Preserving clean database with 0 demo ads.');
-  return;
+  // Seed exactly 2 sample ads per category (24 total) so new visitors see a lively marketplace
+  const existingAdsCount = await Ad.countDocuments({ status: { $ne: 'deleted' } });
+  if (existingAdsCount >= 24) {
+    console.log(`[Seed] DB already has ${existingAdsCount} ads. Skipping sample ads seeding.`);
+    return;
+  }
+
+  const SECOND_SAMPLE_ADS: any[] = [
+    {
+      cat: 'cars',
+      title: 'Hyundai Creta SX (O) 1.5 Diesel Automatic 2022 Sunroof',
+      desc: 'Top model with panoramic sunroof, ventilated seats, Bose audio, comprehensive insurance till 2028.',
+      price: 1480000,
+      city: 'Delhi',
+      locality: 'Rohini Sector 13',
+      attrs: { brand: 'Hyundai', year: 2022, fuel: 'Diesel', transmission: 'Automatic', km_driven: 18500, owners: '1' },
+      isFeatured: true,
+      img: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80',
+    },
+    {
+      cat: 'properties',
+      title: '3 BHK Independent Villa with Private Garden and Modular Kitchen',
+      desc: 'Newly constructed duplex villa in gated community, 2100 sqft super built-up, Italian marble flooring.',
+      price: 13500000,
+      city: 'Hyderabad',
+      locality: 'Gachibowli',
+      attrs: { property_type: 'Independent House', bedrooms: '3', area_sqft: 2100, furnishing: 'Furnished', listed_by: 'Owner' },
+      isFeatured: false,
+      img: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80',
+    },
+    {
+      cat: 'mobiles',
+      title: 'Samsung Galaxy S23 Ultra 5G (256GB / 12GB RAM) Phantom Black',
+      desc: 'In brand new condition with original S-Pen, 200MP camera, 100x zoom, bill and box with fast charger.',
+      price: 74000,
+      city: 'Mumbai',
+      locality: 'Lajpat Nagar',
+      attrs: { brand: 'Samsung', model: 'Galaxy S23 Ultra', storage: '256GB', condition: 'Like New' },
+      isFeatured: false,
+      img: 'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=800&q=80',
+    },
+    {
+      cat: 'jobs',
+      title: 'Digital Marketing & Social Media Manager for Ecommerce Brand',
+      desc: 'Manage Meta & Google ads, social media handles, and influencer campaigns. 2+ years experience preferred.',
+      price: 0,
+      salary: { from: 35000, to: 50000, period: 'Monthly' },
+      city: 'Bengaluru',
+      locality: 'Koramangala',
+      attrs: { salary_from: 35000, salary_to: 50000, salary_period: 'Monthly', position_type: 'Full-time', experience: '2-5 years' },
+      isFeatured: false,
+      img: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80',
+    },
+    {
+      cat: 'bikes',
+      title: 'Yamaha YZF R15 V4 Racing Blue 2023, Quickshifter ABS',
+      desc: 'Showroom condition R15 V4, only 7800 km driven, first owner, scratchless, ceramic coated with dual ABS.',
+      price: 165000,
+      city: 'Mumbai',
+      locality: 'Bandra West',
+      attrs: { brand: 'Yamaha', model: 'YZF R15 V4', year: 2023, km_driven: 7800, owners: '1' },
+      isFeatured: true,
+      img: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=80',
+    },
+    {
+      cat: 'electronics',
+      title: 'LG 260L 3 Star Frost Free Double Door Refrigerator Smart Inverter',
+      desc: 'Shiny steel finish double door fridge in 100% working order, 10 year compressor warranty with stabilizer free operation.',
+      price: 17500,
+      city: 'Delhi',
+      locality: 'Janakpuri',
+      attrs: { brand: 'LG', condition: 'Used - Good', years_used: 2 },
+      isFeatured: false,
+      img: 'https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?auto=format&fit=crop&w=800&q=80',
+    },
+    {
+      cat: 'commercial-vehicles',
+      title: 'Mahindra Bolero Maxi Truck Plus 2022 Power Steering',
+      desc: 'Heavy duty commercial pickup truck, original tyres, all papers clear, ready for transport business.',
+      price: 520000,
+      city: 'Pune',
+      locality: 'Chakan MIDC',
+      attrs: { vehicle_type: 'Pickup Truck', brand: 'Mahindra', year: 2022 },
+      isFeatured: false,
+      img: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=800&q=80',
+    },
+    {
+      cat: 'furniture',
+      title: 'L-Shape 6 Seater Fabric Sectional Sofa Set with Pillows',
+      desc: 'Grey premium suede fabric sofa, high density foam, only 1 year old, zero stains, extremely comfortable.',
+      price: 19500,
+      city: 'Mumbai',
+      locality: 'Powai',
+      attrs: { material: 'Fabric / Foam', condition: 'Used - Like New' },
+      isFeatured: true,
+      img: 'https://images.unsplash.com/photo-1493663284041-c423e1085a17?auto=format&fit=crop&w=800&q=80',
+    },
+    {
+      cat: 'fashion',
+      title: 'Bridal Heritage Heavy Velvet Lehenga Choli with Embroidered Dupatta',
+      desc: 'Exquisite maroon zardozi handwork lehenga worn once for reception, professionally dry cleaned in box.',
+      price: 14500,
+      city: 'Delhi',
+      locality: 'Chandni Chowk',
+      attrs: { type: 'Bridal Lehenga', size: 'Free Size', condition: 'Used - Like New' },
+      isFeatured: true,
+      img: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
+    },
+    {
+      cat: 'books-sports',
+      title: 'Yamaha F310 Acoustic Guitar with Padded Gig Bag & Plectrums',
+      desc: 'Original Yamaha spruce top dreadnought guitar, clear tone, low action strings, perfect for beginners and pros.',
+      price: 7200,
+      city: 'Pune',
+      locality: 'FC Road',
+      attrs: { condition: 'Used - Like New' },
+      isFeatured: true,
+      img: 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?auto=format&fit=crop&w=800&q=80',
+    },
+    {
+      cat: 'pets',
+      title: 'Persian Kitten Triple Coat Doll Face (2 Months Old)',
+      desc: 'Pure white fluffy triple coat Persian kitten, litter trained, dewormed, extremely playful and friendly with kids.',
+      price: 12000,
+      city: 'Mumbai',
+      locality: 'Andheri Lokhandwala',
+      attrs: { breed: 'Persian Cat', age: '60 Days' },
+      isFeatured: false,
+      img: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=800&q=80',
+    },
+    {
+      cat: 'services',
+      title: 'Expert Laptop & Smartphone Repair at Doorstep (Screen, Battery, OS)',
+      desc: 'Quick 60-minute doorstep repair for MacBooks, Dell, HP, iPhone, and Android with 90-day warranty on spare parts.',
+      price: 499,
+      city: 'Bengaluru',
+      locality: 'HSR Layout',
+      attrs: { service_type: 'Electronics Repair', price_type: 'Starting at' },
+      isFeatured: true,
+      img: 'https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?auto=format&fit=crop&w=800&q=80',
+    },
+  ];
+
+  // 12 primary templates + 12 secondary templates = exactly 2 per category (24 ads)
+  const combinedSpecs = [...DEMO_ADS_SPEC, ...SECOND_SAMPLE_ADS];
+  const adsToInsert: any[] = [];
+  const validityDays = 30;
+
+  for (let i = 0; i < combinedSpecs.length; i++) {
+    const template = combinedSpecs[i];
+    const user = demoUsers[i % demoUsers.length];
+    const categoryDoc = categoryMap.get(template.cat) || categoryMap.get('cars');
+
+    adsToInsert.push({
+      user: user._id,
+      category: categoryDoc._id,
+      subcategory: categoryDoc.subcategories?.[0]?._id || null,
+      title: template.title,
+      description: template.desc,
+      price: template.price,
+      salary: template.salary,
+      attributes: template.attrs || {},
+      images: [
+        { url: template.img || PLACEHOLDER_IMG, publicId: `sample_${template.cat}_${i}` },
+      ],
+      city: template.city || 'Mumbai',
+      locality: template.locality || 'City Center',
+      geo: { lat: 19.076, lng: 72.8777 },
+      contactName: user.name,
+      phone: user.phone,
+      showPhone: true,
+      status: 'active',
+      isFeatured: !!template.isFeatured,
+      featuredUntil: template.isFeatured ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : undefined,
+      views: Math.floor(Math.random() * 35) + 12,
+      expiresAt: new Date(Date.now() + validityDays * 24 * 60 * 60 * 1000),
+      createdAt: new Date(Date.now() - (i * 2 * 60 * 60 * 1000)),
+    });
+  }
+
+  await Ad.insertMany(adsToInsert);
+  console.log(`[Seed] Seeded exactly ${adsToInsert.length} sample ads (2 ads for each of the 12 categories)!`);
 
   console.log('[Seed] Seeding completed successfully!');
 }

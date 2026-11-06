@@ -32,15 +32,13 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     setLoading(true);
     try {
       const res = await api.post('/auth/send-otp', { phone: cleanPhone });
-      const receivedOtp = res.data.data?.otpPreview || '1234';
-      setOtpHint(receivedOtp);
       setStep('otp');
 
-      const infoMsg = `OTP sent! Demo code is: ${receivedOtp} (or use 1234)`;
+      const infoMsg = `OTP sent successfully to +91 ${cleanPhone}. Please check your SMS.`;
       if (typeof window !== 'undefined' && window.alert) {
         window.alert(infoMsg);
       } else {
-        Alert.alert('OTP Dispatched', infoMsg);
+        Alert.alert('OTP Sent', infoMsg);
       }
     } catch (err: any) {
       const errMsg = err.response?.data?.message || 'Failed to send OTP. Please try again.';
@@ -284,15 +282,6 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           <View style={styles.formCard}>
             <Text style={styles.formCardTitle}>Verify OTP</Text>
             <Text style={styles.formCardSubtitle}>Enter 4-digit code sent to +91 {phone}</Text>
-
-            {otpHint && (
-              <View style={styles.demoBadge}>
-                <MaterialCommunityIcons name="information-outline" size={18} color="#D97706" style={{ marginRight: 6 }} />
-                <Text style={styles.demoBadgeText}>
-                  Test OTP: <Text style={styles.boldText}>{otpHint}</Text> (or use 1234)
-                </Text>
-              </View>
-            )}
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Enter 4-digit OTP</Text>

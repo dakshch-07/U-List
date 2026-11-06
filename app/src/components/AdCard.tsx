@@ -12,12 +12,23 @@ interface AdCardProps {
 }
 
 export const AdCard: React.FC<AdCardProps> = ({ ad, onPress, onFavoritePress, isFavorite }) => {
-  const imageUrl = getFullImageUrl(ad.images && ad.images.length > 0 ? ad.images[0].url : undefined);
+  const fallbackUrl = 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80';
+  const initialUrl = getFullImageUrl(ad.images && ad.images.length > 0 ? ad.images[0].url : undefined);
+  const [imgSrc, setImgSrc] = React.useState<string>(initialUrl);
 
   return (
     <TouchableOpacity activeOpacity={0.8} style={styles.card} onPress={onPress}>
       <View style={styles.imageContainer}>
-        <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
+        <Image
+          source={{ uri: imgSrc }}
+          style={styles.image}
+          resizeMode="cover"
+          onError={() => {
+            if (imgSrc !== fallbackUrl) {
+              setImgSrc(fallbackUrl);
+            }
+          }}
+        />
         {ad.isFeatured && (
           <View style={styles.featuredBadge}>
             <Text style={styles.featuredText}>HIGHLIGHTED</Text>

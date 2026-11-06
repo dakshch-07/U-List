@@ -132,14 +132,29 @@ export const AdDetailScreen: React.FC<{ route: any; navigation: any }> = ({ rout
   }
 
   const rawImages = ad.images && ad.images.length > 0 ? ad.images : [{ url: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80' }];
-  const currentImageUrl = getFullImageUrl(rawImages[activeImageIndex]?.url || rawImages[0]?.url);
+  const fallbackDetailUrl = 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80';
+  const targetImageUrl = getFullImageUrl(rawImages[activeImageIndex]?.url || rawImages[0]?.url);
+  const [activeImgUri, setActiveImgUri] = React.useState<string>(targetImageUrl);
+
+  React.useEffect(() => {
+    setActiveImgUri(targetImageUrl);
+  }, [targetImageUrl]);
 
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
         {/* Cover Photo & Carousel */}
         <View style={styles.imageContainer}>
-          <Image source={{ uri: currentImageUrl }} style={styles.image} resizeMode="cover" />
+          <Image
+            source={{ uri: activeImgUri }}
+            style={styles.image}
+            resizeMode="cover"
+            onError={() => {
+              if (activeImgUri !== fallbackDetailUrl) {
+                setActiveImgUri(fallbackDetailUrl);
+              }
+            }}
+          />
 
           {/* Multiple Images Dots / Thumbnail Navigation */}
           {rawImages.length > 1 && (

@@ -114,12 +114,18 @@ export const MyAdsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           />
         }
         renderItem={({ item }) => {
+          const fallbackThumb = 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80';
           const imgUrl = item.images?.[0]?.url ? getFullImageUrl(item.images[0].url) : null;
           return (
             <View style={styles.card}>
               <View style={styles.cardHeader}>
                 {imgUrl ? (
-                  <Image source={{ uri: imgUrl }} style={styles.adThumb} resizeMode="cover" />
+                  <Image
+                    source={{ uri: imgUrl }}
+                    style={styles.adThumb}
+                    resizeMode="cover"
+                    defaultSource={{ uri: fallbackThumb }}
+                  />
                 ) : (
                   <View style={styles.adThumbFallback}>
                     <MaterialCommunityIcons name="image-outline" size={24} color="#94A3B8" />

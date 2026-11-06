@@ -805,7 +805,7 @@ export async function runSeed(): Promise<void> {
       locality: 'Powai',
       attrs: { material: 'Fabric / Foam', condition: 'Used - Like New' },
       isFeatured: true,
-      img: 'https://images.unsplash.com/photo-1493663284041-c423e1085a17?auto=format&fit=crop&w=800&q=80',
+      img: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80',
     },
     {
       cat: 'fashion',
@@ -1046,7 +1046,7 @@ export async function runSeed(): Promise<void> {
       locality: 'Hinjewadi Phase 1',
       attrs: { material: 'Breathable Mesh', condition: 'Like New' },
       isFeatured: false,
-      img: 'https://images.unsplash.com/photo-1580481077194-c2c62c7e0c40?auto=format&fit=crop&w=800&q=80',
+      img: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80',
     },
 
     // 9. FASHION (+2)

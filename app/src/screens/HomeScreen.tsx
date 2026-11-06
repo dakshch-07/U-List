@@ -183,174 +183,174 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         onOpenCityPicker={() => navigation.navigate('CityPicker')}
       />
 
-      <FlatList
-        data={ads}
-        numColumns={2}
-        keyExtractor={(item) => item._id}
+      <ScrollView
+        stickyHeaderIndices={[1]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         contentContainerStyle={styles.listContent}
-        ListHeaderComponent={
-          <>
-            {/* Top Header: Location, Wishlist, Notifications, Logo - Scrolls UP naturally with the page */}
-            <View style={styles.scrollableTopRow}>
-              {/* Left: Location Dropdown with full city name visibility */}
+      >
+        {/* Top Header: Location, Wishlist, Notifications, Logo - Scrolls UP naturally with the page */}
+        <View style={styles.scrollableTopRow}>
+          {/* Left: Location Dropdown with full city name visibility */}
+          <TouchableOpacity
+            style={styles.citySelector}
+            onPress={() => navigation.navigate('CityPicker')}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons name="map-marker" size={18} color={theme.colors.primary} />
+            <Text style={styles.cityName}>
+              {selectedCity}
+            </Text>
+            <MaterialCommunityIcons name="chevron-down" size={16} color={theme.colors.text} />
+          </TouchableOpacity>
+
+          {/* Right: Wishlist Heart, Notifications Bell, Brand Logo */}
+          <View style={styles.topRightActions}>
+            <TouchableOpacity
+              style={styles.headerIconButton}
+              onPress={() => navigation.navigate('Favorites')}
+              accessibilityLabel="Wishlist"
+            >
+              <MaterialCommunityIcons name="heart-outline" size={20} color={theme.colors.text} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.headerIconButton}
+              onPress={() => alert('No new notifications')}
+              accessibilityLabel="Notifications"
+            >
+              <MaterialCommunityIcons name="bell-outline" size={20} color={theme.colors.text} />
+            </TouchableOpacity>
+
+            <View style={styles.brandContainer}>
+              <Image
+                source={require('../../assets/logo.png')}
+                style={styles.brandLogo}
+                resizeMode="contain"
+              />
+            </View>
+          </View>
+        </View>
+
+        {/* Sticky Search Bar: Scrolls naturally until top=0, then STICKS permanently above all content */}
+        <View style={styles.stickySearchContainer}>
+          <View style={styles.searchRow}>
+            <TouchableOpacity
+              style={styles.searchBar}
+              activeOpacity={0.9}
+              onPress={() => navigation.navigate('Search')}
+            >
+              <MaterialCommunityIcons name="magnify" size={20} color={theme.colors.secondaryText} />
+              <Text style={styles.searchPlaceholder} numberOfLines={1}>{t.searchPlaceholder}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Categories 4-Column Grid */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>{t.browseCategories}</Text>
+        </View>
+        <View style={styles.categoriesGrid}>
+          {categories.slice(0, 12).map((cat: any) => {
+            const catImg = CATEGORY_IMAGES[cat.slug];
+            return (
               <TouchableOpacity
-                style={styles.citySelector}
-                onPress={() => navigation.navigate('CityPicker')}
-                activeOpacity={0.7}
+                key={cat._id}
+                style={styles.categoryCard}
+                onPress={() => navigation.navigate('Category', { category: cat })}
               >
-                <MaterialCommunityIcons name="map-marker" size={18} color={theme.colors.primary} />
-                <Text style={styles.cityName}>
-                  {selectedCity}
+                <View style={styles.categoryImageBox}>
+                  {catImg ? (
+                    <Image
+                      source={typeof catImg === 'string' ? { uri: catImg } : catImg}
+                      style={styles.categoryImage}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <MaterialCommunityIcons
+                      name={cat.icon || 'tag-outline'}
+                      size={28}
+                      color={theme.colors.primary}
+                    />
+                  )}
+                </View>
+                <Text style={styles.categoryLabel} numberOfLines={2}>
+                  {cat.name}
                 </Text>
-                <MaterialCommunityIcons name="chevron-down" size={16} color={theme.colors.text} />
               </TouchableOpacity>
+            );
+          })}
+        </View>
 
-              {/* Right: Wishlist Heart, Notifications Bell, Brand Logo */}
-              <View style={styles.topRightActions}>
-                <TouchableOpacity
-                  style={styles.headerIconButton}
-                  onPress={() => navigation.navigate('Favorites')}
-                  accessibilityLabel="Wishlist"
-                >
-                  <MaterialCommunityIcons name="heart-outline" size={20} color={theme.colors.text} />
-                </TouchableOpacity>
+        {/* Ulist custom branded "Turn on location" nearby recommendations prompt banner */}
+        {showLocationPrompt && (
+          <View style={styles.locationBanner}>
+            <TouchableOpacity
+              style={styles.locationBannerClose}
+              onPress={handleDismissLocationPrompt}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <MaterialCommunityIcons name="close" size={16} color="rgba(255,255,255,0.85)" />
+            </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={styles.headerIconButton}
-                  onPress={() => alert('No new notifications')}
-                  accessibilityLabel="Notifications"
-                >
-                  <MaterialCommunityIcons name="bell-outline" size={20} color={theme.colors.text} />
-                </TouchableOpacity>
+            <View style={styles.locationBannerLeft}>
+              <Text style={styles.locationBannerText}>
+                {t.wantBetterRecommendations}
+              </Text>
+              <TouchableOpacity
+                style={styles.locationBannerButton}
+                onPress={handleTurnOnLocation}
+                disabled={locating}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.locationBannerBtnText}>
+                  {locating ? t.detecting : t.turnOnLocation}
+                </Text>
+              </TouchableOpacity>
+            </View>
 
-                <View style={styles.brandContainer}>
-                  <Image
-                    source={require('../../assets/logo.png')}
-                    style={styles.brandLogo}
-                    resizeMode="contain"
-                  />
-                </View>
+            <View style={styles.locationBannerGraphic}>
+              <View style={styles.locationIconCircle}>
+                <MaterialCommunityIcons name="crosshairs-gps" size={26} color="#D9480F" />
               </View>
             </View>
+          </View>
+        )}
 
-            {/* Sticky Search Bar: Scrolls naturally until top=0, then STICKS at the top */}
-            <View style={styles.stickySearchContainer}>
-              <View style={styles.searchRow}>
-                <TouchableOpacity
-                  style={styles.searchBar}
-                  activeOpacity={0.9}
-                  onPress={() => navigation.navigate('Search')}
-                >
-                  <MaterialCommunityIcons name="magnify" size={20} color={theme.colors.secondaryText} />
-                  <Text style={styles.searchPlaceholder} numberOfLines={1}>{t.searchPlaceholder}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-            {/* Categories 4-Column Grid */}
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{t.browseCategories}</Text>
-            </View>
-            <View style={styles.categoriesGrid}>
-              {categories.slice(0, 12).map((cat: any) => {
-                const catImg = CATEGORY_IMAGES[cat.slug];
-                return (
-                  <TouchableOpacity
-                    key={cat._id}
-                    style={styles.categoryCard}
-                    onPress={() => navigation.navigate('Category', { category: cat })}
-                  >
-                    <View style={styles.categoryImageBox}>
-                      {catImg ? (
-                        <Image
-                          source={typeof catImg === 'string' ? { uri: catImg } : catImg}
-                          style={styles.categoryImage}
-                          resizeMode="cover"
-                        />
-                      ) : (
-                        <MaterialCommunityIcons
-                          name={cat.icon || 'tag-outline'}
-                          size={28}
-                          color={theme.colors.primary}
-                        />
-                      )}
-                    </View>
-                    <Text style={styles.categoryLabel} numberOfLines={2}>
-                      {cat.name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+        {/* Fresh Recommendations Header */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>{t.freshRecommendations}</Text>
+        </View>
 
-            {/* Ulist custom branded "Turn on location" nearby recommendations prompt banner */}
-            {showLocationPrompt && (
-              <View style={styles.locationBanner}>
-                <TouchableOpacity
-                  style={styles.locationBannerClose}
-                  onPress={handleDismissLocationPrompt}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <MaterialCommunityIcons name="close" size={16} color="rgba(255,255,255,0.85)" />
-                </TouchableOpacity>
+        {isFetching && ads.length === 0 && (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', padding: 4 }}>
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </View>
+        )}
 
-                <View style={styles.locationBannerLeft}>
-                  <Text style={styles.locationBannerText}>
-                    {t.wantBetterRecommendations}
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.locationBannerButton}
-                    onPress={handleTurnOnLocation}
-                    disabled={locating}
-                    activeOpacity={0.85}
-                  >
-                    <Text style={styles.locationBannerBtnText}>
-                      {locating ? t.detecting : t.turnOnLocation}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+        {/* 2-Column Ads Grid */}
+        <View style={styles.adsGrid}>
+          {ads.map((item: any) => (
+            <AdCard
+              key={item._id}
+              ad={item}
+              onPress={() => navigation.navigate('AdDetail', { adId: item._id })}
+            />
+          ))}
+        </View>
 
-                <View style={styles.locationBannerGraphic}>
-                  <View style={styles.locationIconCircle}>
-                    <MaterialCommunityIcons name="crosshairs-gps" size={26} color="#D9480F" />
-                  </View>
-                </View>
-              </View>
-            )}
-
-            {/* Fresh Recommendations Header */}
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{t.freshRecommendations}</Text>
-            </View>
-
-            {isFetching && ads.length === 0 && (
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', padding: 4 }}>
-                <SkeletonCard />
-                <SkeletonCard />
-                <SkeletonCard />
-                <SkeletonCard />
-              </View>
-            )}
-          </>
-        }
-        renderItem={({ item }) => (
-          <AdCard
-            ad={item}
-            onPress={() => navigation.navigate('AdDetail', { adId: item._id })}
+        {ads.length === 0 && !isFetching && (
+          <EmptyState
+            icon="map-marker-radius-outline"
+            title={`No ads in ${selectedCity} right now`}
+            description="Be the first to post a classified listing here, or switch to All India to see available listings."
+            buttonLabel="Switch to All India"
+            onButtonPress={() => navigation.navigate('CityPicker')}
           />
         )}
-        ListEmptyComponent={
-          !isFetching ? (
-            <EmptyState
-              icon="map-marker-radius-outline"
-              title={`No ads in ${selectedCity} right now`}
-              description="Be the first to post a classified listing here, or switch to All India to see available listings."
-              buttonLabel="Switch to All India"
-              onButtonPress={() => navigation.navigate('CityPicker')}
-            />
-          ) : undefined
-        }
-      />
+      </ScrollView>
     </View>
   );
 };
@@ -625,5 +625,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 3,
     elevation: 3,
+  },
+  adsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  mainContent: {
+    paddingBottom: 24,
   },
 });

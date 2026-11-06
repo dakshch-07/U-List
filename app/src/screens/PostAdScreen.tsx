@@ -416,9 +416,9 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           </TouchableOpacity>
           <Text style={styles.stepTitle}>
             {step === 1 && 'Categories'}
-            {step === 2 && 'Step 2: Key Details'}
+            {step === 2 && 'Step 2: Price & Details'}
             {step === 3 && 'Step 3: Upload Photos'}
-            {step === 4 && 'Step 4: Price & Contact'}
+            {step === 4 && 'Step 4: Location & Contact'}
           </Text>
         </View>
         <Text style={styles.stepProgress}>{step}/4</Text>
@@ -466,6 +466,17 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         {/* Step 2: Dynamic Category Attributes & Title */}
         {step === 2 && (
           <View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Set Price (₹) *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter amount"
+                keyboardType="numeric"
+                value={price}
+                onChangeText={setPrice}
+              />
+            </View>
+
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Ad Title * (max 70 chars)</Text>
               <TextInput
@@ -544,6 +555,10 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               <TouchableOpacity
                 style={[styles.nextButton, { flex: 1, marginTop: 0, marginLeft: 12 }]}
                 onPress={() => {
+                  if (!price) {
+                    Alert.alert('Required', 'Please enter the price for your listing');
+                    return;
+                  }
                   if (!title || !description) {
                     Alert.alert('Required', 'Please fill title and description');
                     return;
@@ -593,26 +608,15 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 style={[styles.nextButton, { flex: 1, marginTop: 0, marginLeft: 12 }]}
                 onPress={() => setStep(4)}
               >
-                <Text style={styles.nextButtonText}>Next: Price & Details</Text>
+                <Text style={styles.nextButtonText}>Next: Location & Contact</Text>
               </TouchableOpacity>
             </View>
           </View>
         )}
 
-        {/* Step 4: Price & Locality */}
+        {/* Step 4: Location & Contact */}
         {step === 4 && (
           <View>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Set Price (₹) *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter amount"
-                keyboardType="numeric"
-                value={price}
-                onChangeText={setPrice}
-              />
-            </View>
-
             <View style={styles.inputGroup}>
               <Text style={styles.label}>City *</Text>
               <TextInput

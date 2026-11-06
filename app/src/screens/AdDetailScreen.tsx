@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Share, Linking, Alert } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Share, Linking, Alert, Dimensions, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { theme } from '../theme';
@@ -122,15 +122,26 @@ export const AdDetailScreen: React.FC<{ route: any; navigation: any }> = ({ rout
   };
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const imageScrollRef = useRef<ScrollView>(null);
+  const [carouselWidth, setCarouselWidth] = useState(Dimensions.get('window').width);
 
   const rawImages = ad?.images && ad.images.length > 0 ? ad.images : [{ url: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80' }];
   const fallbackDetailUrl = 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80';
-  const targetImageUrl = getFullImageUrl(rawImages[activeImageIndex]?.url || rawImages[0]?.url);
-  const [activeImgUri, setActiveImgUri] = React.useState<string>(targetImageUrl);
 
-  React.useEffect(() => {
-    setActiveImgUri(targetImageUrl);
-  }, [targetImageUrl]);
+  const onCarouselScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetX = e.nativeEvent.contentOffset.x;
+    if (carouselWidth > 0) {
+      const page = Math.round(offsetX / carouselWidth);
+      if (page !== activeImageIndex && page >= 0 && page < rawImages.length) {
+        setActiveImageIndex(page);
+      }
+    }
+  };
+
+  const scrollToImage = (index: number) => {
+    setActiveImageIndex(index);
+    imageScrollRef.current?.scrollTo({ x: index * carouselWidth, animated: true });
+  };
 
   if (isLoading || !ad) {
     return (
@@ -143,26 +154,46 @@ export const AdDetailScreen: React.FC<{ route: any; navigation: any }> = ({ rout
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        {/* Cover Photo & Carousel */}
-        <View style={styles.imageContainer}>
-          <Image
-            source={{ uri: activeImgUri }}
-            style={styles.image}
-            resizeMode="cover"
-            onError={() => {
-              if (activeImgUri !== fallbackDetailUrl) {
-                setActiveImgUri(fallbackDetailUrl);
-              }
-            }}
-          />
+        {/* Cover Photo & Swipeable Carousel */}
+        <View
+          style={styles.imageContainer}
+          onLayout={(e) => {
+            const width = e.nativeEvent.layout.width;
+            if (width > 0 && width !== carouselWidth) {
+              setCarouselWidth(width);
+            }
+          }}
+        >
+          <ScrollView
+            ref={imageScrollRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={onCarouselScroll}
+            scrollEventThrottle={16}
+            style={{ width: '100%', height: '100%' }}
+          >
+            {rawImages.map((img: any, idx: number) => {
+              const fullUrl = getFullImageUrl(img.url);
+              return (
+                <View key={idx} style={{ width: carouselWidth, height: '100%' }}>
+                  <Image
+                    source={{ uri: fullUrl }}
+                    style={styles.image}
+                    resizeMode="cover"
+                  />
+                </View>
+              );
+            })}
+          </ScrollView>
 
-          {/* Multiple Images Dots / Thumbnail Navigation */}
+          {/* Multiple Images Dots Navigation */}
           {rawImages.length > 1 && (
             <View style={styles.imagePagination}>
               {rawImages.map((_: any, idx: number) => (
                 <TouchableOpacity
                   key={idx}
-                  onPress={() => setActiveImageIndex(idx)}
+                  onPress={() => scrollToImage(idx)}
                   style={[
                     styles.paginationDot,
                     activeImageIndex === idx && styles.paginationDotActive,

@@ -333,11 +333,12 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         {/* 2-Column Ads Grid */}
         <View style={styles.adsGrid}>
           {ads.map((item: any) => (
-            <AdCard
-              key={item._id}
-              ad={item}
-              onPress={() => navigation.navigate('AdDetail', { adId: item._id })}
-            />
+            <View key={item._id} style={styles.adCardWrapper}>
+              <AdCard
+                ad={item}
+                onPress={() => navigation.navigate('AdDetail', { adId: item._id })}
+              />
+            </View>
           ))}
         </View>
 
@@ -629,6 +630,11 @@ const styles = StyleSheet.create({
   adsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    marginHorizontal: -4,
+  },
+  adCardWrapper: {
+    width: '50%',
+    padding: 0,
   },
   mainContent: {
     paddingBottom: 24,

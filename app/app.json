@@ -10,6 +10,14 @@
       "backgroundColor": "#D9480F",
       "resizeMode": "contain"
     },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "themeColor": "#D9480F",
+      "backgroundColor": "#FFFFFF",
+      "name": "Ulist",
+      "shortName": "Ulist",
+      "display": "standalone"
+    },
     "android": {
       "package": "com.weegrow.ulist",
       "versionCode": 1,

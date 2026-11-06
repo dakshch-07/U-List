@@ -1,26 +1,64 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, Linking, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Image } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { storage } from '../utils/storage';
 import { theme } from '../theme';
 
 export const AppDownloadBanner: React.FC = () => {
   const [visible, setVisible] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   useEffect(() => {
-    // Only show on Web browsers (mobile web or desktop web)
-    if (Platform.OS !== 'web') return;
+    // Only apply on Web platform
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
 
+    // 1. If user is ALREADY running the app as an installed PWA / standalone, NEVER show banner!
+    const isStandalone =
+      (window.navigator as any).standalone === true ||
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.matchMedia('(display-mode: fullscreen)').matches;
+
+    if (isStandalone) {
+      setVisible(false);
+      return;
+    }
+
+    // 2. Check if user dismissed it earlier
     (async () => {
       try {
         const dismissed = await storage.getItem('ulist_dismiss_download_banner');
-        if (!dismissed) {
+        const installed = await storage.getItem('ulist_app_installed');
+        if (!dismissed && !installed) {
           setVisible(true);
         }
       } catch {
         setVisible(true);
       }
     })();
+
+    // 3. Listen for browser PWA install prompt event ('beforeinstallprompt')
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setVisible(true);
+    };
+
+    // 4. When app is installed, instantly disappear the notification banner permanently!
+    const handleAppInstalled = async () => {
+      setVisible(false);
+      setDeferredPrompt(null);
+      try {
+        await storage.setItem('ulist_app_installed', 'true');
+      } catch {}
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
   }, []);
 
   const handleDismiss = async () => {
@@ -30,9 +68,27 @@ export const AppDownloadBanner: React.FC = () => {
     } catch {}
   };
 
-  const handleDownload = () => {
-    // Direct link to official APK download or Google Play Store
-    window.open('https://github.com/dakshch-07/U-List/releases', '_blank');
+  const handleDownload = async () => {
+    if (deferredPrompt) {
+      // Trigger native 1-click browser PWA install prompt!
+      deferredPrompt.prompt();
+      const choiceResult = await deferredPrompt.userChoice;
+      if (choiceResult?.outcome === 'accepted') {
+        setVisible(false);
+        try {
+          await storage.setItem('ulist_app_installed', 'true');
+        } catch {}
+      }
+      setDeferredPrompt(null);
+    } else {
+      // Fallback: If browser doesn't expose beforeinstallprompt (e.g. iOS Safari), show instructions
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+      if (isIOS) {
+        alert("To install Ulist on iPhone/iPad: Tap the Share button in Safari, then tap 'Add to Home Screen'!");
+      } else {
+        alert("To install Ulist: Tap the browser menu (⋮) in Chrome, then tap 'Install app' or 'Add to Home screen'!");
+      }
+    }
   };
 
   if (!visible) return null;

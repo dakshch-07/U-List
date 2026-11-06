@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
+import https from 'https';
 import { User } from '../models/User';
 import { AuthenticatedRequest } from '../middleware/auth';
 
@@ -21,6 +22,44 @@ const loginSchema = z.object({
 // Temporary in-memory OTP store for phone logins
 const otpStore = new Map<string, { otp: string; expiresAt: number }>();
 
+/**
+ * Dispatch SMS OTP via Fast2SMS Gateway
+ */
+const sendSmsOtp = async (phone: string, otp: string): Promise<boolean> => {
+  const apiKey = process.env.FAST2SMS_API_KEY || 'rQDx1rNHHcW90dKTjB2G0ekTdqBNpMXE3AnYyxcmgiZHDve1PGBcyuS3g9Pqaf8oNWBAxgHK8JRh7x58';
+  if (!apiKey) {
+    console.warn('[Fast2SMS] No API Key configured. Skipping real SMS dispatch.');
+    return false;
+  }
+
+  const message = `Your UList verification code is ${otp}. Valid for 5 minutes. Please do not share this OTP with anyone. - UList Marketplace`;
+  const url = `https://www.fast2sms.com/dev/bulkV2?authorization=${encodeURIComponent(apiKey)}&route=q&message=${encodeURIComponent(message)}&numbers=${phone}`;
+
+  return new Promise((resolve) => {
+    https.get(url, (res) => {
+      let rawData = '';
+      res.on('data', chunk => rawData += chunk);
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(rawData);
+          if (parsed.return) {
+            console.log(`[Fast2SMS] SMS sent successfully to ${phone}. Request ID: ${parsed.request_id}`);
+            resolve(true);
+          } else {
+            console.error(`[Fast2SMS] Error response:`, parsed);
+            resolve(false);
+          }
+        } catch {
+          resolve(false);
+        }
+      });
+    }).on('error', (err) => {
+      console.error(`[Fast2SMS] Network error:`, err.message);
+      resolve(false);
+    });
+  });
+};
+
 export const sendOtp = async (req: Request, res: Response): Promise<void> => {
   try {
     let { phone } = req.body;
@@ -34,19 +73,25 @@ export const sendOtp = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Generate 4-digit OTP (Default 1234 in testing, or dynamic for production)
+    // Generate random 4-digit OTP (Master 1234 reserved only for demo 9876543210)
     const otp = cleanPhone === '9876543210' ? '1234' : Math.floor(1000 + Math.random() * 9000).toString();
     const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes validity
     otpStore.set(cleanPhone, { otp, expiresAt });
 
-    console.log(`[OTP DISPATCH] Mobile: ${cleanPhone} | OTP: ${otp}`);
+    console.log(`[OTP DISPATCH] Mobile: ${cleanPhone} | Generated OTP: ${otp}`);
+
+    // Send real SMS to user phone
+    let smsDispatched = false;
+    if (cleanPhone !== '9876543210') {
+      smsDispatched = await sendSmsOtp(cleanPhone, otp);
+    }
 
     res.json({
       success: true,
       message: `OTP sent successfully to +91 ${cleanPhone}`,
       data: {
         phone: cleanPhone,
-        otpPreview: process.env.NODE_ENV !== 'production' || true ? otp : undefined, // Shown for easy testing
+        smsSent: smsDispatched,
       },
     });
   } catch (err: any) {
@@ -65,8 +110,9 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
     const cleanPhone = phone.replace(/[^0-9]/g, '').slice(-10);
     const stored = otpStore.get(cleanPhone);
 
-    // Accept stored OTP or master '1234'
-    const isValid = (stored && stored.otp === otp.trim() && Date.now() <= stored.expiresAt) || otp.trim() === '1234';
+    // Accept stored OTP (or master '1234' only for demo number 9876543210)
+    const isMasterDemo = cleanPhone === '9876543210' && otp.trim() === '1234';
+    const isValid = (stored && stored.otp === otp.trim() && Date.now() <= stored.expiresAt) || isMasterDemo;
 
     if (!isValid) {
       res.status(400).json({ success: false, message: 'Invalid or expired OTP. Please try again.' });

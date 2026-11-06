@@ -65,15 +65,21 @@ app.get('/admin/{*splat}', (_req, res) => {
   res.sendFile(path.join(adminDistDir, 'index.html'));
 });
 
-// Debug endpoint to verify live server filesystem on Render
+// Debug endpoint to verify live server filesystem and database type on Render
 app.get('/api/debug-paths', async (_req, res) => {
   const { User } = await import('./models/User');
   const adminEmail = (process.env.ADMIN_EMAIL || 'admin@ulist.in').toLowerCase();
   const foundAdmin = await User.findOne({ email: adminEmail });
+  const totalUsers = await User.countDocuments();
+  const totalAds = await Ad.countDocuments();
   
   res.json({
     cwd: process.cwd(),
     __dirname,
+    mongoUriPrefix: process.env.MONGODB_URI ? process.env.MONGODB_URI.substring(0, 15) + '...' : 'none (fallback in-memory)',
+    isUsingExternalMongo: !!process.env.MONGODB_URI,
+    totalUsers,
+    totalAds,
     adminDistDir,
     adminExists: fs.existsSync(adminDistDir),
     adminFiles: fs.existsSync(adminDistDir) ? fs.readdirSync(adminDistDir) : [],

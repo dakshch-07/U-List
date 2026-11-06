@@ -123,15 +123,7 @@ export const AdDetailScreen: React.FC<{ route: any; navigation: any }> = ({ rout
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  if (isLoading || !ad) {
-    return (
-      <View style={styles.loading}>
-        <Text style={{ color: theme.colors.secondaryText }}>Loading listing details...</Text>
-      </View>
-    );
-  }
-
-  const rawImages = ad.images && ad.images.length > 0 ? ad.images : [{ url: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80' }];
+  const rawImages = ad?.images && ad.images.length > 0 ? ad.images : [{ url: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80' }];
   const fallbackDetailUrl = 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80';
   const targetImageUrl = getFullImageUrl(rawImages[activeImageIndex]?.url || rawImages[0]?.url);
   const [activeImgUri, setActiveImgUri] = React.useState<string>(targetImageUrl);
@@ -139,6 +131,14 @@ export const AdDetailScreen: React.FC<{ route: any; navigation: any }> = ({ rout
   React.useEffect(() => {
     setActiveImgUri(targetImageUrl);
   }, [targetImageUrl]);
+
+  if (isLoading || !ad) {
+    return (
+      <View style={styles.loading}>
+        <Text style={{ color: theme.colors.secondaryText }}>Loading listing details...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>

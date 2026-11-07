@@ -23,10 +23,91 @@
         flex: 1;
       }
     </style>
-  <meta name="theme-color" content="#D9480F">
-<link rel="icon" href="/favicon.ico"/></head>
+    <meta name="theme-color" content="#D9480F">
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon.png" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/assets/icon-192.png" />
+    <style>
+      #pwa-preloader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 999999;
+        transition: opacity 0.35s ease, visibility 0.35s ease;
+      }
+      #pwa-preloader.fade-out {
+        opacity: 0;
+        visibility: hidden;
+      }
+      .preloader-logo {
+        width: 180px;
+        height: auto;
+        animation: pulseLogo 1.6s ease-in-out infinite alternate;
+      }
+      .preloader-spinner {
+        width: 32px;
+        height: 32px;
+        margin-top: 28px;
+        border: 3px solid rgba(217, 72, 15, 0.15);
+        border-top-color: #D9480F;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes pulseLogo {
+        from { transform: scale(0.96); opacity: 0.92; }
+        to { transform: scale(1.02); opacity: 1; }
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
 
   <body>
+    <!-- PWA Preloader with official Ulist Logo -->
+    <div id="pwa-preloader">
+      <img src="/assets/logo.png" alt="Ulist" class="preloader-logo" />
+      <div class="preloader-spinner"></div>
+    </div>
+    <script>
+      // Automatically hide preloader when React/Expo root renders its content
+      (function() {
+        var preloader = document.getElementById('pwa-preloader');
+        var root = document.getElementById('root');
+        if (!preloader || !root) return;
+        
+        var observer = new MutationObserver(function() {
+          if (root.children.length > 0) {
+            preloader.classList.add('fade-out');
+            setTimeout(function() {
+              if (preloader.parentNode) preloader.parentNode.removeChild(preloader);
+            }, 400);
+            observer.disconnect();
+          }
+        });
+        observer.observe(root, { childList: true, subtree: true });
+
+        // Fallback safety timeout so user is never stuck
+        window.addEventListener('load', function() {
+          setTimeout(function() {
+            if (preloader && preloader.parentNode) {
+              preloader.classList.add('fade-out');
+              setTimeout(function() {
+                if (preloader.parentNode) preloader.parentNode.removeChild(preloader);
+              }, 400);
+            }
+          }, 3000);
+        });
+      })();
+    </script>
     <!-- Use static rendering with Expo Router to support running without JavaScript. -->
     <noscript> You need to enable JavaScript to run this app. </noscript>
     <!-- The root element for your Expo app. -->

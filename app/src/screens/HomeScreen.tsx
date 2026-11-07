@@ -421,9 +421,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flexShrink: 0,
+    gap: 6,
   },
   headerIconButton: {
-    width: 26,
+    width: 28,
     height: 34,
     alignItems: 'center',
     justifyContent: 'center',
@@ -431,7 +432,7 @@ const styles = StyleSheet.create({
   brandContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 4,
+    marginLeft: 6,
   },
   brandLogo: {
     width: 76,

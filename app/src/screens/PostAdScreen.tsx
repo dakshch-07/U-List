@@ -438,6 +438,17 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   activeOpacity={0.82}
                   onPress={() => {
                     setSelectedCategory(cat);
+                    // Filter dynamicAttrs so only keys defined in the selected category are preserved
+                    if (cat.fields && cat.fields.length > 0) {
+                      const validKeys = new Set(cat.fields.map((f: any) => f.key));
+                      const filteredAttrs: Record<string, any> = {};
+                      Object.entries(dynamicAttrs).forEach(([k, v]) => {
+                        if (validKeys.has(k)) filteredAttrs[k] = v;
+                      });
+                      setDynamicAttrs(filteredAttrs);
+                    } else {
+                      setDynamicAttrs({});
+                    }
                     setStep(2);
                   }}
                 >

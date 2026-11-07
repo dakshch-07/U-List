@@ -93,17 +93,17 @@ export const AdDetailScreen: React.FC<{ route: any; navigation: any }> = ({ rout
 
   const onShare = async () => {
     try {
-      const shortUrl = `https://u-list-api.onrender.com/a/${ad?._id}`;
+      const shareUrl = `https://www.ulist.in/a/${ad?._id}`;
       const priceText = ad?.salary?.from != null && ad?.salary?.to != null
         ? `₹${ad.salary.from.toLocaleString('en-IN')} - ₹${ad.salary.to.toLocaleString('en-IN')}`
         : formatINR(ad?.price);
       
-      const shareMessage = `Check out this listing on Ulist: ${ad?.title} for ${priceText}\n\n👉 View details: ${shortUrl}`;
+      const shareMessage = `Check out this listing on Ulist: ${ad?.title} for ${priceText}\n\n👉 View details: ${shareUrl}`;
 
       await Share.share({
         title: ad?.title || 'Ulist Listing',
         message: shareMessage,
-        url: shortUrl,
+        url: shareUrl,
       });
     } catch {}
   };

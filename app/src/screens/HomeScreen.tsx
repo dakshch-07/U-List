@@ -67,6 +67,24 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   });
   const hasFavorites = favorites.length > 0;
 
+  // Handle URL parameters like /?adId=xxx or /a/:id directly on Web
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlAdId = urlParams.get('adId');
+      if (urlAdId) {
+        navigation.navigate('AdDetail', { adId: urlAdId });
+      } else {
+        // Also check if path is like /a/xxxx or /ad/xxxx
+        const pathname = window.location.pathname;
+        const match = pathname.match(/^\/(?:a|ad)\/([a-zA-Z0-9_-]+)/);
+        if (match && match[1]) {
+          navigation.navigate('AdDetail', { adId: match[1] });
+        }
+      }
+    }
+  }, [navigation]);
+
   useEffect(() => {
     // Check if location modal was already answered once
     (async () => {

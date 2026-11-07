@@ -29,7 +29,38 @@ import { TermsOfServiceScreen } from './src/screens/TermsOfServiceScreen';
 import { LanguageScreen } from './src/screens/LanguageScreen';
 import { NotificationsScreen } from './src/screens/NotificationsScreen';
 import { OfflineNotice } from './src/components/OfflineNotice';
+import * as Linking from 'expo-linking';
 import { translations } from './src/utils/translations';
+
+const prefix = Linking.createURL('/');
+
+const linking = {
+  prefixes: [prefix, 'https://www.ulist.in', 'https://ulist.in'],
+  config: {
+    screens: {
+      Main: {
+        screens: {
+          HomeTab: '',
+          ChatsTab: 'chats',
+          SellTab: 'sell',
+          MyAdsTab: 'my-ads',
+          AccountTab: 'account',
+        },
+      },
+      AdDetail: 'a/:adId',
+      CityPicker: 'cities',
+      Search: 'search',
+      Category: 'category/:slug',
+      Login: 'login',
+      Notifications: 'notifications',
+      Favorites: 'favorites',
+      ContactUs: 'contact',
+      AboutUs: 'about',
+      PrivacyPolicy: 'privacy',
+      TermsOfService: 'terms',
+    },
+  },
+};
 
 const queryClient = new QueryClient();
 const Stack = createNativeStackNavigator();
@@ -322,6 +353,7 @@ export default function App() {
       <QueryClientProvider client={queryClient}>
         <NavigationContainer
           ref={navigationRef}
+          linking={linking}
           onStateChange={() => {
             if (Platform.OS === 'web' && typeof window !== 'undefined' && window.history && !isNavigatingRef.current) {
               window.history.pushState({ ulistApp: true, timestamp: Date.now() }, '', window.location.href);

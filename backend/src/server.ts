@@ -576,8 +576,8 @@ app.get(['/ad/:id', '/a/:id'], async (req, res) => {
     const safeTitle = (ad.title || 'Ulist Listing').replace(/"/g, '&quot;');
     const safePrice = ad.price ? `₹${ad.price.toLocaleString('en-IN')}` : '';
     const safeDesc = (ad.description || `View ${safeTitle} on Ulist`).slice(0, 150).replace(/"/g, '&quot;');
-    const safeImage = ad.images?.[0]?.url || 'https://u-list-api.onrender.com/assets/icon.png';
-    const targetUrl = `https://u-list-app.vercel.app/?adId=${adId}`;
+    const safeImage = ad.images?.[0]?.url || 'https://www.ulist.in/assets/icon.png';
+    const targetUrl = `https://www.ulist.in/?adId=${adId}`;
 
     res.send(`
       <!DOCTYPE html>

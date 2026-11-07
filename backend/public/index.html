@@ -74,7 +74,8 @@
         to { transform: rotate(360deg); }
       }
     </style>
-  </head>
+  <meta name="theme-color" content="#D9480F">
+</head>
 
   <body>
     <!-- PWA Preloader with official Ulist Logo -->
@@ -83,7 +84,6 @@
       <div class="preloader-spinner"></div>
     </div>
     <script>
-      // Automatically hide preloader when React/Expo root renders its content
       (function() {
         var preloader = document.getElementById('pwa-preloader');
         var root = document.getElementById('root');
@@ -100,7 +100,7 @@
         });
         observer.observe(root, { childList: true, subtree: true });
 
-        // Register Service Worker for PWA installation
+        // Service Worker registration for PWA installability
         if ('serviceWorker' in navigator) {
           window.addEventListener('load', function() {
             navigator.serviceWorker.register('/service-worker.js').catch(function(err) {

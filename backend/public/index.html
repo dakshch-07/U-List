@@ -24,9 +24,14 @@
       }
     </style>
     <meta name="theme-color" content="#D9480F">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Ulist">
     <link rel="manifest" href="/manifest.json" />
     <link rel="icon" type="image/png" sizes="48x48" href="/favicon.png" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="apple-touch-icon" href="/assets/icon-192.png" />
     <style>
       #pwa-preloader {
@@ -95,23 +100,20 @@
         });
         observer.observe(root, { childList: true, subtree: true });
 
-        // Fallback safety timeout so user is never stuck
-        window.addEventListener('load', function() {
-          setTimeout(function() {
-            if (preloader && preloader.parentNode) {
-              preloader.classList.add('fade-out');
-              setTimeout(function() {
-                if (preloader.parentNode) preloader.parentNode.removeChild(preloader);
-              }, 400);
-            }
-          }, 3000);
-        });
+        // Register Service Worker for PWA installation
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/service-worker.js').catch(function(err) {
+              console.log('SW registration error:', err);
+            });
+          });
+        }
       })();
     </script>
     <!-- Use static rendering with Expo Router to support running without JavaScript. -->
     <noscript> You need to enable JavaScript to run this app. </noscript>
     <!-- The root element for your Expo app. -->
     <div id="root"></div>
-  <script src="/_expo/static/js/web/index-fbeb325aea593ecf4eea74769c840d8e.js" defer></script>
+  <script src="/_expo/static/js/web/index-736e8ab1be47df8ece5a7c9ff1e7ba2f.js" defer></script>
 </body>
 </html>

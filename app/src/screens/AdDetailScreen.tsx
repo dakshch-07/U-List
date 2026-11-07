@@ -139,8 +139,21 @@ export const AdDetailScreen: React.FC<{ route: any; navigation: any }> = ({ rout
   };
 
   const scrollToImage = (index: number) => {
-    setActiveImageIndex(index);
-    imageScrollRef.current?.scrollTo({ x: index * carouselWidth, animated: true });
+    const targetIndex = Math.max(0, Math.min(index, rawImages.length - 1));
+    setActiveImageIndex(targetIndex);
+    imageScrollRef.current?.scrollTo({ x: targetIndex * carouselWidth, animated: true });
+  };
+
+  const handlePrevImage = () => {
+    if (activeImageIndex > 0) {
+      scrollToImage(activeImageIndex - 1);
+    }
+  };
+
+  const handleNextImage = () => {
+    if (activeImageIndex < rawImages.length - 1) {
+      scrollToImage(activeImageIndex + 1);
+    }
   };
 
   if (isLoading || !ad) {
@@ -169,6 +182,7 @@ export const AdDetailScreen: React.FC<{ route: any; navigation: any }> = ({ rout
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
+            onScroll={onCarouselScroll}
             onMomentumScrollEnd={onCarouselScroll}
             scrollEventThrottle={16}
             style={{ width: '100%', height: '100%' }}
@@ -186,6 +200,27 @@ export const AdDetailScreen: React.FC<{ route: any; navigation: any }> = ({ rout
               );
             })}
           </ScrollView>
+
+          {/* Web / Touch Arrow Controls for Easy Navigation */}
+          {rawImages.length > 1 && activeImageIndex > 0 && (
+            <TouchableOpacity
+              style={[styles.carouselArrow, styles.carouselArrowLeft]}
+              onPress={handlePrevImage}
+              activeOpacity={0.8}
+            >
+              <MaterialCommunityIcons name="chevron-left" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+          )}
+
+          {rawImages.length > 1 && activeImageIndex < rawImages.length - 1 && (
+            <TouchableOpacity
+              style={[styles.carouselArrow, styles.carouselArrowRight]}
+              onPress={handleNextImage}
+              activeOpacity={0.8}
+            >
+              <MaterialCommunityIcons name="chevron-right" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+          )}
 
           {/* Multiple Images Dots Navigation */}
           {rawImages.length > 1 && (
@@ -272,9 +307,17 @@ export const AdDetailScreen: React.FC<{ route: any; navigation: any }> = ({ rout
             style={styles.sellerCard}
             onPress={() => navigation.navigate('SellerProfile', { sellerId: ad.user?._id })}
           >
-            <View style={styles.sellerAvatar}>
-              <MaterialCommunityIcons name="account" size={28} color={theme.colors.secondaryText} />
-            </View>
+            {ad.user?.avatar ? (
+              <Image
+                source={{ uri: getFullImageUrl(ad.user.avatar) }}
+                style={styles.sellerAvatarImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={styles.sellerAvatar}>
+                <MaterialCommunityIcons name="account" size={28} color={theme.colors.secondaryText} />
+              </View>
+            )}
             <View style={{ flex: 1, marginLeft: 12 }}>
               <Text style={styles.sellerName}>{ad.contactName || ad.user?.name}</Text>
               <Text style={styles.sellerMeta}>Member on Ulist • View profile & ads</Text>
@@ -470,6 +513,24 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
   },
+  carouselArrow: {
+    position: 'absolute',
+    top: '50%',
+    marginTop: -18,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  carouselArrowLeft: {
+    left: 12,
+  },
+  carouselArrowRight: {
+    right: 12,
+  },
   topActions: {
     position: 'absolute',
     top: 16,
@@ -569,6 +630,12 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.border,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  sellerAvatarImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: theme.colors.border,
   },
   sellerName: {
     fontSize: theme.typography.size.body,

@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshControl, Image } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshControl, Image, Platform } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect } from '@react-navigation/native';
 import { api } from '../services/api';
@@ -50,22 +50,36 @@ export const MyAdsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   };
 
   const handleDelete = async (id: string) => {
-    Alert.alert('Delete Ad', 'Are you sure you want to permanently delete this ad?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await api.delete(`/ads/${id}`);
-            refetch();
-            queryClient.invalidateQueries({ queryKey: ['myAds'] });
-          } catch {
-            Alert.alert('Error', 'Failed to delete');
-          }
+    const executeDelete = async () => {
+      try {
+        await api.delete(`/ads/${id}`);
+        refetch();
+        queryClient.invalidateQueries({ queryKey: ['myAds'] });
+      } catch (err: any) {
+        const errorMsg = err?.response?.data?.message || 'Failed to delete ad';
+        if (Platform.OS === 'web' && typeof window !== 'undefined') {
+          window.alert(errorMsg);
+        } else {
+          Alert.alert('Error', errorMsg);
+        }
+      }
+    };
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const confirmed = window.confirm('Are you sure you want to permanently delete this ad?');
+      if (confirmed) {
+        await executeDelete();
+      }
+    } else {
+      Alert.alert('Delete Ad', 'Are you sure you want to permanently delete this ad?', [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: executeDelete,
         },
-      },
-    ]);
+      ]);
+    }
   };
 
   if (!user) {

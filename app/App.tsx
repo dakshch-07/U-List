@@ -3,8 +3,9 @@ import { View, Text, StyleSheet, Platform, BackHandler, TouchableOpacity } from 
 import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { api } from './src/services/api';
 
 import { theme } from './src/theme';
 import { useAuthStore } from './src/store/authStore';
@@ -115,8 +116,22 @@ const errorStyles = StyleSheet.create({
 });
 
 function BottomTabs() {
-  const { language } = useAuthStore();
+  const { user, language } = useAuthStore();
   const t = translations[language] || translations.en;
+
+  // Poll conversations for unread badge count
+  const { data: conversations = [] } = useQuery({
+    queryKey: ['conversations', user?._id],
+    queryFn: async () => {
+      if (!user) return [];
+      const res = await api.get('/conversations');
+      return Array.isArray(res.data?.data) ? res.data.data : [];
+    },
+    enabled: !!user,
+    refetchInterval: 5000,
+  });
+
+  const totalUnreadCount = conversations.reduce((acc: number, c: any) => acc + (c.unreadCount || 0), 0);
 
   return (
     <Tab.Navigator
@@ -162,6 +177,18 @@ function BottomTabs() {
         component={ChatsScreen}
         options={{
           tabBarLabel: t.chats,
+          tabBarBadge: totalUnreadCount > 0 ? (totalUnreadCount > 99 ? '99+' : totalUnreadCount) : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: theme.colors.primary,
+            color: '#FFFFFF',
+            fontSize: 10,
+            fontWeight: 'bold',
+            minWidth: 16,
+            height: 16,
+            borderRadius: 8,
+            lineHeight: 16,
+            top: 2,
+          },
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons name="chat-outline" color={color} size={22.5} />
           ),

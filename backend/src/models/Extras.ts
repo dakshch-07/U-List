@@ -184,3 +184,28 @@ const ContactInquirySchema = new Schema<IContactInquiry>(
 );
 
 export const ContactInquiry = model<IContactInquiry>('ContactInquiry', ContactInquirySchema);
+
+// In-App Notification
+export interface INotification extends Document {
+  user: Types.ObjectId;
+  title: string;
+  message: string;
+  type: 'ad_approved' | 'ad_rejected' | 'ad_expired' | 'system' | 'general';
+  ad?: Types.ObjectId;
+  isRead: boolean;
+  createdAt: Date;
+}
+
+const NotificationSchema = new Schema<INotification>(
+  {
+    user: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    title: { type: String, required: true },
+    message: { type: String, required: true },
+    type: { type: String, enum: ['ad_approved', 'ad_rejected', 'ad_expired', 'system', 'general'], default: 'general' },
+    ad: { type: Schema.Types.ObjectId, ref: 'Ad' },
+    isRead: { type: Boolean, default: false, index: true },
+  },
+  { timestamps: true }
+);
+
+export const Notification = model<INotification>('Notification', NotificationSchema);

@@ -358,9 +358,31 @@ export const markAsSold = async (req: AuthenticatedRequest, res: Response): Prom
 export const renewAd = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const ad = await Ad.findOne({ _id: id, user: req.user!._id });
+    const userId = req.user!._id;
+    const ad = await Ad.findOne({ _id: id, user: userId });
     if (!ad) {
       res.status(404).json({ success: false, message: 'Ad not found or unauthorized' });
+      return;
+    }
+
+    // Check active limit when reactivating
+    const maxAdsSetting = await Setting.findOne({ key: 'max_active_ads_per_user' });
+    const freeMaxAds = maxAdsSetting?.value ?? 5;
+    const userDoc = await import('../models/User').then((m) => m.User.findById(userId));
+    const paidCredits = userDoc?.paidAdsCredits || 0;
+    const allowedLimit = freeMaxAds + paidCredits;
+
+    const activeAdsCount = await Ad.countDocuments({ user: userId, status: { $in: ['active', 'pending'] } });
+    if (activeAdsCount >= allowedLimit) {
+      res.status(402).json({
+        success: false,
+        requiresPayment: true,
+        extraAdPrice: 29,
+        freeLimit: freeMaxAds,
+        totalAllowed: allowedLimit,
+        activeCount: activeAdsCount,
+        message: `You currently have ${activeAdsCount} active/pending ads (${allowedLimit} allowed). Please mark an ad as sold or upgrade to reactivate this ad.`,
+      });
       return;
     }
 
@@ -371,7 +393,7 @@ export const renewAd = async (req: AuthenticatedRequest, res: Response): Promise
     ad.expiresAt = new Date(Date.now() + validityDays * 24 * 60 * 60 * 1000);
     await ad.save();
 
-    res.json({ success: true, message: 'Ad renewed for 30 days', data: ad });
+    res.json({ success: true, message: 'Ad re-activated successfully for 30 days', data: ad });
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });
   }

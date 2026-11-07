@@ -27,6 +27,7 @@ import { AboutUsScreen } from './src/screens/AboutUsScreen';
 import { PrivacyPolicyScreen } from './src/screens/PrivacyPolicyScreen';
 import { TermsOfServiceScreen } from './src/screens/TermsOfServiceScreen';
 import { LanguageScreen } from './src/screens/LanguageScreen';
+import { NotificationsScreen } from './src/screens/NotificationsScreen';
 import { OfflineNotice } from './src/components/OfflineNotice';
 import { translations } from './src/utils/translations';
 
@@ -400,6 +401,11 @@ export default function App() {
               name="TermsOfService"
               component={TermsOfServiceScreen}
               options={{ title: 'Terms of Service' }}
+            />
+            <Stack.Screen
+              name="Notifications"
+              component={NotificationsScreen}
+              options={{ title: 'Notifications' }}
             />
             <Stack.Screen
               name="Language"

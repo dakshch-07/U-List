@@ -32,6 +32,7 @@ import {
 } from '../controllers/chatController';
 import { createReport } from '../controllers/reportController';
 import { getPaymentConfig, createOrder, verifyPayment } from '../controllers/paymentController';
+import { getMyNotifications, markNotificationAsRead } from '../controllers/notificationController';
 import { authenticate, optionalAuth, requireAdmin } from '../middleware/auth';
 import { upload, processImages } from '../middleware/upload';
 import { authLimiter, postAdLimiter } from '../middleware/rateLimiters';
@@ -75,6 +76,10 @@ router.put('/ads/:id', authenticate, updateAd);
 router.delete('/ads/:id', authenticate, deleteAd);
 router.post('/ads/:id/sold', authenticate, markAsSold);
 router.post('/ads/:id/renew', authenticate, renewAd);
+
+// Notifications routes
+router.get('/notifications', authenticate, getMyNotifications);
+router.put('/notifications/:id/read', authenticate, markNotificationAsRead);
 
 // Favorites routes
 router.get('/favorites', authenticate, getFavorites);

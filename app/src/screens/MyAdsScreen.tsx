@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshControl, Image, Platform } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect } from '@react-navigation/native';
@@ -9,10 +9,18 @@ import { useAuthStore } from '../store/authStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { storage } from '../utils/storage';
 
-export const MyAdsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+export const MyAdsScreen: React.FC<{ navigation: any; route?: any }> = ({ navigation, route }) => {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState<'active' | 'pending' | 'sold' | 'rejected'>('active');
+  const initialTab = route?.params?.tab || 'active';
+  const [tab, setTab] = useState<'active' | 'pending' | 'sold' | 'rejected'>(initialTab);
+
+  // If navigated here with a specific tab parameter (e.g. pending), switch tab
+  useEffect(() => {
+    if (route?.params?.tab) {
+      setTab(route.params.tab);
+    }
+  }, [route?.params?.tab]);
 
   const { data: ads = [], refetch, isFetching } = useQuery({
     queryKey: ['myAds', tab, user?._id],
@@ -46,6 +54,28 @@ export const MyAdsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       queryClient.invalidateQueries({ queryKey: ['myAds'] });
     } catch {
       Alert.alert('Error', 'Failed to update status');
+    }
+  };
+
+  const handleReactivate = async (id: string) => {
+    try {
+      const res = await api.post(`/ads/${id}/renew`);
+      const msg = res.data?.message || 'Ad re-activated successfully for 30 days';
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        window.alert(msg);
+      } else {
+        Alert.alert('Success', msg);
+      }
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ['myAds'] });
+      queryClient.invalidateQueries({ queryKey: ['ads'] });
+    } catch (err: any) {
+      const errMsg = err?.response?.data?.message || 'Failed to re-activate ad';
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        window.alert(errMsg);
+      } else {
+        Alert.alert('Notice', errMsg);
+      }
     }
   };
 
@@ -165,11 +195,35 @@ export const MyAdsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
               <View style={styles.actionRow}>
                 {tab === 'active' && (
+                  <>
+                    <TouchableOpacity
+                      style={[styles.actionBtn, { borderColor: theme.colors.primary }]}
+                      onPress={() => navigation.navigate('SellTab', { editAd: item })}
+                    >
+                      <Text style={[styles.actionBtnText, { color: theme.colors.primary }]}>Edit</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.actionBtn}
+                      onPress={() => handleMarkSold(item._id)}
+                    >
+                      <Text style={styles.actionBtnText}>Mark as Sold</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+                {tab === 'sold' && (
                   <TouchableOpacity
-                    style={styles.actionBtn}
-                    onPress={() => handleMarkSold(item._id)}
+                    style={[styles.actionBtn, { borderColor: theme.colors.primary, backgroundColor: '#FFF7ED' }]}
+                    onPress={() => handleReactivate(item._id)}
                   >
-                    <Text style={styles.actionBtnText}>Mark as Sold</Text>
+                    <Text style={[styles.actionBtnText, { color: theme.colors.primary, fontWeight: '700' }]}>Reactivate</Text>
+                  </TouchableOpacity>
+                )}
+                {(tab === 'pending' || tab === 'rejected') && (
+                  <TouchableOpacity
+                    style={[styles.actionBtn, { borderColor: theme.colors.primary }]}
+                    onPress={() => navigation.navigate('SellTab', { editAd: item })}
+                  >
+                    <Text style={[styles.actionBtnText, { color: theme.colors.primary }]}>Edit</Text>
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity

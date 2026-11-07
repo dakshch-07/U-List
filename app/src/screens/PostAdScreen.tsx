@@ -41,11 +41,12 @@ const CATEGORY_ICONS: Record<string, { icon: string; color: string }> = {
   services: { icon: 'wrench', color: '#64748B' },
 };
 
-export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+export const PostAdScreen: React.FC<{ navigation: any; route?: any }> = ({ navigation, route }) => {
   const { user, selectedCity } = useAuthStore();
   const queryClient = useQueryClient();
+  const editingAd = route?.params?.editAd || null;
 
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(editingAd ? 2 : 1);
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<any>(null);
 
@@ -70,6 +71,24 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
   const [createdAdData, setCreatedAdData] = useState<any>(null);
   const [selectedHighlightPlan, setSelectedHighlightPlan] = useState<'30_days' | '15_days'>('30_days');
+
+  // Pre-fill fields if in Edit mode
+  useEffect(() => {
+    if (editingAd) {
+      setTitle(editingAd.title || '');
+      setDescription(editingAd.description || '');
+      setPrice(editingAd.price ? String(editingAd.price) : '');
+      setAdCity(editingAd.city || 'Mumbai');
+      setLocality(editingAd.locality || '');
+      setContactName(editingAd.contactName || user?.name || '');
+      setPhone(editingAd.phone || user?.phone || '');
+      if (editingAd.attributes) setDynamicAttrs(editingAd.attributes);
+      if (editingAd.images && Array.isArray(editingAd.images)) {
+        setImages(editingAd.images.map((img: any) => img.url));
+      }
+      setStep(2);
+    }
+  }, [editingAd]);
 
   // Sync city & contact if user changes
   React.useEffect(() => {
@@ -321,13 +340,40 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
       const authHeader = { Authorization: `Bearer ${token}` };
 
-      const res = await api.post('/ads', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          ...authHeader,
-        },
-        timeout: 180000, // 3 minutes specifically for multi-photo uploads
-      });
+      let res;
+      if (editingAd?._id) {
+        // Update existing ad
+        res = await api.put(`/ads/${editingAd._id}`, {
+          title: title.trim(),
+          description: description.trim(),
+          price: Number(price) || 0,
+          city: adCity,
+          locality: locality.trim(),
+          contactName: contactName.trim(),
+          phone: phone.trim(),
+          showPhone,
+          attributes: dynamicAttrs,
+          status: 'pending', // Re-submit to pending moderation queue
+        });
+        if (Platform.OS === 'web' && typeof window !== 'undefined') {
+          window.alert('Ad updated successfully! It has been submitted for admin review.');
+        } else {
+          Alert.alert('Updated', 'Ad updated successfully! It has been submitted for admin review.');
+        }
+        await clearDraft();
+        queryClient.invalidateQueries({ queryKey: ['ads'] });
+        queryClient.invalidateQueries({ queryKey: ['myAds'] });
+        navigation.navigate('MyAdsTab', { tab: 'pending' });
+        return;
+      } else {
+        res = await api.post('/ads', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            ...authHeader,
+          },
+          timeout: 180000, // 3 minutes specifically for multi-photo uploads
+        });
+      }
 
       // Clear draft upon successful post
       await clearDraft();
@@ -714,7 +760,7 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 setDescription('');
                 setPrice('');
                 setImages([]);
-                navigation.navigate('MyAdsTab');
+                navigation.navigate('MyAdsTab', { tab: 'pending' });
               }}
             >
               <MaterialCommunityIcons name="arrow-left" size={24} color="#0F2942" />
@@ -872,7 +918,7 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                     setDescription('');
                     setPrice('');
                     setImages([]);
-                    navigation.navigate('MyAdsTab');
+                    navigation.navigate('MyAdsTab', { tab: 'pending' });
                   },
                   onFailure: (pErr) => {
                     if (pErr?.message !== 'Payment cancelled by user') {
@@ -894,7 +940,7 @@ export const PostAdScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 setDescription('');
                 setPrice('');
                 setImages([]);
-                navigation.navigate('MyAdsTab');
+                navigation.navigate('MyAdsTab', { tab: 'pending' });
               }}
             >
               <Text style={styles.sellFasterSkipBtnText}>Skip for now (Continue with Free Listing)</Text>

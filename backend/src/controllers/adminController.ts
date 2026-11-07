@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { User } from '../models/User';
 import { Ad } from '../models/Ad';
 import { Category } from '../models/Category';
-import { Report, City, Banner, Setting, ContactInquiry } from '../models/Extras';
+import { Report, City, Banner, Setting, ContactInquiry, Notification } from '../models/Extras';
 
 export const getDashboardStats = async (_req: Request, res: Response): Promise<void> => {
   try {
@@ -117,6 +117,15 @@ export const approveAd = async (req: Request, res: Response): Promise<void> => {
     ad.rejectReason = '';
     await ad.save();
 
+    // Create In-App Notification for Seller
+    await Notification.create({
+      user: ad.user,
+      title: 'Ad Approved! 🎉',
+      message: `Great news! Your ad "${ad.title}" has been reviewed, approved, and is now live on Ulist.`,
+      type: 'ad_approved',
+      ad: ad._id,
+    });
+
     res.json({ success: true, message: 'Ad approved successfully', data: ad });
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });
@@ -133,9 +142,19 @@ export const rejectAd = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    const rejectionReason = reason || 'Does not comply with listing guidelines';
     ad.status = 'rejected';
-    ad.rejectReason = reason || 'Does not comply with listing guidelines';
+    ad.rejectReason = rejectionReason;
     await ad.save();
+
+    // Create In-App Notification for Seller
+    await Notification.create({
+      user: ad.user,
+      title: 'Ad Rejected ⚠️',
+      message: `Your ad "${ad.title}" was not approved. Reason: ${rejectionReason}. You can edit and resubmit it.`,
+      type: 'ad_rejected',
+      ad: ad._id,
+    });
 
     res.json({ success: true, message: 'Ad rejected', data: ad });
   } catch (err: any) {

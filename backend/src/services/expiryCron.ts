@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import { Ad } from '../models/Ad';
 import { User } from '../models/User';
+import { Notification } from '../models/Extras';
 import { Expo } from 'expo-server-sdk';
 
 const expo = new Expo();
@@ -12,15 +13,27 @@ export function initExpiryCron(): void {
       console.log('[Cron] Running daily ad expiry verification...');
       const now = new Date();
 
-      // 1. Mark expired ads
-      const expiredResult = await Ad.updateMany(
-        {
-          status: 'active',
-          expiresAt: { $lte: now },
-        },
-        { $set: { status: 'expired' } }
-      );
-      console.log(`[Cron] Marked ${expiredResult.modifiedCount} ads as expired`);
+      // 1. Move expired ads after 30 days to 'sold' (as requested: "5 Ads for 30 days, then they move to SOLD")
+      const expiredAds = await Ad.find({
+        status: 'active',
+        expiresAt: { $lte: now },
+      });
+
+      if (expiredAds.length > 0) {
+        for (const ad of expiredAds) {
+          ad.status = 'sold';
+          await ad.save();
+
+          await Notification.create({
+            user: ad.user,
+            title: 'Ad 30-Day Period Ended',
+            message: `Your listing "${ad.title}" has completed 30 days and moved to Sold. You can Re-activate it anytime from My Ads.`,
+            type: 'ad_expired',
+            ad: ad._id,
+          });
+        }
+        console.log(`[Cron] Moved ${expiredAds.length} ads after 30 days to 'sold'`);
+      }
 
       // 2. Unmark expired featured ads
       await Ad.updateMany(

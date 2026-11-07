@@ -33,13 +33,39 @@ const CATEGORY_IMAGES: Record<string, any> = {
 };
 
 export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const { selectedCity, setCity, language } = useAuthStore();
+  const { user, selectedCity, setCity, language } = useAuthStore();
   const t = translations[language] || translations.en;
   const [refreshing, setRefreshing] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showLocationPrompt, setShowLocationPrompt] = useState(true);
   const [locating, setLocating] = useState(false);
+
+  // Unread Notifications Count Query
+  const { data: notifData } = useQuery({
+    queryKey: ['notifications', user?._id],
+    queryFn: async () => {
+      if (!user) return { unreadCount: 0 };
+      const res = await api.get('/notifications');
+      return res.data;
+    },
+    enabled: !!user,
+    refetchInterval: 10000,
+  });
+  const unreadNotifsCount = notifData?.unreadCount || 0;
+
+  // Favorites Count Query to show filled Red Heart when any ad is liked
+  const { data: favorites = [] } = useQuery({
+    queryKey: ['favorites', user?._id],
+    queryFn: async () => {
+      if (!user) return [];
+      const res = await api.get('/favorites');
+      return Array.isArray(res.data?.data) ? res.data.data : [];
+    },
+    enabled: !!user,
+    refetchInterval: 5000,
+  });
+  const hasFavorites = favorites.length > 0;
 
   useEffect(() => {
     // Check if location modal was already answered once
@@ -210,15 +236,28 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               onPress={() => navigation.navigate('Favorites')}
               accessibilityLabel="Wishlist"
             >
-              <MaterialCommunityIcons name="heart-outline" size={20} color={theme.colors.text} />
+              <MaterialCommunityIcons
+                name={hasFavorites ? 'heart' : 'heart-outline'}
+                size={22}
+                color={hasFavorites ? '#EF4444' : theme.colors.text}
+              />
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.headerIconButton}
-              onPress={() => alert('No new notifications')}
+              onPress={() => navigation.navigate('Notifications')}
               accessibilityLabel="Notifications"
             >
-              <MaterialCommunityIcons name="bell-outline" size={20} color={theme.colors.text} />
+              <View style={{ position: 'relative' }}>
+                <MaterialCommunityIcons name="bell-outline" size={22} color={theme.colors.text} />
+                {unreadNotifsCount > 0 && (
+                  <View style={styles.notifBadge}>
+                    <Text style={styles.notifBadgeText}>
+                      {unreadNotifsCount > 9 ? '9+' : unreadNotifsCount}
+                    </Text>
+                  </View>
+                )}
+              </View>
             </TouchableOpacity>
 
             <View style={styles.brandContainer}>
@@ -428,6 +467,23 @@ const styles = StyleSheet.create({
     height: 34,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  notifBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -6,
+    backgroundColor: '#EF4444',
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+  },
+  notifBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: '800',
   },
   brandContainer: {
     flexDirection: 'row',

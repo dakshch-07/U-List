@@ -102,6 +102,12 @@ export const getMessages = async (req: AuthenticatedRequest, res: Response): Pro
       return;
     }
 
+    // Mark incoming messages as seen when current user opens/reads the chat
+    await Message.updateMany(
+      { conversation: id, sender: { $ne: userId }, seenAt: { $exists: false } },
+      { $set: { seenAt: new Date() } }
+    );
+
     const messages = await Message.find({ conversation: id }).sort({ createdAt: 1 });
 
     // Mark messages as seen for current user

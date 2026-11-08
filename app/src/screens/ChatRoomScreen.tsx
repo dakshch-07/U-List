@@ -168,8 +168,8 @@ export const ChatRoomScreen: React.FC<{ route: any; navigation: any }> = ({ rout
                   {isMe && (
                     <MaterialCommunityIcons
                       name={item.seenAt ? 'check-all' : 'check'}
-                      size={14}
-                      color="#FFFFFF"
+                      size={16}
+                      color={item.seenAt ? '#93C5FD' : 'rgba(255, 255, 255, 0.75)'}
                       style={{ marginLeft: 4 }}
                     />
                   )}

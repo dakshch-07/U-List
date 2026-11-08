@@ -6,6 +6,7 @@ import { theme } from '../theme';
 import { formatDateAgo } from '../utils/formatters';
 import { useAuthStore } from '../store/authStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { requestDeviceNotificationPermission, showDeviceNotification } from '../utils/notifications';
 
 export const NotificationsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { user } = useAuthStore();
@@ -65,8 +66,37 @@ export const NotificationsScreen: React.FC<{ navigation: any }> = ({ navigation 
     );
   }
 
+  const [permissionGranted, setPermissionGranted] = React.useState(
+    typeof window !== 'undefined' && 'Notification' in window ? Notification.permission === 'granted' : false
+  );
+
+  const handleEnableDeviceAlerts = async () => {
+    const granted = await requestDeviceNotificationPermission();
+    setPermissionGranted(granted);
+    if (granted) {
+      showDeviceNotification('Notifications Activated!', {
+        body: 'You will now receive instant phone notifications for ad reviews and buyer messages.',
+      });
+    }
+  };
+
   return (
     <View style={styles.container}>
+      {!permissionGranted && (
+        <View style={styles.permissionBanner}>
+          <MaterialCommunityIcons name="bell-ring-outline" size={24} color="#D9480F" />
+          <View style={{ flex: 1, marginLeft: 10 }}>
+            <Text style={styles.permissionTitle}>Turn On Device Notifications</Text>
+            <Text style={styles.permissionDesc}>
+              Get notified immediately on your phone when an ad is approved, rejected, or you receive a chat.
+            </Text>
+          </View>
+          <TouchableOpacity style={styles.enableBtn} onPress={handleEnableDeviceAlerts}>
+            <Text style={styles.enableBtnText}>Enable</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {notifications.length > 0 && (
         <View style={styles.headerBar}>
           <Text style={styles.headerCount}>{notifications.length} notifications</Text>
@@ -168,6 +198,38 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
     backgroundColor: '#FFFFFF',
+  },
+  permissionBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF7ED',
+    borderBottomWidth: 1,
+    borderBottomColor: '#FED7AA',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  permissionTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#9A3412',
+  },
+  permissionDesc: {
+    fontSize: 11,
+    color: '#7C2D12',
+    lineHeight: 15,
+    marginTop: 2,
+  },
+  enableBtn: {
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    marginLeft: 8,
+  },
+  enableBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
   },
   headerCount: {
     fontSize: 13,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, TextInput, Image, ScrollView, Platform, Alert } from 'react-native';
 import * as Location from 'expo-location';
 import { useQuery } from '@tanstack/react-query';
@@ -15,6 +15,7 @@ import { LocationPromptModal } from '../components/LocationPromptModal';
 import { getRecentSearches, clearRecentSearches } from '../services/recentSearches';
 import { storage } from '../utils/storage';
 import { translations } from '../utils/translations';
+import { requestDeviceNotificationPermission, showDeviceNotification } from '../utils/notifications';
 
 // Realistic Indian 3D product category images matching OLX India style
 const CATEGORY_IMAGES: Record<string, any> = {
@@ -53,6 +54,27 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     refetchInterval: 10000,
   });
   const unreadNotifsCount = notifData?.unreadCount || 0;
+  const previousUnreadCountRef = useRef<number>(0);
+
+  // Auto-request notification permissions and notify on fresh in-app update
+  useEffect(() => {
+    if (user) {
+      requestDeviceNotificationPermission();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (unreadNotifsCount > previousUnreadCountRef.current && previousUnreadCountRef.current !== 0) {
+      const latest = notifData?.data?.[0];
+      if (latest) {
+        showDeviceNotification(latest.title || 'Ulist Notification', {
+          body: latest.message,
+          url: '/notifications',
+        });
+      }
+    }
+    previousUnreadCountRef.current = unreadNotifsCount;
+  }, [unreadNotifsCount, notifData]);
 
   // Favorites Count Query to show filled Red Heart when any ad is liked
   const { data: favorites = [] } = useQuery({

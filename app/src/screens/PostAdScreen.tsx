@@ -247,11 +247,58 @@ export const PostAdScreen: React.FC<{ navigation: any; route?: any }> = ({ navig
 
     setSubmitting(true);
     try {
+      // Check token prior to submission
+      const token = await storage.getItem('ulist_access_token');
+      if (!token) {
+        const msg = 'Session expired or not logged in. Please sign in to submit your ad.';
+        if (typeof window !== 'undefined' && window.alert) {
+          window.alert(msg);
+        } else {
+          Alert.alert('Login Required', msg);
+        }
+        navigation.navigate('Login');
+        return;
+      }
+
+      const authHeader = { Authorization: `Bearer ${token}` };
+
+      // Handle Edit Ad flow
+      if (editingAd?._id) {
+        await api.put(`/ads/${editingAd._id}`, {
+          title: title.trim(),
+          description: description.trim(),
+          price: Number(price) || 0,
+          city: (adCity && adCity !== 'India' && adCity !== 'All India') ? adCity.trim() : 'Mumbai',
+          locality: locality.trim(),
+          contactName: contactName.trim() || user?.name || 'Seller',
+          phone: phone.trim(),
+          showPhone,
+          attributes: dynamicAttrs,
+          status: 'pending', // Re-submit to pending moderation review
+        }, {
+          headers: authHeader,
+        });
+
+        if (Platform.OS === 'web' && typeof window !== 'undefined') {
+          window.alert('Ad updated successfully! It has been submitted for admin review.');
+        } else {
+          Alert.alert('Updated', 'Ad updated successfully! It has been submitted for admin review.');
+        }
+        await clearDraft();
+        queryClient.invalidateQueries({ queryKey: ['ads'] });
+        queryClient.invalidateQueries({ queryKey: ['myAds'] });
+        navigation.navigate('MyAdsTab', { tab: 'pending' });
+        return;
+      }
+
+      // New Ad flow
       const formData = new FormData();
       formData.append('title', title.trim());
       formData.append('description', description.trim());
-      formData.append('category', selectedCategory._id);
-      if (selectedSubcategory) {
+      if (selectedCategory?._id) {
+        formData.append('category', selectedCategory._id);
+      }
+      if (selectedSubcategory?._id) {
         formData.append('subcategory', selectedSubcategory._id);
       }
       formData.append('price', price || '0');
@@ -325,55 +372,13 @@ export const PostAdScreen: React.FC<{ navigation: any; route?: any }> = ({ navig
         }
       }
 
-      // Check token prior to submission
-      const token = await storage.getItem('ulist_access_token');
-      if (!token) {
-        const msg = 'Session expired or not logged in. Please sign in to submit your ad.';
-        if (typeof window !== 'undefined' && window.alert) {
-          window.alert(msg);
-        } else {
-          Alert.alert('Login Required', msg);
-        }
-        navigation.navigate('Login');
-        return;
-      }
-
-      const authHeader = { Authorization: `Bearer ${token}` };
-
-      let res;
-      if (editingAd?._id) {
-        // Update existing ad
-        res = await api.put(`/ads/${editingAd._id}`, {
-          title: title.trim(),
-          description: description.trim(),
-          price: Number(price) || 0,
-          city: adCity,
-          locality: locality.trim(),
-          contactName: contactName.trim(),
-          phone: phone.trim(),
-          showPhone,
-          attributes: dynamicAttrs,
-          status: 'pending', // Re-submit to pending moderation queue
-        });
-        if (Platform.OS === 'web' && typeof window !== 'undefined') {
-          window.alert('Ad updated successfully! It has been submitted for admin review.');
-        } else {
-          Alert.alert('Updated', 'Ad updated successfully! It has been submitted for admin review.');
-        }
-        await clearDraft();
-        queryClient.invalidateQueries({ queryKey: ['ads'] });
-        queryClient.invalidateQueries({ queryKey: ['myAds'] });
-        navigation.navigate('MyAdsTab', { tab: 'pending' });
-        return;
-      } else {
-        res = await api.post('/ads', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            ...authHeader,
-          },
-          timeout: 180000, // 3 minutes specifically for multi-photo uploads
-        });
-      }
+      const res = await api.post('/ads', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          ...authHeader,
+        },
+        timeout: 180000, // 3 minutes specifically for multi-photo uploads
+      });
 
       // Clear draft upon successful post
       await clearDraft();

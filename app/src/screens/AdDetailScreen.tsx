@@ -11,6 +11,7 @@ export const AdDetailScreen: React.FC<{ route: any; navigation: any }> = ({ rout
   const { adId } = route.params;
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
+  const [isStartingChat, setIsStartingChat] = useState(false);
 
   // Favorite status
   const { data: favData } = useQuery({
@@ -52,25 +53,34 @@ export const AdDetailScreen: React.FC<{ route: any; navigation: any }> = ({ rout
   });
 
   const handleStartChat = async () => {
+    if (isStartingChat) return;
+
     if (!user) {
       navigation.navigate('Login');
       return;
     }
 
-    if (ad.user?._id === user._id) {
+    const sellerUserId = ad.user?._id || ad.user;
+    const currentUserId = user?._id || (user as any)?.id;
+
+    if (sellerUserId && currentUserId && sellerUserId.toString() === currentUserId.toString()) {
       Alert.alert('Notice', 'This is your own listing.');
       return;
     }
 
     try {
+      setIsStartingChat(true);
       const res = await api.post('/conversations', { adId: ad._id });
+      setIsStartingChat(false);
       navigation.navigate('ChatRoom', {
         conversationId: res.data.data._id,
-        otherUser: ad.user,
+        otherUser: res.data.data.otherUser || ad.user,
         ad: ad,
       });
     } catch (err: any) {
-      Alert.alert('Chat Error', err.response?.data?.message || 'Unable to open conversation');
+      setIsStartingChat(false);
+      const errorMsg = err.response?.data?.message || err.message || 'Unable to open conversation';
+      Alert.alert('Chat Error', errorMsg);
     }
   };
 
@@ -426,11 +436,16 @@ export const AdDetailScreen: React.FC<{ route: any; navigation: any }> = ({ rout
       {/* Sticky Bottom Action Bar: Chat & Call */}
       <View style={styles.bottomBar}>
         <TouchableOpacity
-          style={styles.chatButton}
+          style={[styles.chatButton, isStartingChat && { opacity: 0.7 }]}
           onPress={handleStartChat}
+          disabled={isStartingChat}
         >
-          <MaterialCommunityIcons name="chat-outline" size={20} color="#FFFFFF" />
-          <Text style={styles.chatButtonText}>Chat</Text>
+          {isStartingChat ? (
+            <MaterialCommunityIcons name="loading" size={20} color="#FFFFFF" />
+          ) : (
+            <MaterialCommunityIcons name="chat-outline" size={20} color="#FFFFFF" />
+          )}
+          <Text style={styles.chatButtonText}>{isStartingChat ? 'Opening...' : 'Chat'}</Text>
         </TouchableOpacity>
 
         {ad.showPhone ? (

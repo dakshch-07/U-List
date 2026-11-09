@@ -58,6 +58,7 @@ const linking = {
       AboutUs: 'about',
       PrivacyPolicy: 'privacy',
       TermsOfService: 'terms',
+      ChatRoom: 'chat/:conversationId',
     },
   },
 };

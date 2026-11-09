@@ -16,12 +16,31 @@ const QUICK_REPLIES = [
 ];
 
 export const ChatRoomScreen: React.FC<{ route: any; navigation: any }> = ({ route, navigation }) => {
-  const { conversationId, otherUser, ad } = route.params;
+  const { conversationId, otherUser: initialOtherUser, ad: initialAd } = route.params || {};
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [inputText, setInputText] = useState('');
   const flatListRef = useRef<FlatList>(null);
   const socketRef = useRef<Socket | null>(null);
+
+  // Fetch conversation meta if accessed directly or details missing
+  const { data: conversationData } = useQuery({
+    queryKey: ['conversationMeta', conversationId],
+    queryFn: async () => {
+      if (!conversationId) return null;
+      try {
+        const res = await api.get(`/conversations`);
+        const convos = res.data?.data || [];
+        return convos.find((c: any) => c._id === conversationId) || null;
+      } catch {
+        return null;
+      }
+    },
+    enabled: !!conversationId && (!initialOtherUser || !initialAd),
+  });
+
+  const otherUser = initialOtherUser || conversationData?.otherUser;
+  const ad = initialAd || conversationData?.ad;
 
   // Fetch conversation messages with auto polling fallback
   const { data: messages = [] } = useQuery({

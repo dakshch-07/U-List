@@ -567,7 +567,7 @@ const DEMO_ADS_SPEC = [
 ];
 
 // Placeholder image (neutral 4:3 SVG converted into data URI or local placeholder)
-const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80';
+const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80';
 
 export async function runSeed(): Promise<void> {
   console.log('[Seed] Starting database seed...');

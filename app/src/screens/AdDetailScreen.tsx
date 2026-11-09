@@ -125,8 +125,8 @@ export const AdDetailScreen: React.FC<{ route: any; navigation: any }> = ({ rout
   const imageScrollRef = useRef<ScrollView>(null);
   const [carouselWidth, setCarouselWidth] = useState(Dimensions.get('window').width);
 
-  const rawImages = ad?.images && ad.images.length > 0 ? ad.images : [{ url: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80' }];
-  const fallbackDetailUrl = 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80';
+  const rawImages = ad?.images && ad.images.length > 0 ? ad.images : [{ url: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80' }];
+  const fallbackDetailUrl = 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80';
 
   const onCarouselScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offsetX = e.nativeEvent.contentOffset.x;

@@ -12,7 +12,7 @@ interface AdCardProps {
 }
 
 export const AdCard: React.FC<AdCardProps> = ({ ad, onPress, onFavoritePress, isFavorite }) => {
-  const fallbackUrl = 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80';
+  const fallbackUrl = 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80';
   const initialUrl = getFullImageUrl(ad.images && ad.images.length > 0 ? ad.images[0].url : undefined);
   const [imgSrc, setImgSrc] = React.useState<string>(initialUrl);
 

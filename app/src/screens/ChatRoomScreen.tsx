@@ -218,18 +218,34 @@ export const ChatRoomScreen: React.FC<{ route: any; navigation: any }> = ({ rout
         </TouchableOpacity>
       </View>
 
-      {/* Ad Mini Header Card */}
+      {/* Ad Mini Header Card (Clickable to open ad details) */}
       {ad && (
-        <View style={styles.adHeader}>
-          <Image
-            source={{ uri: getFullImageUrl(ad.images?.[0]?.url) }}
-            style={styles.adThumb}
-          />
+        <TouchableOpacity
+          style={styles.adHeader}
+          activeOpacity={0.8}
+          onPress={() => {
+            const adId = ad._id || ad.id;
+            if (adId) {
+              navigation.navigate('AdDetail', { adId });
+            }
+          }}
+        >
+          {ad.images?.[0]?.url ? (
+            <Image
+              source={{ uri: getFullImageUrl(ad.images[0].url) }}
+              style={styles.adThumb}
+            />
+          ) : (
+            <View style={styles.adThumbPlaceholder}>
+              <MaterialCommunityIcons name="image-outline" size={22} color="#94A3B8" />
+            </View>
+          )}
           <View style={{ flex: 1, marginLeft: 10 }}>
             <Text style={styles.adTitle} numberOfLines={1}>{ad.title}</Text>
             <Text style={styles.adPrice}>{formatINR(ad.price)}</Text>
           </View>
-        </View>
+          <MaterialCommunityIcons name="chevron-right" size={22} color="#94A3B8" />
+        </TouchableOpacity>
       )}
 
       {/* Messages Feed */}
@@ -455,6 +471,15 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: theme.borderRadius.sm,
+    backgroundColor: '#F1F5F9',
+  },
+  adThumbPlaceholder: {
+    width: 44,
+    height: 44,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   adTitle: {
     fontSize: theme.typography.size.caption,

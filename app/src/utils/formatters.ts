@@ -7,7 +7,7 @@ const BACKEND_HOST = 'https://u-list-api.onrender.com';
 
 export const getFullImageUrl = (url?: string): string => {
   if (!url) {
-    return 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80';
+    return 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80';
   }
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;

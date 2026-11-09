@@ -202,7 +202,6 @@ export const MyAdsScreen: React.FC<{ navigation: any; route?: any }> = ({ naviga
           />
         }
         renderItem={({ item }) => {
-          const fallbackThumb = 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80';
           const imgUrl = item.images?.[0]?.url ? getFullImageUrl(item.images[0].url) : null;
           return (
             <View style={styles.card}>
@@ -212,7 +211,6 @@ export const MyAdsScreen: React.FC<{ navigation: any; route?: any }> = ({ naviga
                     source={{ uri: imgUrl }}
                     style={styles.adThumb}
                     resizeMode="cover"
-                    defaultSource={{ uri: fallbackThumb }}
                   />
                 ) : (
                   <View style={styles.adThumbFallback}>

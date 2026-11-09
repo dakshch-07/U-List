@@ -9,6 +9,10 @@ export const getFullImageUrl = (url?: string): string => {
   if (!url) {
     return 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80';
   }
+  // Local object URLs, base64 data URIs, or file URIs must be returned as-is
+  if (url.startsWith('blob:') || url.startsWith('data:') || url.startsWith('file:')) {
+    return url;
+  }
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }

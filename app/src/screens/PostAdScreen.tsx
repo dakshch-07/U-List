@@ -654,11 +654,12 @@ export const PostAdScreen: React.FC<{ navigation: any; route?: any }> = ({ navig
             <Text style={styles.label}>Upload Photos (Up to 8, first photo is cover)</Text>
             <View style={styles.photosGrid}>
               {images.map((uri, idx) => {
-                const fullSrc = getFullImageUrl(uri);
+                const isLocal = uri.startsWith('data:') || uri.startsWith('blob:') || uri.startsWith('file:');
+                const imageSrc = isLocal ? uri : getFullImageUrl(uri);
                 return (
                   <View key={idx} style={styles.photoThumb}>
                     <Image
-                      source={{ uri: fullSrc }}
+                      source={{ uri: imageSrc }}
                       style={styles.photoImg}
                       resizeMode="cover"
                     />

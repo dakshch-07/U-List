@@ -2,6 +2,7 @@ import multer from 'multer';
 import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs';
+import mongoose from 'mongoose';
 import { Request, Response, NextFunction } from 'express';
 
 const uploadDir = path.join(__dirname, '../../uploads');
@@ -9,12 +10,24 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
+let gridFSBucket: mongoose.mongo.GridFSBucket | null = null;
+const getGridFSBucket = (): mongoose.mongo.GridFSBucket | null => {
+  if (gridFSBucket) return gridFSBucket;
+  if (mongoose.connection && mongoose.connection.db) {
+    gridFSBucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+      bucketName: 'uploads',
+    });
+    return gridFSBucket;
+  }
+  return null;
+};
+
 const storage = multer.memoryStorage();
 
 export const upload = multer({
   storage,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5 MB max
+    fileSize: 10 * 1024 * 1024, // 10 MB max per file
     files: 8,
   },
   fileFilter: (_req, file, cb) => {
@@ -39,18 +52,41 @@ export const processImages = async (
     }
 
     const processedImages: { url: string; publicId: string }[] = [];
+    const bucket = getGridFSBucket();
 
-    // Process all images in parallel with optimized sharp settings for blazing fast conversion
+    // Process all images in parallel
     await Promise.all(
       files.map(async (file, i) => {
         const filename = `ad_${Date.now()}_${i}_${Math.random().toString(36).substring(7)}.webp`;
         const filepath = path.join(uploadDir, filename);
 
         try {
-          await sharp(file.buffer, { failOn: 'none' })
+          const webpBuffer = await sharp(file.buffer, { failOn: 'none' })
             .resize({ width: 1080, height: 1080, fit: 'inside', withoutEnlargement: true })
-            .webp({ quality: 75, effort: 1 }) // effort: 1 makes compression 5x faster with virtually zero visible difference
-            .toFile(filepath);
+            .webp({ quality: 80, effort: 1 })
+            .toBuffer();
+
+          // 1. Save to local disk cache (fast immediate serving if on same instance)
+          try {
+            await fs.promises.writeFile(filepath, webpBuffer);
+          } catch (writeErr) {
+            console.warn('[Local Disk Write Warning]:', writeErr);
+          }
+
+          // 2. Persist to MongoDB GridFS for permanent storage across server restarts & redeployments
+          if (bucket) {
+            await new Promise<void>((resolve) => {
+              const uploadStream = bucket.openUploadStream(filename, {
+                metadata: { contentType: 'image/webp' },
+              });
+              uploadStream.on('finish', () => resolve());
+              uploadStream.on('error', (e) => {
+                console.warn('[GridFS Upload Warning]:', e);
+                resolve(); // Do not abort overall upload if GridFS warns
+              });
+              uploadStream.end(webpBuffer);
+            });
+          }
 
           processedImages.push({
             url: `/uploads/${filename}`,
@@ -68,3 +104,4 @@ export const processImages = async (
     next(err);
   }
 };
+

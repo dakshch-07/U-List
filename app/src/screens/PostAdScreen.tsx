@@ -661,7 +661,6 @@ export const PostAdScreen: React.FC<{ navigation: any; route?: any }> = ({ navig
                       source={{ uri: fullSrc }}
                       style={styles.photoImg}
                       resizeMode="cover"
-                      defaultSource={{ uri: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=400&q=80' }}
                     />
                     <TouchableOpacity
                       style={styles.deletePhoto}

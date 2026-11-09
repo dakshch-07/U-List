@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
+import mongoose from 'mongoose';
 import { connectDB } from './config/db';
 import apiRoutes from './routes/api';
 import { runSeed } from './scripts/seed';
@@ -53,7 +54,63 @@ const uploadsDir = findFolder('uploads');
 console.log('[Server Paths] adminDistDir:', adminDistDir, 'exists:', fs.existsSync(adminDistDir));
 console.log('[Server Paths] appPublicDir:', appPublicDir, 'exists:', fs.existsSync(appPublicDir));
 
-// Serve uploaded static assets
+// Serve uploaded static assets (Local disk cache + MongoDB GridFS fallback)
+let serverGridFSBucket: mongoose.mongo.GridFSBucket | null = null;
+const getServerGridFSBucket = (): mongoose.mongo.GridFSBucket | null => {
+  if (serverGridFSBucket) return serverGridFSBucket;
+  if (mongoose.connection && mongoose.connection.db) {
+    serverGridFSBucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+      bucketName: 'uploads',
+    });
+    return serverGridFSBucket;
+  }
+  return null;
+};
+
+// Custom middleware to serve from local uploads dir first, and fallback to MongoDB GridFS stream
+app.get('/uploads/:filename', async (req, res, next) => {
+  const filename = req.params.filename;
+  const localFilePath = path.join(uploadsDir, filename);
+
+  // 1. If exists in local disk cache, send it immediately
+  if (fs.existsSync(localFilePath)) {
+    return res.sendFile(localFilePath);
+  }
+
+  // 2. Otherwise stream from persistent MongoDB GridFS
+  try {
+    const bucket = getServerGridFSBucket();
+    if (!bucket) {
+      return res.status(404).send('Not found');
+    }
+
+    const files = await bucket.find({ filename }).limit(1).toArray();
+    if (!files || files.length === 0) {
+      return res.status(404).send('File not found');
+    }
+
+    const fileDoc = files[0];
+    const mimeType = (fileDoc.metadata as any)?.contentType || 'image/webp';
+    res.setHeader('Content-Type', mimeType);
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+
+    const downloadStream = bucket.openDownloadStreamByName(filename);
+    
+    // Also opportunistically cache to local disk for even faster subsequent hits
+    try {
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+      const writeStream = fs.createWriteStream(localFilePath);
+      downloadStream.pipe(writeStream);
+    } catch {}
+
+    downloadStream.pipe(res);
+  } catch (gridErr) {
+    console.warn('[GridFS Stream Error]:', gridErr);
+    next();
+  }
+});
 app.use('/uploads', express.static(uploadsDir));
 
 // Serve Admin Web Panel build

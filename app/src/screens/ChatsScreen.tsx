@@ -131,12 +131,18 @@ export const ChatsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               })
             }
           >
-            <Image
-              source={{
-                uri: getFullImageUrl(item.ad?.images?.[0]?.url),
-              }}
-              style={styles.chatAvatar}
-            />
+            {item.ad?.images?.[0]?.url ? (
+              <Image
+                source={{
+                  uri: getFullImageUrl(item.ad?.images?.[0]?.url),
+                }}
+                style={styles.chatAvatar}
+              />
+            ) : (
+              <View style={styles.chatAvatarPlaceholder}>
+                <MaterialCommunityIcons name="image-outline" size={26} color="#94A3B8" />
+              </View>
+            )}
             <View style={styles.chatDetails}>
               <View style={styles.chatNameRow}>
                 <Text style={styles.chatName} numberOfLines={1}>{item.otherUser?.name || 'User'}</Text>
@@ -295,6 +301,14 @@ const styles = StyleSheet.create({
     height: 54,
     borderRadius: 8,
     backgroundColor: '#F1F5F9',
+  },
+  chatAvatarPlaceholder: {
+    width: 54,
+    height: 54,
+    borderRadius: 8,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   chatDetails: {
     flex: 1,

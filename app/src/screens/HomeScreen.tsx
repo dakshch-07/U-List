@@ -51,7 +51,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       return res.data;
     },
     enabled: !!user,
-    refetchInterval: 10000,
+    refetchInterval: 30000,
   });
   const unreadNotifsCount = notifData?.unreadCount || 0;
   const previousUnreadCountRef = useRef<number>(0);
@@ -85,7 +85,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       return Array.isArray(res.data?.data) ? res.data.data : [];
     },
     enabled: !!user,
-    refetchInterval: 5000,
+    staleTime: 60000,
   });
   const hasFavorites = favorites.length > 0;
 

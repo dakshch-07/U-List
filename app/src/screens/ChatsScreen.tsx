@@ -20,7 +20,7 @@ export const ChatsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       return res.data.data;
     },
     enabled: !!user,
-    refetchInterval: 3000,
+    refetchInterval: 8000,
   });
 
   if (!user) {

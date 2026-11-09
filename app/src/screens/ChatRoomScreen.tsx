@@ -30,7 +30,7 @@ export const ChatRoomScreen: React.FC<{ route: any; navigation: any }> = ({ rout
       const res = await api.get(`/conversations/${conversationId}/messages`);
       return res.data.data;
     },
-    refetchInterval: 2000, // Fast 2-second auto-refresh for real-time responsiveness
+    refetchInterval: 5000, // Balanced 5-second polling fallback so socket.io handles instant events without CPU thrashing
   });
 
   const otherUserId = otherUser?._id;
@@ -103,11 +103,51 @@ export const ChatRoomScreen: React.FC<{ route: any; navigation: any }> = ({ rout
       const res = await api.post(`/conversations/${conversationId}/messages`, { text });
       return res.data.data;
     },
-    onSuccess: (newMsg) => {
+    onMutate: async (newText: string) => {
+      // 1. Immediately clear the input for instant responsiveness
       setInputText('');
-      queryClient.setQueryData(['messages', conversationId], (old: any = []) => [...old, newMsg]);
+
+      // 2. Cancel outgoing message queries so they don't overwrite optimistic update
+      await queryClient.cancelQueries({ queryKey: ['messages', conversationId] });
+
+      // 3. Snapshot the previous messages
+      const previousMessages = queryClient.getQueryData(['messages', conversationId]) || [];
+
+      // 4. Optimistically inject the new message immediately with temporary ID
+      const tempId = `temp_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      const optimisticMessage = {
+        _id: tempId,
+        conversation: conversationId,
+        sender: user?._id,
+        text: newText,
+        createdAt: new Date().toISOString(),
+        seenAt: null,
+      };
+
+      queryClient.setQueryData(['messages', conversationId], (old: any = []) => [
+        ...old,
+        optimisticMessage,
+      ]);
+
+      // Scroll immediately
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 50);
+
+      return { previousMessages, tempId };
     },
-    onError: (err: any) => {
+    onSuccess: (savedMsg, _variables, context) => {
+      // Replace temporary optimistic message with real saved message from backend
+      queryClient.setQueryData(['messages', conversationId], (old: any = []) => {
+        return old.map((m: any) => (m._id === context?.tempId ? savedMsg : m));
+      });
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+    },
+    onError: (err: any, _variables, context) => {
+      // Revert back if network completely failed
+      if (context?.previousMessages) {
+        queryClient.setQueryData(['messages', conversationId], context.previousMessages);
+      }
       Alert.alert('Delivery Failed', err.response?.data?.message || 'Message could not be sent');
     },
   });

@@ -8,6 +8,7 @@ import { theme } from '../theme';
 import { useAuthStore } from '../store/authStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { initiateRazorpayPayment } from '../services/paymentService';
+import { getFullImageUrl } from '../utils/formatters';
 
 // Realistic 3D Indian product images matching OLX India style
 const CATEGORY_IMAGES: Record<string, any> = {
@@ -84,7 +85,15 @@ export const PostAdScreen: React.FC<{ navigation: any; route?: any }> = ({ navig
       setPhone(editingAd.phone || user?.phone || '');
       if (editingAd.attributes) setDynamicAttrs(editingAd.attributes);
       if (editingAd.images && Array.isArray(editingAd.images)) {
-        setImages(editingAd.images.map((img: any) => img.url));
+        setImages(
+          editingAd.images
+            .map((img: any) => {
+              if (typeof img === 'string') return getFullImageUrl(img);
+              if (img && typeof img.url === 'string') return getFullImageUrl(img.url);
+              return null;
+            })
+            .filter(Boolean) as string[]
+        );
       }
       setStep(2);
     }
@@ -196,7 +205,12 @@ export const PostAdScreen: React.FC<{ navigation: any; route?: any }> = ({ navig
     enabled: !!user,
   });
 
-  const activeMyAdsCount = myAds.filter((a: any) => a.status === 'active' || a.status === 'pending').length;
+  // Count all ads posted in current 30-day window (Active, Pending, Sold, Rejected, Deleted) towards the 5 ads limit
+  const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  const activeMyAdsCount = myAds.filter((a: any) => {
+    const createdTime = new Date(a.createdAt).getTime();
+    return createdTime >= thirtyDaysAgo;
+  }).length;
 
   const pickImage = async () => {
     const remainingSlots = 8 - images.length;
@@ -274,20 +288,20 @@ export const PostAdScreen: React.FC<{ navigation: any; route?: any }> = ({ navig
           phone: phone.trim(),
           showPhone,
           attributes: dynamicAttrs,
-          status: 'pending', // Re-submit to pending moderation review
+          status: 'active', // Retain active status or directly active upon edit
         }, {
           headers: authHeader,
         });
 
         if (Platform.OS === 'web' && typeof window !== 'undefined') {
-          window.alert('Ad updated successfully! It has been submitted for admin review.');
+          window.alert('Ad updated successfully!');
         } else {
-          Alert.alert('Updated', 'Ad updated successfully! It has been submitted for admin review.');
+          Alert.alert('Updated', 'Ad updated successfully!');
         }
         await clearDraft();
         queryClient.invalidateQueries({ queryKey: ['ads'] });
         queryClient.invalidateQueries({ queryKey: ['myAds'] });
-        navigation.navigate('MyAdsTab', { tab: 'pending' });
+        navigation.navigate('MyAdsTab', { tab: 'active' });
         return;
       }
 
@@ -639,17 +653,25 @@ export const PostAdScreen: React.FC<{ navigation: any; route?: any }> = ({ navig
           <View>
             <Text style={styles.label}>Upload Photos (Up to 8, first photo is cover)</Text>
             <View style={styles.photosGrid}>
-              {images.map((uri, idx) => (
-                <View key={idx} style={styles.photoThumb}>
-                  <Image source={{ uri }} style={styles.photoImg} />
-                  <TouchableOpacity
-                    style={styles.deletePhoto}
-                    onPress={() => setImages(images.filter((_, i) => i !== idx))}
-                  >
-                    <MaterialCommunityIcons name="close" size={16} color="#FFFFFF" />
-                  </TouchableOpacity>
-                </View>
-              ))}
+              {images.map((uri, idx) => {
+                const fullSrc = getFullImageUrl(uri);
+                return (
+                  <View key={idx} style={styles.photoThumb}>
+                    <Image
+                      source={{ uri: fullSrc }}
+                      style={styles.photoImg}
+                      resizeMode="cover"
+                      defaultSource={{ uri: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=400&q=80' }}
+                    />
+                    <TouchableOpacity
+                      style={styles.deletePhoto}
+                      onPress={() => setImages(images.filter((_, i) => i !== idx))}
+                    >
+                      <MaterialCommunityIcons name="close" size={16} color="#FFFFFF" />
+                    </TouchableOpacity>
+                  </View>
+                );
+              })}
               {images.length < 8 && (
                 <TouchableOpacity style={styles.addPhotoBox} onPress={pickImage}>
                   <MaterialCommunityIcons name="camera-plus-outline" size={32} color={theme.colors.primary} />

@@ -81,18 +81,17 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
 
   const handleInviteFriends = async () => {
     try {
-      const shareUrl = 'https://u-list-app.vercel.app';
-      const message = `Check out Ulist - Buy and Sell anything near you with ease! Download or visit: ${shareUrl}`;
+      const shareUrl = 'https://www.ulist.in';
+      const message = `Check out Ulist — List It. Sell It. Cash It! Buy and sell anything near you with ease: ${shareUrl}`;
       if (Platform.OS === 'web' && typeof navigator !== 'undefined' && (navigator as any).share) {
         await (navigator as any).share({
           title: 'Ulist - List It. Sell It. Cash It!',
           text: message,
-          url: shareUrl,
         });
       } else if (Platform.OS === 'web') {
         if (typeof navigator !== 'undefined' && navigator.clipboard) {
-          await navigator.clipboard.writeText(`${message}`);
-          Alert.alert('Link Copied', 'Invite link copied to clipboard!');
+          await navigator.clipboard.writeText(message);
+          Alert.alert('Link Copied', 'Invite message copied to clipboard!');
         } else {
           Alert.alert('Invite Link', shareUrl);
         }
@@ -107,27 +106,70 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
     }
   };
 
+  const handleLogout = () => {
+    const executeLogout = async () => {
+      try {
+        await logout();
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const confirmed = window.confirm('Are you sure you want to log out of Ulist?');
+      if (confirmed) {
+        executeLogout();
+      }
+    } else {
+      Alert.alert(
+        'Log Out',
+        'Are you sure you want to log out of Ulist?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Log Out', style: 'destructive', onPress: executeLogout },
+        ]
+      );
+    }
+  };
+
   const handleDeleteAccount = () => {
-    Alert.alert(
-      'Delete Account',
-      'This action is irreversible. All your listings, messages, and profile data will be permanently removed. Continue?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await api.delete('/auth/me');
-              await logout();
-              Alert.alert('Account deleted', 'Your account has been deleted permanently');
-            } catch {
-              Alert.alert('Error', 'Failed to delete account');
-            }
+    const executeDelete = async () => {
+      try {
+        await api.delete('/auth/me');
+        await logout();
+        if (Platform.OS === 'web' && typeof window !== 'undefined') {
+          window.alert('Your account has been deleted permanently');
+        } else {
+          Alert.alert('Account deleted', 'Your account has been deleted permanently');
+        }
+      } catch {
+        if (Platform.OS === 'web' && typeof window !== 'undefined') {
+          window.alert('Failed to delete account');
+        } else {
+          Alert.alert('Error', 'Failed to delete account');
+        }
+      }
+    };
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const confirmed = window.confirm('Are you sure you want to permanently delete your account? This action is irreversible. All your listings, messages, and profile data will be permanently removed.');
+      if (confirmed) {
+        executeDelete();
+      }
+    } else {
+      Alert.alert(
+        'Delete Account',
+        'This action is irreversible. All your listings, messages, and profile data will be permanently removed. Continue?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: executeDelete,
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   return (
@@ -273,7 +315,7 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
 
         {user && (
           <>
-            <TouchableOpacity style={styles.menuItem} onPress={logout}>
+            <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
               <MaterialCommunityIcons name="logout" size={22} color={theme.colors.error} />
               <Text style={[styles.menuText, { color: theme.colors.error }]}>{t.logOut}</Text>
             </TouchableOpacity>

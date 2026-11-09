@@ -617,19 +617,56 @@ app.get('/{*splat}', (_req, res) => {
   }
 });
 
-// Socket.io for Realtime Chat
+// Socket.io for Realtime Chat & Live Online Presence
+const connectedUserSockets = new Map<string, Set<string>>();
+
 io.on('connection', (socket) => {
-  const userId = socket.handshake.query.userId;
-  if (userId) {
+  const userId = socket.handshake.query.userId as string;
+  if (userId && typeof userId === 'string') {
     socket.join(`user_${userId}`);
+
+    // Track active connection
+    if (!connectedUserSockets.has(userId)) {
+      connectedUserSockets.set(userId, new Set());
+    }
+    connectedUserSockets.get(userId)!.add(socket.id);
+
+    // Broadcast user is online
+    io.emit('user:status', { userId, isOnline: true });
+
+    // Update lastSeen in DB
+    import('./models/User').then(({ User }) => {
+      User.findByIdAndUpdate(userId, { lastSeen: new Date() }).exec().catch(() => {});
+    });
   }
 
   socket.on('join_conversation', (convId) => {
     socket.join(`conv_${convId}`);
   });
 
+  socket.on('check_user_online', (targetUserId: string, callback?: (status: { isOnline: boolean }) => void) => {
+    const isOnline = connectedUserSockets.has(targetUserId) && connectedUserSockets.get(targetUserId)!.size > 0;
+    if (typeof callback === 'function') {
+      callback({ isOnline });
+    } else {
+      socket.emit('user:status', { userId: targetUserId, isOnline });
+    }
+  });
+
   socket.on('disconnect', () => {
-    // Client disconnected
+    if (userId && typeof userId === 'string' && connectedUserSockets.has(userId)) {
+      const userSockets = connectedUserSockets.get(userId)!;
+      userSockets.delete(socket.id);
+      if (userSockets.size === 0) {
+        connectedUserSockets.delete(userId);
+        const lastSeen = new Date();
+        // Broadcast user has gone offline with lastSeen timestamp
+        io.emit('user:status', { userId, isOnline: false, lastSeen });
+        import('./models/User').then(({ User }) => {
+          User.findByIdAndUpdate(userId, { lastSeen }).exec().catch(() => {});
+        });
+      }
+    }
   });
 });
 

@@ -10,7 +10,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 export const ChatsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState<'buying' | 'selling'>('buying');
-  const [activeFilter, setActiveFilter] = useState<'all' | 'verified' | 'unread' | 'important'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'read'>('all');
 
   const { data: conversations = [], refetch, isFetching } = useQuery({
     queryKey: ['conversations'],
@@ -46,10 +46,10 @@ export const ChatsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     return !isMyAd;
   });
 
-  // Apply Quick Filter chips
+  // Apply Quick Filter chips (All, Unread, Read)
   const filteredConversations = filteredByTab.filter((c: any) => {
     if (activeFilter === 'unread') return (c.unreadCount || 0) > 0;
-    if (activeFilter === 'verified') return c.otherUser?.phone || c.otherUser?.role === 'admin';
+    if (activeFilter === 'read') return (c.unreadCount || 0) === 0;
     return true;
   });
 
@@ -85,7 +85,7 @@ export const ChatsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* QUICK FILTERS Chips */}
+      {/* QUICK FILTERS Chips: Only All, Unread, and Read */}
       <View style={styles.quickFilterSection}>
         <Text style={styles.quickFilterTitle}>QUICK FILTERS</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsScroll}>
@@ -97,21 +97,6 @@ export const ChatsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.chip, activeFilter === 'verified' && styles.chipActive]}
-            onPress={() => setActiveFilter('verified')}
-          >
-            <MaterialCommunityIcons
-              name="star-check"
-              size={14}
-              color={activeFilter === 'verified' ? '#D9480F' : '#EA580C'}
-              style={{ marginRight: 4 }}
-            />
-            <Text style={[styles.chipText, activeFilter === 'verified' && styles.chipTextActive]}>
-              Ulist Verified Sellers
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
             style={[styles.chip, activeFilter === 'unread' && styles.chipActive]}
             onPress={() => setActiveFilter('unread')}
           >
@@ -119,10 +104,10 @@ export const ChatsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.chip, activeFilter === 'important' && styles.chipActive]}
-            onPress={() => setActiveFilter('important')}
+            style={[styles.chip, activeFilter === 'read' && styles.chipActive]}
+            onPress={() => setActiveFilter('read')}
           >
-            <Text style={[styles.chipText, activeFilter === 'important' && styles.chipTextActive]}>Important</Text>
+            <Text style={[styles.chipText, activeFilter === 'read' && styles.chipTextActive]}>Read</Text>
           </TouchableOpacity>
         </ScrollView>
       </View>

@@ -287,47 +287,13 @@ export default function App() {
       if (!window.history.state?.ulistApp) {
         window.history.replaceState({ ulistApp: true, index: 0 }, '', window.location.href);
       }
-
-      // Web/Mobile Browser Back Button handler
-      const handlePopState = (_e: PopStateEvent) => {
-        // If navigation was triggered internally, skip
-        if (isNavigatingRef.current) return;
-
-        if (navigationRef.current && navigationRef.current.canGoBack()) {
-          isNavigatingRef.current = true;
-          navigationRef.current.goBack();
-          setTimeout(() => {
-            isNavigatingRef.current = false;
-          }, 100);
-        } else {
-          // At root Home Screen: Double back check to prevent accidental exit
-          const now = Date.now();
-          if (now - lastExitPressRef.current < 2500) {
-            // User confirmed exit by pressing back twice
-            window.history.back();
-          } else {
-            lastExitPressRef.current = now;
-            // Push history state back so the browser stays inside the app
-            window.history.pushState({ ulistApp: true, index: 0 }, '', window.location.href);
-            if (typeof window !== 'undefined' && window.alert) {
-              window.alert('Press back again to exit Ulist');
-            }
-          }
-        }
-      };
-
-      window.addEventListener('popstate', handlePopState);
-
-      return () => {
-        window.removeEventListener('popstate', handlePopState);
-      };
     }
 
-    // Android Native Hardware Back Button handler
+    // Android Native Hardware Back Button handler (only triggers on actual device back button)
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
       if (navigationRef.current && navigationRef.current.canGoBack()) {
         navigationRef.current.goBack();
-        return true; // Stepped back, do not close app
+        return true; // Stepped back inside app, do not close app
       }
 
       // User is at root Home screen: Require double press to exit
@@ -362,12 +328,29 @@ export default function App() {
         >
           <OfflineNotice />
           <Stack.Navigator
-            screenOptions={{
+            screenOptions={({ navigation }) => ({
               headerStyle: { backgroundColor: theme.colors.background },
               headerTintColor: theme.colors.text,
               headerTitleStyle: { fontWeight: '700', fontSize: 16 },
               headerShadowVisible: false,
-            }}
+              headerLeft: (props) =>
+                props.canGoBack ? (
+                  <TouchableOpacity
+                    onPress={() => {
+                      isNavigatingRef.current = true;
+                      navigation.goBack();
+                      setTimeout(() => {
+                        isNavigatingRef.current = false;
+                      }, 200);
+                    }}
+                    style={{ paddingHorizontal: 12, paddingVertical: 8, marginLeft: -4 }}
+                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                    activeOpacity={0.7}
+                  >
+                    <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.text} />
+                  </TouchableOpacity>
+                ) : null,
+            })}
           >
             <Stack.Screen
               name="Main"

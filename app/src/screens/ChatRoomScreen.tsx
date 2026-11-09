@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform, Alert, Modal, ActivityIndicator } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { theme } from '../theme';
 import { useAuthStore } from '../store/authStore';
-import { formatINR, getFullImageUrl } from '../utils/formatters';
+import { formatINR, getFullImageUrl, formatLastSeen } from '../utils/formatters';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { io, Socket } from 'socket.io-client';
 
@@ -33,7 +33,29 @@ export const ChatRoomScreen: React.FC<{ route: any; navigation: any }> = ({ rout
     refetchInterval: 2000, // Fast 2-second auto-refresh for real-time responsiveness
   });
 
-  // Setup Socket.io
+  const otherUserId = otherUser?._id;
+  const [isOtherUserOnline, setIsOtherUserOnline] = useState<boolean>(false);
+  const [otherUserLastSeen, setOtherUserLastSeen] = useState<string | Date | undefined>(otherUser?.lastSeen);
+
+  // Fetch fresh other user profile for accurate lastSeen
+  const { data: userProfileData } = useQuery({
+    queryKey: ['publicUser', otherUserId],
+    queryFn: async () => {
+      if (!otherUserId) return null;
+      const res = await api.get(`/users/${otherUserId}`);
+      return res.data?.data?.user;
+    },
+    enabled: !!otherUserId,
+    refetchInterval: 10000,
+  });
+
+  useEffect(() => {
+    if (userProfileData?.lastSeen) {
+      setOtherUserLastSeen(userProfileData.lastSeen);
+    }
+  }, [userProfileData?.lastSeen]);
+
+  // Setup Socket.io for Realtime Messages & Live Online Presence
   useEffect(() => {
     try {
       const socket = io('https://u-list-api.onrender.com', {
@@ -43,6 +65,24 @@ export const ChatRoomScreen: React.FC<{ route: any; navigation: any }> = ({ rout
       socketRef.current = socket;
 
       socket.emit('join_conversation', conversationId);
+
+      // Check initial live status of the other user
+      if (otherUserId) {
+        socket.emit('check_user_online', otherUserId, (resp: { isOnline: boolean }) => {
+          if (resp && typeof resp.isOnline === 'boolean') {
+            setIsOtherUserOnline(resp.isOnline);
+          }
+        });
+      }
+
+      socket.on('user:status', (data: { userId: string; isOnline: boolean; lastSeen?: string }) => {
+        if (data && data.userId === otherUserId) {
+          setIsOtherUserOnline(data.isOnline);
+          if (data.lastSeen) {
+            setOtherUserLastSeen(data.lastSeen);
+          }
+        }
+      });
 
       socket.on('message:new', (newMsg: any) => {
         queryClient.setQueryData(['messages', conversationId], (old: any = []) => {
@@ -56,7 +96,7 @@ export const ChatRoomScreen: React.FC<{ route: any; navigation: any }> = ({ rout
         socket.disconnect();
       };
     } catch {}
-  }, [conversationId]);
+  }, [conversationId, otherUserId]);
 
   const sendMutation = useMutation({
     mutationFn: async (text: string) => {
@@ -78,35 +118,70 @@ export const ChatRoomScreen: React.FC<{ route: any; navigation: any }> = ({ rout
     sendMutation.mutate(txt);
   };
 
+  const [showBlockModal, setShowBlockModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState('Spam or Scam');
+  const [reportNote, setReportNote] = useState('');
+  const [submittingAction, setSubmittingAction] = useState(false);
+
+  const confirmBlockUser = async () => {
+    if (!otherUser?._id) return;
+    setSubmittingAction(true);
+    try {
+      await api.post(`/users/${otherUser._id}/block`);
+      setShowBlockModal(false);
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        window.alert(`User ${otherUser?.name || ''} has been blocked.`);
+      } else {
+        Alert.alert('Blocked', 'User has been blocked.');
+      }
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      navigation.goBack();
+    } catch {
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        window.alert('Failed to block user');
+      } else {
+        Alert.alert('Error', 'Failed to block user');
+      }
+    } finally {
+      setSubmittingAction(false);
+    }
+  };
+
+  const confirmReportUser = async () => {
+    if (!otherUser?._id) return;
+    setSubmittingAction(true);
+    try {
+      await api.post('/reports', {
+        targetType: 'user',
+        target: otherUser._id,
+        reason: reportReason,
+        note: reportNote.trim(),
+      });
+      setShowReportModal(false);
+      setReportNote('');
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        window.alert('Thank you! Report submitted. Our moderation team will investigate.');
+      } else {
+        Alert.alert('Report Submitted', 'Thank you. Our moderation team will investigate.');
+      }
+    } catch {
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        window.alert('Failed to submit report. Please try again.');
+      } else {
+        Alert.alert('Error', 'Failed to submit report');
+      }
+    } finally {
+      setSubmittingAction(false);
+    }
+  };
+
   const handleBlockUser = () => {
-    Alert.alert('Block User', `Are you sure you want to block ${otherUser?.name}?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Block',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await api.post(`/users/${otherUser._id}/block`);
-            Alert.alert('Blocked', 'User has been blocked.');
-            navigation.goBack();
-          } catch {
-            Alert.alert('Error', 'Failed to block user');
-          }
-        },
-      },
-    ]);
+    setShowBlockModal(true);
   };
 
   const handleReportUser = () => {
-    Alert.prompt
-      ? Alert.prompt('Report User', 'Please enter reason for reporting this user:', async (reason) => {
-          if (!reason) return;
-          try {
-            await api.post('/reports', { targetType: 'user', target: otherUser._id, reason });
-            Alert.alert('Reported', 'Thank you. Our moderation team will investigate.');
-          } catch {}
-        })
-      : Alert.alert('Report Submitted', 'User reported for policy violation review.');
+    setShowReportModal(true);
   };
 
   return (
@@ -122,7 +197,18 @@ export const ChatRoomScreen: React.FC<{ route: any; navigation: any }> = ({ rout
         </TouchableOpacity>
         <View style={{ flex: 1, marginLeft: 12 }}>
           <Text style={styles.otherUserName} numberOfLines={1}>{otherUser?.name || 'Seller'}</Text>
-          <Text style={styles.userStatus}>Online</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 1 }}>
+            {isOtherUserOnline ? (
+              <>
+                <View style={styles.onlineDot} />
+                <Text style={styles.userStatusOnline}>Online</Text>
+              </>
+            ) : (
+              <Text style={styles.userStatusOffline}>
+                {formatLastSeen(otherUserLastSeen)}
+              </Text>
+            )}
+          </View>
         </View>
         <TouchableOpacity onPress={handleBlockUser} style={{ padding: 6 }}>
           <MaterialCommunityIcons name="account-cancel-outline" size={22} color={theme.colors.secondaryText} />
@@ -212,6 +298,112 @@ export const ChatRoomScreen: React.FC<{ route: any; navigation: any }> = ({ rout
           <MaterialCommunityIcons name="send" size={20} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
+      {/* Block User Confirmation Modal */}
+      <Modal
+        visible={showBlockModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowBlockModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <View style={styles.modalIconCircle}>
+              <MaterialCommunityIcons name="account-cancel" size={32} color={theme.colors.error} />
+            </View>
+            <Text style={styles.modalTitle}>Block {otherUser?.name || 'User'}?</Text>
+            <Text style={styles.modalDesc}>
+              They will no longer be able to message you or view your active listings on Ulist.
+            </Text>
+
+            <View style={styles.modalBtnRow}>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => setShowBlockModal(false)}
+                disabled={submittingAction}
+              >
+                <Text style={styles.modalCancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalConfirmBtn}
+                onPress={confirmBlockUser}
+                disabled={submittingAction}
+              >
+                {submittingAction ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.modalConfirmBtnText}>Block User</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Report User Modal */}
+      <Modal
+        visible={showReportModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowReportModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <View style={[styles.modalIconCircle, { backgroundColor: '#FEE2E2' }]}>
+              <MaterialCommunityIcons name="flag" size={30} color={theme.colors.error} />
+            </View>
+            <Text style={styles.modalTitle}>Report User</Text>
+            <Text style={styles.modalDesc}>
+              Help us keep Ulist safe. Please choose a reason why you are reporting {otherUser?.name || 'this user'}:
+            </Text>
+
+            {['Spam or Scam', 'Inappropriate or Offensive', 'Fraud or Fake Listing', 'Harassment or Abuse'].map((r) => (
+              <TouchableOpacity
+                key={r}
+                style={[styles.reasonOption, reportReason === r && styles.reasonOptionActive]}
+                onPress={() => setReportReason(r)}
+              >
+                <MaterialCommunityIcons
+                  name={reportReason === r ? 'radiobox-marked' : 'radiobox-blank'}
+                  size={18}
+                  color={reportReason === r ? theme.colors.primary : '#94A3B8'}
+                />
+                <Text style={[styles.reasonText, reportReason === r && styles.reasonTextActive]}>{r}</Text>
+              </TouchableOpacity>
+            ))}
+
+            <TextInput
+              style={styles.reportInput}
+              placeholder="Additional details (optional)..."
+              placeholderTextColor="#94A3B8"
+              value={reportNote}
+              onChangeText={setReportNote}
+              multiline
+              numberOfLines={2}
+            />
+
+            <View style={styles.modalBtnRow}>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => setShowReportModal(false)}
+                disabled={submittingAction}
+              >
+                <Text style={styles.modalCancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalConfirmBtn, { backgroundColor: theme.colors.primary }]}
+                onPress={confirmReportUser}
+                disabled={submittingAction}
+              >
+                {submittingAction ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.modalConfirmBtnText}>Submit Report</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 };
@@ -235,9 +427,21 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.weight.bold,
     color: theme.colors.text,
   },
-  userStatus: {
+  onlineDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: '#10B981',
+    marginRight: 5,
+  },
+  userStatusOnline: {
+    fontSize: 11.5,
+    fontWeight: '600',
+    color: '#10B981',
+  },
+  userStatusOffline: {
     fontSize: 11,
-    color: theme.colors.success,
+    color: '#94A3B8',
   },
   adHeader: {
     flexDirection: 'row',
@@ -358,5 +562,122 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalBox: {
+    width: '100%',
+    maxWidth: 360,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+  },
+  modalIconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#FEE2E2',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  modalDesc: {
+    fontSize: 13,
+    color: '#64748B',
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 14,
+  },
+  reasonOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    paddingVertical: 9,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginBottom: 6,
+    backgroundColor: '#F8FAFC',
+  },
+  reasonOptionActive: {
+    borderColor: theme.colors.primary,
+    backgroundColor: '#FFF7ED',
+  },
+  reasonText: {
+    fontSize: 13,
+    color: '#334155',
+    marginLeft: 8,
+    fontWeight: '500',
+  },
+  reasonTextActive: {
+    color: theme.colors.primary,
+    fontWeight: '700',
+  },
+  reportInput: {
+    width: '100%',
+    height: 52,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 13,
+    color: '#0F172A',
+    textAlignVertical: 'top',
+    marginTop: 4,
+    marginBottom: 16,
+  },
+  modalBtnRow: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'space-between',
+    marginTop: 6,
+  },
+  modalCancelBtn: {
+    flex: 1,
+    paddingVertical: 11,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  modalCancelBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#64748B',
+  },
+  modalConfirmBtn: {
+    flex: 1,
+    paddingVertical: 11,
+    borderRadius: 8,
+    backgroundColor: theme.colors.error,
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  modalConfirmBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });

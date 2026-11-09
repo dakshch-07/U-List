@@ -29,3 +29,23 @@ export const formatDateAgo = (dateStr: string): string => {
 
   return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
 };
+
+export const formatLastSeen = (dateStr?: string | Date): string => {
+  if (!dateStr) return 'Offline';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return 'Offline';
+  const now = new Date();
+  const diffMinutes = Math.floor((now.getTime() - d.getTime()) / (1000 * 60));
+
+  if (diffMinutes < 3) return 'Online';
+  if (diffMinutes < 60) return `last seen ${diffMinutes}m ago`;
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `last seen ${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays === 1) {
+    const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    return `last seen yesterday at ${timeStr}`;
+  }
+  if (diffDays < 7) return `last seen ${diffDays}d ago`;
+  return `last seen ${d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`;
+};

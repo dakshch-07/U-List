@@ -198,7 +198,7 @@ export const TermsOfServiceScreen: React.FC = () => {
         <Text style={styles.paragraph}>Complaints and violations may be submitted to:</Text>
         <View style={styles.contactCard}>
           <Text style={styles.contactTitle}>ULIST – by WishCraft</Text>
-          <Text style={styles.contactLine}>Website: https://u-list-app.vercel.app</Text>
+          <Text style={styles.contactLine}>Website: https://www.ulist.in</Text>
           <Text style={styles.contactLine}>Email: support@ulist.in</Text>
         </View>
       </View>

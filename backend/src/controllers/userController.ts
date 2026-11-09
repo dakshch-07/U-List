@@ -38,7 +38,7 @@ export const updateMe = async (req: AuthenticatedRequest, res: Response): Promis
 export const getPublicUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const user = await User.findById(id).select('name avatar createdAt');
+    const user = await User.findById(id).select('name avatar createdAt lastSeen');
     if (!user) {
       res.status(404).json({ success: false, message: 'User not found' });
       return;

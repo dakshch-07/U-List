@@ -176,14 +176,20 @@ export const createAd = async (req: AuthenticatedRequest, res: Response): Promis
   try {
     const userId = req.user!._id;
 
-    // Check max active ads per user (5 free ads in any category + purchased paid ad credits)
+    // Check max ads per user in current 30-day cycle (5 free ads total across active, pending, sold, rejected, deleted)
     const maxAdsSetting = await Setting.findOne({ key: 'max_active_ads_per_user' });
     const freeMaxAds = maxAdsSetting?.value ?? 5;
     const userDoc = await import('../models/User').then((m) => m.User.findById(userId));
     const paidCredits = userDoc?.paidAdsCredits || 0;
     const allowedLimit = freeMaxAds + paidCredits;
 
-    const activeAdsCount = await Ad.countDocuments({ user: userId, status: { $in: ['active', 'pending'] } });
+    // Ads posted within the last 30 days cycle count toward the user's limit
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const activeAdsCount = await Ad.countDocuments({
+      user: userId,
+      createdAt: { $gte: thirtyDaysAgo },
+      status: { $in: ['active', 'pending', 'sold', 'rejected', 'deleted'] },
+    });
     if (activeAdsCount >= allowedLimit) {
       res.status(402).json({
         success: false,
@@ -192,7 +198,7 @@ export const createAd = async (req: AuthenticatedRequest, res: Response): Promis
         freeLimit: freeMaxAds,
         totalAllowed: allowedLimit,
         activeCount: activeAdsCount,
-        message: `You have used your ${freeMaxAds} Free Ads limit. Additional ads cost ₹29 per ad. Please pay to post this ad.`,
+        message: `You have reached your limit of ${freeMaxAds} Ads for this 30-day period. Additional ads cost ₹29 per ad. Please pay to post this ad.`,
       });
       return;
     }
@@ -365,14 +371,20 @@ export const renewAd = async (req: AuthenticatedRequest, res: Response): Promise
       return;
     }
 
-    // Check active limit when reactivating
+    // Check active limit when reactivating within cycle
     const maxAdsSetting = await Setting.findOne({ key: 'max_active_ads_per_user' });
     const freeMaxAds = maxAdsSetting?.value ?? 5;
     const userDoc = await import('../models/User').then((m) => m.User.findById(userId));
     const paidCredits = userDoc?.paidAdsCredits || 0;
     const allowedLimit = freeMaxAds + paidCredits;
 
-    const activeAdsCount = await Ad.countDocuments({ user: userId, status: { $in: ['active', 'pending'] } });
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const activeAdsCount = await Ad.countDocuments({
+      user: userId,
+      _id: { $ne: ad._id },
+      createdAt: { $gte: thirtyDaysAgo },
+      status: { $in: ['active', 'pending', 'sold', 'rejected', 'deleted'] },
+    });
     if (activeAdsCount >= allowedLimit) {
       res.status(402).json({
         success: false,
@@ -381,7 +393,7 @@ export const renewAd = async (req: AuthenticatedRequest, res: Response): Promise
         freeLimit: freeMaxAds,
         totalAllowed: allowedLimit,
         activeCount: activeAdsCount,
-        message: `You currently have ${activeAdsCount} active/pending ads (${allowedLimit} allowed). Please mark an ad as sold or upgrade to reactivate this ad.`,
+        message: `You currently have ${activeAdsCount} ads counted in this 30-day cycle (${allowedLimit} allowed). Please upgrade to reactivate this ad.`,
       });
       return;
     }
@@ -426,7 +438,10 @@ export const getMyAds = async (req: AuthenticatedRequest, res: Response): Promis
   try {
     const { status } = req.query;
     const query: any = { user: req.user!._id };
-    if (status) {
+    if (status === 'rejected') {
+      // Include rejected and deleted ads under the rejected tab
+      query.status = { $in: ['rejected', 'deleted'] };
+    } else if (status) {
       query.status = status;
     } else {
       query.status = { $ne: 'deleted' };

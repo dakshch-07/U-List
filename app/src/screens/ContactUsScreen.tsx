@@ -172,10 +172,10 @@ export const ContactUsScreen: React.FC<{ navigation: any }> = ({ navigation }) =
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Message *</Text>
               <TextInput
-                style={[styles.input, { height: 110, textAlignVertical: 'top' }]}
+                style={[styles.input, { height: 70, textAlignVertical: 'top' }]}
                 placeholder="Describe your issue or feedback in detail..."
                 multiline
-                numberOfLines={4}
+                numberOfLines={3}
                 value={message}
                 onChangeText={setMessage}
                 placeholderTextColor={theme.colors.secondaryText}
@@ -209,22 +209,22 @@ const styles = StyleSheet.create({
   },
   headerBanner: {
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: 20,
-    paddingVertical: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '800',
     color: '#1B1B1B',
     letterSpacing: 0.5,
   },
   headerSubtitle: {
-    fontSize: 13,
+    fontSize: 12,
     color: theme.colors.secondaryText,
-    marginTop: 6,
-    lineHeight: 18,
+    marginTop: 3,
+    lineHeight: 16,
   },
   tabBar: {
     flexDirection: 'row',
@@ -253,9 +253,11 @@ const styles = StyleSheet.create({
   },
   formCard: {
     backgroundColor: '#FFFFFF',
-    margin: 16,
+    marginHorizontal: 16,
+    marginVertical: 10,
     borderRadius: 8,
-    padding: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -265,47 +267,47 @@ const styles = StyleSheet.create({
     borderColor: '#EEEEEE',
   },
   assistBanner: {
-    marginBottom: 20,
-    paddingBottom: 14,
+    marginBottom: 12,
+    paddingBottom: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
   },
   assistHeading: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     color: '#1B1B1B',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   assistDesc: {
-    fontSize: 12,
+    fontSize: 11.5,
     color: '#6B6B6B',
-    lineHeight: 18,
+    lineHeight: 16,
   },
   inputGroup: {
-    marginBottom: 16,
+    marginBottom: 10,
   },
   label: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '700',
     color: '#424242',
-    marginBottom: 6,
+    marginBottom: 3,
   },
   input: {
     borderBottomWidth: 1.5,
     borderBottomColor: '#CCCCCC',
-    paddingVertical: 8,
+    paddingVertical: 5,
     paddingHorizontal: 4,
-    fontSize: 14,
+    fontSize: 13.5,
     color: '#1B1B1B',
     backgroundColor: '#FAFAFA',
     borderRadius: 4,
   },
   sendBtn: {
     backgroundColor: '#0084D4',
-    paddingVertical: 14,
+    paddingVertical: 12,
     borderRadius: 4,
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 8,
     elevation: 2,
   },
   sendBtnText: {

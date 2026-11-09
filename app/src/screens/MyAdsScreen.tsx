@@ -47,35 +47,79 @@ export const MyAdsScreen: React.FC<{ navigation: any; route?: any }> = ({ naviga
   );
 
   const handleMarkSold = async (id: string) => {
-    try {
-      await api.post(`/ads/${id}/sold`);
-      Alert.alert('Status updated', 'Ad marked as sold');
-      refetch();
-      queryClient.invalidateQueries({ queryKey: ['myAds'] });
-    } catch {
-      Alert.alert('Error', 'Failed to update status');
+    const executeMarkSold = async () => {
+      try {
+        await api.post(`/ads/${id}/sold`);
+        if (Platform.OS === 'web' && typeof window !== 'undefined') {
+          window.alert('Ad marked as sold');
+        } else {
+          Alert.alert('Status updated', 'Ad marked as sold');
+        }
+        refetch();
+        queryClient.invalidateQueries({ queryKey: ['myAds'] });
+        queryClient.invalidateQueries({ queryKey: ['ads'] });
+      } catch {
+        const errorMsg = 'Failed to update status';
+        if (Platform.OS === 'web' && typeof window !== 'undefined') {
+          window.alert(errorMsg);
+        } else {
+          Alert.alert('Error', errorMsg);
+        }
+      }
+    };
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const confirmed = window.confirm('Are you sure you want to mark this ad as Sold? It will be moved to the SOLD tab.');
+      if (confirmed) {
+        await executeMarkSold();
+      }
+    } else {
+      Alert.alert('Mark as Sold', 'Are you sure you want to mark this ad as Sold?', [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Mark as Sold',
+          onPress: executeMarkSold,
+        },
+      ]);
     }
   };
 
   const handleReactivate = async (id: string) => {
-    try {
-      const res = await api.post(`/ads/${id}/renew`);
-      const msg = res.data?.message || 'Ad re-activated successfully for 30 days';
-      if (Platform.OS === 'web' && typeof window !== 'undefined') {
-        window.alert(msg);
-      } else {
-        Alert.alert('Success', msg);
+    const executeReactivate = async () => {
+      try {
+        const res = await api.post(`/ads/${id}/renew`);
+        const msg = res.data?.message || 'Ad re-activated successfully for 30 days';
+        if (Platform.OS === 'web' && typeof window !== 'undefined') {
+          window.alert(msg);
+        } else {
+          Alert.alert('Success', msg);
+        }
+        refetch();
+        queryClient.invalidateQueries({ queryKey: ['myAds'] });
+        queryClient.invalidateQueries({ queryKey: ['ads'] });
+      } catch (err: any) {
+        const errMsg = err?.response?.data?.message || 'Failed to re-activate ad';
+        if (Platform.OS === 'web' && typeof window !== 'undefined') {
+          window.alert(errMsg);
+        } else {
+          Alert.alert('Notice', errMsg);
+        }
       }
-      refetch();
-      queryClient.invalidateQueries({ queryKey: ['myAds'] });
-      queryClient.invalidateQueries({ queryKey: ['ads'] });
-    } catch (err: any) {
-      const errMsg = err?.response?.data?.message || 'Failed to re-activate ad';
-      if (Platform.OS === 'web' && typeof window !== 'undefined') {
-        window.alert(errMsg);
-      } else {
-        Alert.alert('Notice', errMsg);
+    };
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const confirmed = window.confirm('Are you sure you want to re-activate this ad for 30 days?');
+      if (confirmed) {
+        await executeReactivate();
       }
+    } else {
+      Alert.alert('Reactivate Ad', 'Are you sure you want to re-activate this ad for 30 days?', [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reactivate',
+          onPress: executeReactivate,
+        },
+      ]);
     }
   };
 
@@ -187,7 +231,13 @@ export const MyAdsScreen: React.FC<{ navigation: any; route?: any }> = ({ naviga
                       <Text style={styles.pendingBadgeText}>Pending Admin Review</Text>
                     </View>
                   )}
-                  {item.rejectReason ? (
+                  {tab === 'rejected' && item.status === 'deleted' && (
+                    <View style={[styles.pendingBadge, { backgroundColor: '#FEE2E2' }]}>
+                      <MaterialCommunityIcons name="trash-can-outline" size={13} color="#EF4444" />
+                      <Text style={[styles.pendingBadgeText, { color: '#EF4444' }]}>Deleted Ad (Counted in 30-Day Limit)</Text>
+                    </View>
+                  )}
+                  {tab === 'rejected' && item.status !== 'deleted' && item.rejectReason ? (
                     <Text style={styles.rejectReason}>Reason: {item.rejectReason}</Text>
                   ) : null}
                 </View>
@@ -218,7 +268,7 @@ export const MyAdsScreen: React.FC<{ navigation: any; route?: any }> = ({ naviga
                     <Text style={[styles.actionBtnText, { color: theme.colors.primary, fontWeight: '700' }]}>Reactivate</Text>
                   </TouchableOpacity>
                 )}
-                {(tab === 'pending' || tab === 'rejected') && (
+                {tab === 'rejected' && item.status !== 'deleted' && (
                   <TouchableOpacity
                     style={[styles.actionBtn, { borderColor: theme.colors.primary }]}
                     onPress={() => navigation.navigate('SellTab', { editAd: item })}
@@ -226,12 +276,14 @@ export const MyAdsScreen: React.FC<{ navigation: any; route?: any }> = ({ naviga
                     <Text style={[styles.actionBtnText, { color: theme.colors.primary }]}>Edit</Text>
                   </TouchableOpacity>
                 )}
-                <TouchableOpacity
-                  style={[styles.actionBtn, { borderColor: theme.colors.error }]}
-                  onPress={() => handleDelete(item._id)}
-                >
-                  <Text style={[styles.actionBtnText, { color: theme.colors.error }]}>Delete</Text>
-                </TouchableOpacity>
+                {tab !== 'rejected' && (
+                  <TouchableOpacity
+                    style={[styles.actionBtn, { borderColor: theme.colors.error }]}
+                    onPress={() => handleDelete(item._id)}
+                  >
+                    <Text style={[styles.actionBtnText, { color: theme.colors.error }]}>Delete</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           );

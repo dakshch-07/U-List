@@ -73,7 +73,7 @@ export const PostAdScreen: React.FC<{ navigation: any; route?: any }> = ({ navig
   const [createdAdData, setCreatedAdData] = useState<any>(null);
   const [selectedHighlightPlan, setSelectedHighlightPlan] = useState<'30_days' | '15_days'>('30_days');
 
-  // Pre-fill fields if in Edit mode
+  // Pre-fill fields if in Edit mode, or ensure fresh blank slate if posting new ad
   useEffect(() => {
     if (editingAd) {
       setTitle(editingAd.title || '');
@@ -96,6 +96,18 @@ export const PostAdScreen: React.FC<{ navigation: any; route?: any }> = ({ navig
         );
       }
       setStep(2);
+    } else {
+      // User tapped Sell to create a new ad: start cleanly from Step 1
+      setStep(1);
+      setSelectedCategory(null);
+      setSelectedSubcategory(null);
+      setTitle('');
+      setDescription('');
+      setPrice('');
+      setLocality('');
+      setDynamicAttrs({});
+      setImages([]);
+      clearDraft();
     }
   }, [editingAd]);
 
@@ -118,8 +130,9 @@ export const PostAdScreen: React.FC<{ navigation: any; route?: any }> = ({ navig
     } catch {}
   };
 
-  // Auto-restore draft from storage if session expired or page reloaded
+  // Auto-restore draft from storage if session expired or page reloaded (ONLY if not editing an ad)
   React.useEffect(() => {
+    if (editingAd) return;
     (async () => {
       try {
         const savedDraft = await storage.getItem('ulist_ad_draft');
@@ -133,15 +146,16 @@ export const PostAdScreen: React.FC<{ navigation: any; route?: any }> = ({ navig
         }
       } catch {}
     })();
-  }, []);
+  }, [editingAd]);
 
-  // Auto-save draft on every detail update
+  // Auto-save draft on every detail update (ONLY if not editing an ad)
   React.useEffect(() => {
+    if (editingAd) return;
     if (title || description || price || locality) {
       const draftStr = JSON.stringify({ title, description, price, locality, dynamicAttrs });
       storage.setItem('ulist_ad_draft', draftStr).catch(() => {});
     }
-  }, [title, description, price, locality, dynamicAttrs]);
+  }, [editingAd, title, description, price, locality, dynamicAttrs]);
 
   // Handle Step-by-Step Back Navigation
   const handleStepBack = () => {
@@ -502,6 +516,16 @@ export const PostAdScreen: React.FC<{ navigation: any; route?: any }> = ({ navig
                   style={styles.categoryCard}
                   activeOpacity={0.82}
                   onPress={() => {
+                    // When choosing a category for a fresh ad, reset previous ad values
+                    if (!editingAd) {
+                      setTitle('');
+                      setDescription('');
+                      setPrice('');
+                      setLocality('');
+                      setDynamicAttrs({});
+                      setImages([]);
+                      clearDraft();
+                    }
                     setSelectedCategory(cat);
                     // Filter dynamicAttrs so only keys defined in the selected category are preserved
                     if (cat.fields && cat.fields.length > 0) {

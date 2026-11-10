@@ -862,7 +862,7 @@ export const PostAdScreen: React.FC<{ navigation: any; route?: any }> = ({ navig
                   style={styles.previewAdBtn}
                   onPress={() => {
                     setIsSuccessModalVisible(false);
-                    navigation.navigate('AdDetail', { id: createdAdData._id });
+                    navigation.navigate('AdDetail', { adId: createdAdData._id });
                   }}
                 >
                   <Text style={styles.previewAdText}>Preview Ad</Text>

@@ -8,7 +8,7 @@ import { useAuthStore } from '../store/authStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export const AdDetailScreen: React.FC<{ route: any; navigation: any }> = ({ route, navigation }) => {
-  const { adId } = route.params;
+  const adId = route?.params?.adId || route?.params?.id || '';
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [isStartingChat, setIsStartingChat] = useState(false);
@@ -166,10 +166,28 @@ export const AdDetailScreen: React.FC<{ route: any; navigation: any }> = ({ rout
     }
   };
 
-  if (isLoading || !ad) {
+  if (isLoading || (!ad && !adId)) {
     return (
       <View style={styles.loading}>
         <Text style={{ color: theme.colors.secondaryText }}>Loading listing details...</Text>
+      </View>
+    );
+  }
+
+  if (!ad) {
+    return (
+      <View style={styles.loading}>
+        <MaterialCommunityIcons name="alert-circle-outline" size={48} color={theme.colors.secondaryText} />
+        <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '700', marginTop: 12 }}>Listing Not Found</Text>
+        <Text style={{ color: theme.colors.secondaryText, fontSize: 13, marginTop: 4, textAlign: 'center', paddingHorizontal: 32 }}>
+          This listing may have been removed or is pending review.
+        </Text>
+        <TouchableOpacity
+          style={{ marginTop: 16, paddingHorizontal: 20, paddingVertical: 10, backgroundColor: theme.colors.primary, borderRadius: 6 }}
+          onPress={() => navigation.canGoBack() ? navigation.goBack() : navigation.navigate('HomeTab')}
+        >
+          <Text style={{ color: '#FFFFFF', fontWeight: '700' }}>Go Back</Text>
+        </TouchableOpacity>
       </View>
     );
   }

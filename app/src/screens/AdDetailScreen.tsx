@@ -200,11 +200,11 @@ export const AdDetailScreen: React.FC<{ route: any; navigation: any }> = ({ rout
             {rawImages.map((img: any, idx: number) => {
               const fullUrl = getFullImageUrl(img.url);
               return (
-                <View key={idx} style={{ width: carouselWidth, height: '100%' }}>
+                <View key={idx} style={{ width: carouselWidth, height: '100%', backgroundColor: '#0F172A', alignItems: 'center', justifyContent: 'center' }}>
                   <Image
                     source={{ uri: fullUrl }}
                     style={styles.image}
-                    resizeMode="cover"
+                    resizeMode="contain"
                   />
                 </View>
               );
@@ -484,8 +484,9 @@ const styles = StyleSheet.create({
   imageContainer: {
     width: '100%',
     aspectRatio: 4 / 3,
-    backgroundColor: theme.colors.surface,
+    backgroundColor: '#0F172A',
     position: 'relative',
+    overflow: 'hidden',
   },
   image: {
     width: '100%',

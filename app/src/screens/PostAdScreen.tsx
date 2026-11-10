@@ -264,12 +264,17 @@ export const PostAdScreen: React.FC<{ navigation: any; route?: any }> = ({ navig
       return;
     }
 
+    // If remainingSlots is 1, enable built-in cropper / editor with 4:3 ratio
+    // If selecting multiple, allowsMultipleSelection is used
+    const allowEdit = remainingSlots === 1;
+
     const res = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsMultipleSelection: true,
+      allowsMultipleSelection: !allowEdit,
       selectionLimit: remainingSlots,
-      quality: 0.6,
-      allowsEditing: false,
+      quality: 0.8,
+      allowsEditing: allowEdit,
+      aspect: [4, 3],
     });
 
     if (!res.canceled && res.assets && res.assets.length > 0) {

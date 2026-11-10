@@ -186,6 +186,24 @@ export const setFeaturedAd = async (req: Request, res: Response): Promise<void> 
   }
 };
 
+export const adminDeleteAd = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const ad = await Ad.findById(id);
+    if (!ad) {
+      res.status(404).json({ success: false, message: 'Ad not found' });
+      return;
+    }
+
+    ad.status = 'deleted';
+    await ad.save();
+
+    res.json({ success: true, message: 'Ad deleted permanently by admin', data: ad });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 export const getAdminUsers = async (req: Request, res: Response): Promise<void> => {
   try {
     const { search, page = '1', limit = '15' } = req.query;

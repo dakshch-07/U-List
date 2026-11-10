@@ -8,6 +8,7 @@ import {
   getAdminAds,
   approveAd,
   rejectAd,
+  adminDeleteAd,
   setFeaturedAd,
   getAdminUsers,
   toggleUserStatus,
@@ -106,6 +107,7 @@ router.get('/admin/stats', authenticate, requireAdmin, getDashboardStats);
 router.get('/admin/ads', authenticate, requireAdmin, getAdminAds);
 router.post('/admin/ads/:id/approve', authenticate, requireAdmin, approveAd);
 router.post('/admin/ads/:id/reject', authenticate, requireAdmin, rejectAd);
+router.delete('/admin/ads/:id', authenticate, requireAdmin, adminDeleteAd);
 router.post('/admin/ads/:id/featured', authenticate, requireAdmin, setFeaturedAd);
 router.get('/admin/users', authenticate, requireAdmin, getAdminUsers);
 router.post('/admin/users/:id/toggle-status', authenticate, requireAdmin, toggleUserStatus);

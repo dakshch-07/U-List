@@ -297,6 +297,21 @@ export default function App() {
     }
   };
 
+  const handleDeleteAd = async (id: string, title?: string) => {
+    const confirmed = window.confirm(`Are you sure you want to PERMANENTLY DELETE this ad "${title || ''}"? Fake/fraud ads will be immediately removed from the entire platform.`);
+    if (!confirmed) return;
+    try {
+      await axios.delete(`${API_BASE}/admin/ads/${id}`, authHeaders);
+      setMessage('Ad deleted successfully');
+      setTimeout(() => setMessage(''), 3000);
+      if (activeTab === 'dashboard') fetchDashboard();
+      if (activeTab === 'ads') fetchAds();
+      if (activeTab === 'highlighted') fetchHighlightedAds();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to delete ad');
+    }
+  };
+
   const handleToggleFeatured = async (id: string, current: boolean) => {
     try {
       await axios.post(`${API_BASE}/admin/ads/${id}/featured`, { isFeatured: !current, days: 7 }, authHeaders);
@@ -591,9 +606,16 @@ export default function App() {
                               </button>
                               <button
                                 onClick={() => handleRejectAd(ad._id)}
-                                style={{ background: '#D93025', color: '#FFFFFF', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}
+                                style={{ background: '#D93025', color: '#FFFFFF', border: 'none', padding: '6px 12px', borderRadius: '4px', marginRight: '8px', cursor: 'pointer' }}
                               >
                                 Reject
+                              </button>
+                              <button
+                                onClick={() => handleDeleteAd(ad._id, ad.title)}
+                                style={{ background: '#334155', color: '#FFFFFF', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}
+                                title="Delete fake/unwanted ad permanently"
+                              >
+                                Delete
                               </button>
                             </td>
                           </tr>
@@ -697,11 +719,18 @@ export default function App() {
                           {ad.status !== 'rejected' && (
                             <button
                               onClick={() => handleRejectAd(ad._id)}
-                              style={{ background: '#D93025', color: '#FFFFFF', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}
+                              style={{ background: '#D93025', color: '#FFFFFF', border: 'none', padding: '6px 12px', borderRadius: '4px', marginRight: '6px', cursor: 'pointer', fontWeight: 600 }}
                             >
                               Reject
                             </button>
                           )}
+                          <button
+                            onClick={() => handleDeleteAd(ad._id, ad.title)}
+                            style={{ background: '#334155', color: '#FFFFFF', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}
+                            title="Delete fake/unwanted ad permanently"
+                          >
+                            Delete
+                          </button>
                         </td>
                       </tr>
                     ))}

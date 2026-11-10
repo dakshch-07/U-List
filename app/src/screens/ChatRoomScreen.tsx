@@ -105,7 +105,24 @@ export const ChatRoomScreen: React.FC<{ route: any; navigation: any }> = ({ rout
 
       socket.on('message:new', (newMsg: any) => {
         queryClient.setQueryData(['messages', conversationId], (old: any = []) => {
+          // If we already have this exact message by ID, do nothing
           if (old.some((m: any) => m._id === newMsg._id)) return old;
+
+          // If this is our own message (e.g. broadcast back to sender),
+          // check if there is an optimistic temp message matching same sender and text.
+          // Replace it to prevent duplicate bubbles!
+          const isFromMe = newMsg.sender === user?._id || newMsg.sender?._id === user?._id;
+          if (isFromMe) {
+            const tempIndex = old.findIndex(
+              (m: any) => m._id?.startsWith('temp_') && m.text === newMsg.text
+            );
+            if (tempIndex !== -1) {
+              const updated = [...old];
+              updated[tempIndex] = newMsg;
+              return updated;
+            }
+          }
+
           return [...old, newMsg];
         });
         queryClient.invalidateQueries({ queryKey: ['conversations'] });
@@ -158,6 +175,11 @@ export const ChatRoomScreen: React.FC<{ route: any; navigation: any }> = ({ rout
     onSuccess: (savedMsg, _variables, context) => {
       // Replace temporary optimistic message with real saved message from backend
       queryClient.setQueryData(['messages', conversationId], (old: any = []) => {
+        // If the socket already inserted the savedMsg, just remove the temp message
+        const alreadyHasSaved = old.some((m: any) => m._id === savedMsg._id);
+        if (alreadyHasSaved) {
+          return old.filter((m: any) => m._id !== context?.tempId);
+        }
         return old.map((m: any) => (m._id === context?.tempId ? savedMsg : m));
       });
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
@@ -310,7 +332,16 @@ export const ChatRoomScreen: React.FC<{ route: any; navigation: any }> = ({ rout
       {/* Messages Feed */}
       <FlatList
         ref={flatListRef}
-        data={messages}
+        data={(() => {
+          // Robust de-duplication safety to ensure messages NEVER render duplicate
+          const seen = new Set();
+          return messages.filter((m: any) => {
+            if (!m || !m._id) return false;
+            if (seen.has(m._id)) return false;
+            seen.add(m._id);
+            return true;
+          });
+        })()}
         keyExtractor={(item) => item._id}
         contentContainerStyle={styles.messagesList}
         onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}

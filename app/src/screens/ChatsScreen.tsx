@@ -9,7 +9,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export const ChatsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'buying' | 'selling'>('buying');
+  const [activeTab, setActiveTab] = useState<'all' | 'buying' | 'selling'>('all');
   const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'read'>('all');
 
   const { data: conversations = [], refetch, isFetching } = useQuery({
@@ -39,8 +39,18 @@ export const ChatsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     );
   }
 
-  // Filter conversations by Buying (I am buyer) vs Selling (My Ad)
+  // Calculate unread counts per tab
+  const allUnreadCount = conversations.reduce((acc: number, c: any) => acc + (c.unreadCount || 0), 0);
+  const buyingUnreadCount = conversations
+    .filter((c: any) => !(c.ad?.user === user?._id || c.ad?.user?._id === user?._id))
+    .reduce((acc: number, c: any) => acc + (c.unreadCount || 0), 0);
+  const sellingUnreadCount = conversations
+    .filter((c: any) => (c.ad?.user === user?._id || c.ad?.user?._id === user?._id))
+    .reduce((acc: number, c: any) => acc + (c.unreadCount || 0), 0);
+
+  // Filter conversations by All vs Buying (I am buyer) vs Selling (My Ad)
   const filteredByTab = conversations.filter((c: any) => {
+    if (activeTab === 'all') return true;
     const isMyAd = c.ad?.user === user?._id || c.ad?.user?._id === user?._id;
     if (activeTab === 'selling') return isMyAd;
     return !isMyAd;
@@ -60,16 +70,45 @@ export const ChatsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         <Text style={styles.headerTitle}>Chats</Text>
       </View>
 
-      {/* Buying / Selling Tabs (OLX India Style) */}
+      {/* All / Buying / Selling Tabs with Unread Count Badges */}
       <View style={styles.tabsRow}>
+        <TouchableOpacity
+          style={[styles.tabBtn, activeTab === 'all' && styles.tabBtnActive]}
+          onPress={() => setActiveTab('all')}
+          activeOpacity={0.8}
+        >
+          <View style={styles.tabContentRow}>
+            <Text style={[styles.tabBtnText, activeTab === 'all' && styles.tabBtnTextActive]}>
+              ALL
+            </Text>
+            {allUnreadCount > 0 && (
+              <View style={[styles.tabBadge, activeTab === 'all' ? styles.tabBadgeActive : styles.tabBadgeInactive]}>
+                <Text style={styles.tabBadgeText}>
+                  {allUnreadCount > 99 ? '99+' : allUnreadCount}
+                </Text>
+              </View>
+            )}
+          </View>
+          {activeTab === 'all' && <View style={styles.activeTabIndicator} />}
+        </TouchableOpacity>
+
         <TouchableOpacity
           style={[styles.tabBtn, activeTab === 'buying' && styles.tabBtnActive]}
           onPress={() => setActiveTab('buying')}
           activeOpacity={0.8}
         >
-          <Text style={[styles.tabBtnText, activeTab === 'buying' && styles.tabBtnTextActive]}>
-            BUYING
-          </Text>
+          <View style={styles.tabContentRow}>
+            <Text style={[styles.tabBtnText, activeTab === 'buying' && styles.tabBtnTextActive]}>
+              BUYING
+            </Text>
+            {buyingUnreadCount > 0 && (
+              <View style={[styles.tabBadge, activeTab === 'buying' ? styles.tabBadgeActive : styles.tabBadgeInactive]}>
+                <Text style={styles.tabBadgeText}>
+                  {buyingUnreadCount > 99 ? '99+' : buyingUnreadCount}
+                </Text>
+              </View>
+            )}
+          </View>
           {activeTab === 'buying' && <View style={styles.activeTabIndicator} />}
         </TouchableOpacity>
 
@@ -78,9 +117,18 @@ export const ChatsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           onPress={() => setActiveTab('selling')}
           activeOpacity={0.8}
         >
-          <Text style={[styles.tabBtnText, activeTab === 'selling' && styles.tabBtnTextActive]}>
-            SELLING
-          </Text>
+          <View style={styles.tabContentRow}>
+            <Text style={[styles.tabBtnText, activeTab === 'selling' && styles.tabBtnTextActive]}>
+              SELLING
+            </Text>
+            {sellingUnreadCount > 0 && (
+              <View style={[styles.tabBadge, activeTab === 'selling' ? styles.tabBadgeActive : styles.tabBadgeInactive]}>
+                <Text style={styles.tabBadgeText}>
+                  {sellingUnreadCount > 99 ? '99+' : sellingUnreadCount}
+                </Text>
+              </View>
+            )}
+          </View>
           {activeTab === 'selling' && <View style={styles.activeTabIndicator} />}
         </TouchableOpacity>
       </View>
@@ -217,6 +265,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 14,
     position: 'relative',
+  },
+  tabContentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  tabBadge: {
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    paddingHorizontal: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabBadgeActive: {
+    backgroundColor: '#D9480F',
+  },
+  tabBadgeInactive: {
+    backgroundColor: '#94A3B8',
+  },
+  tabBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '800',
+    lineHeight: 12,
   },
   tabBtnActive: {
     borderBottomColor: '#D9480F',

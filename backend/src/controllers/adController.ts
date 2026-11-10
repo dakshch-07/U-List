@@ -438,7 +438,9 @@ export const getMyAds = async (req: AuthenticatedRequest, res: Response): Promis
   try {
     const { status } = req.query;
     const query: any = { user: req.user!._id };
-    if (status === 'rejected') {
+    if (status === 'all') {
+      // Return all ads without status filtering
+    } else if (status === 'rejected') {
       // Include rejected and deleted ads under the rejected tab
       query.status = { $in: ['rejected', 'deleted'] };
     } else if (status) {

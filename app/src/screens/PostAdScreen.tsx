@@ -228,12 +228,13 @@ export const PostAdScreen: React.FC<{ navigation: any; route?: any }> = ({ navig
   });
 
   const { data: myAds = [] } = useQuery({
-    queryKey: ['myAds'],
+    queryKey: ['myAdsAllUser', user?._id],
     queryFn: async () => {
-      const res = await api.get('/ads/mine');
-      return res.data.data;
+      const res = await api.get('/ads/mine', { params: { status: 'all' } });
+      return Array.isArray(res.data?.data) ? res.data.data : [];
     },
     enabled: !!user,
+    staleTime: 0,
   });
 
   // Count all ads posted in current 30-day window (Active, Pending, Sold, Rejected, Deleted) towards the 5 ads limit

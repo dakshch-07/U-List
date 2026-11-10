@@ -230,6 +230,21 @@ function BottomTabs() {
       <Tab.Screen
         name="SellTab"
         component={PostAdScreen}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Clear any editAd params so user always starts a brand new ad
+            navigation.navigate('SellTab', { editAd: null, fresh: Date.now() });
+            if (Platform.OS === 'web' && typeof window !== 'undefined' && window.history) {
+              try {
+                const url = new URL(window.location.href);
+                if (url.searchParams.has('editAd')) {
+                  url.searchParams.delete('editAd');
+                  window.history.replaceState({}, '', url.pathname);
+                }
+              } catch {}
+            }
+          },
+        })}
         options={{
           tabBarLabel: t.sell,
           tabBarIcon: () => (

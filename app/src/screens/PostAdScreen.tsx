@@ -108,8 +108,19 @@ export const PostAdScreen: React.FC<{ navigation: any; route?: any }> = ({ navig
       setDynamicAttrs({});
       setImages([]);
       clearDraft();
+
+      // On Web, clean ?editAd from browser URL if present
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && window.history) {
+        try {
+          const url = new URL(window.location.href);
+          if (url.searchParams.has('editAd')) {
+            url.searchParams.delete('editAd');
+            window.history.replaceState({}, '', url.pathname);
+          }
+        } catch {}
+      }
     }
-  }, [editingAd]);
+  }, [editingAd, route?.params?.fresh]);
 
   // Sync city & contact if user changes
   React.useEffect(() => {
@@ -160,6 +171,12 @@ export const PostAdScreen: React.FC<{ navigation: any; route?: any }> = ({ navig
   // Handle Step-by-Step Back Navigation
   const handleStepBack = () => {
     if (step > 1) {
+      if (step === 2 && !editingAd) {
+        // If stepping back to category selection, clear category and dynamic attrs
+        setSelectedCategory(null);
+        setSelectedSubcategory(null);
+        setDynamicAttrs({});
+      }
       setStep((prev) => ((prev - 1) as 1 | 2 | 3 | 4));
       return true;
     }
@@ -516,28 +533,27 @@ export const PostAdScreen: React.FC<{ navigation: any; route?: any }> = ({ navig
                   style={styles.categoryCard}
                   activeOpacity={0.82}
                   onPress={() => {
-                    // When choosing a category for a fresh ad, reset previous ad values
-                    if (!editingAd) {
-                      setTitle('');
-                      setDescription('');
-                      setPrice('');
-                      setLocality('');
-                      setDynamicAttrs({});
-                      setImages([]);
-                      clearDraft();
+                    // Selecting a category from Step 1 means posting a new ad
+                    if (editingAd) {
+                      navigation.setParams({ editAd: null });
+                    }
+                    setTitle('');
+                    setDescription('');
+                    setPrice('');
+                    setLocality('');
+                    setDynamicAttrs({});
+                    setImages([]);
+                    clearDraft();
+                    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.history) {
+                      try {
+                        const url = new URL(window.location.href);
+                        if (url.searchParams.has('editAd')) {
+                          url.searchParams.delete('editAd');
+                          window.history.replaceState({}, '', url.pathname);
+                        }
+                      } catch {}
                     }
                     setSelectedCategory(cat);
-                    // Filter dynamicAttrs so only keys defined in the selected category are preserved
-                    if (cat.fields && cat.fields.length > 0) {
-                      const validKeys = new Set(cat.fields.map((f: any) => f.key));
-                      const filteredAttrs: Record<string, any> = {};
-                      Object.entries(dynamicAttrs).forEach(([k, v]) => {
-                        if (validKeys.has(k)) filteredAttrs[k] = v;
-                      });
-                      setDynamicAttrs(filteredAttrs);
-                    } else {
-                      setDynamicAttrs({});
-                    }
                     setStep(2);
                   }}
                 >

@@ -164,7 +164,20 @@ function BottomTabs() {
     refetchInterval: 5000,
   });
 
+  // Query user's ads count for My Ads badge
+  const { data: userAds = [] } = useQuery({
+    queryKey: ['myAdsTabCount', user?._id],
+    queryFn: async () => {
+      if (!user) return [];
+      const res = await api.get('/ads/mine');
+      return Array.isArray(res.data?.data) ? res.data.data : [];
+    },
+    enabled: !!user,
+    refetchInterval: 10000,
+  });
+
   const totalUnreadCount = conversations.reduce((acc: number, c: any) => acc + (c.unreadCount || 0), 0);
+  const totalMyAdsCount = userAds.length;
 
   return (
     <Tab.Navigator
@@ -261,6 +274,18 @@ function BottomTabs() {
         component={MyAdsScreen}
         options={{
           tabBarLabel: t.myAds,
+          tabBarBadge: totalMyAdsCount > 0 ? (totalMyAdsCount > 99 ? '99+' : totalMyAdsCount) : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: theme.colors.primary,
+            color: '#FFFFFF',
+            fontSize: 10,
+            fontWeight: 'bold',
+            minWidth: 16,
+            height: 16,
+            borderRadius: 8,
+            lineHeight: 16,
+            top: 2,
+          },
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons name="format-list-bulleted" color={color} size={22.5} />
           ),

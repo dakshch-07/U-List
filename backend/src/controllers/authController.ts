@@ -57,7 +57,8 @@ const sendSmsOtp = async (phone: string, otp: string): Promise<boolean> => {
   };
 
   // 1. Primary Route: Official WhatsApp Template (₹0.25 Rate)
-  const waUrl = `https://www.fast2sms.com/dev/whatsapp?message_id=43845&numbers=${phone}&variables_values=${encodeURIComponent(otp)}`;
+  const templateId = process.env.FAST2SMS_WA_MESSAGE_ID || '43845';
+  const waUrl = `https://www.fast2sms.com/dev/whatsapp?message_id=${templateId}&numbers=${phone}&variables_values=${encodeURIComponent(otp)}`;
   const waRes = await sendGetRequest(waUrl, { 'Authorization': apiKey });
   if (waRes.success) {
     console.log(`[Fast2SMS] OTP sent via WhatsApp (₹0.25) to ${phone}. Request ID: ${waRes.data?.request_id}`);

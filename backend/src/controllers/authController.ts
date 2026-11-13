@@ -23,28 +23,28 @@ const loginSchema = z.object({
 const otpStore = new Map<string, { otp: string; expiresAt: number }>();
 
 /**
- * Dispatch SMS OTP via Fast2SMS Gateway
- * Attempts low-cost OTP route (25 paise) first; falls back to Quick SMS route if OTP route verification is pending.
+ * Dispatch SMS / WhatsApp OTP via Fast2SMS Gateway
+ * 1. Primary: WhatsApp Template API (Message ID 43845 - ₹0.25 per message)
+ * 2. Secondary: Fast2SMS low-cost OTP route (25 paise)
+ * 3. Fallback: Quick SMS route
  */
 const sendSmsOtp = async (phone: string, otp: string): Promise<boolean> => {
-  const apiKey = process.env.FAST2SMS_API_KEY || 'rQDx1rNHHcW90dKTjB2G0ekTdqBNpMXE3AnYyxcmgiZHDve1PGBcyuS3g9Pqaf8oNWBAxgHK8JRh7x58';
+  const apiKey = process.env.FAST2SMS_API_KEY || 'CGwV4GO4mSrhULEa1m3ZLMHbOpjOy6HZ8nMoeqTB337OFdGhxiJuUuxtACbRSocHuzffl20VwUYRrvTa';
   if (!apiKey) {
-    console.warn('[Fast2SMS] No API Key configured. Skipping real SMS dispatch.');
+    console.warn('[Fast2SMS] No API Key configured. Skipping real dispatch.');
     return false;
   }
 
-  // 1. Try cheap OTP Route first (~₹0.25 per SMS)
-  const otpUrl = `https://www.fast2sms.com/dev/bulkV2?authorization=${encodeURIComponent(apiKey)}&route=otp&variables_values=${encodeURIComponent(otp)}&numbers=${phone}`;
-
-  const sendRequest = (url: string): Promise<{ success: boolean; data: any }> => {
+  const sendGetRequest = (url: string, headers: Record<string, string> = {}): Promise<{ success: boolean; data: any }> => {
     return new Promise((resolve) => {
-      https.get(url, (res) => {
+      https.get(url, { headers }, (res) => {
         let rawData = '';
         res.on('data', chunk => rawData += chunk);
         res.on('end', () => {
           try {
             const parsed = JSON.parse(rawData);
-            resolve({ success: !!parsed.return, data: parsed });
+            const isSuccess = !!(parsed.return || parsed.success || parsed.status === 'success');
+            resolve({ success: isSuccess, data: parsed });
           } catch {
             resolve({ success: false, data: null });
           }
@@ -56,20 +56,29 @@ const sendSmsOtp = async (phone: string, otp: string): Promise<boolean> => {
     });
   };
 
-  const otpRes = await sendRequest(otpUrl);
+  // 1. Primary Route: Official WhatsApp Template (₹0.25 Rate)
+  const waUrl = `https://www.fast2sms.com/dev/whatsapp?message_id=43845&numbers=${phone}&variables_values=${encodeURIComponent(otp)}`;
+  const waRes = await sendGetRequest(waUrl, { 'Authorization': apiKey });
+  if (waRes.success) {
+    console.log(`[Fast2SMS] OTP sent via WhatsApp (₹0.25) to ${phone}. Request ID: ${waRes.data?.request_id}`);
+    return true;
+  }
+  console.warn(`[Fast2SMS] WhatsApp dispatch response:`, waRes.data);
+
+  // 2. Secondary Route: Fast2SMS OTP Route (~₹0.25)
+  const otpUrl = `https://www.fast2sms.com/dev/bulkV2?authorization=${encodeURIComponent(apiKey)}&route=otp&variables_values=${encodeURIComponent(otp)}&numbers=${phone}`;
+  const otpRes = await sendGetRequest(otpUrl);
   if (otpRes.success) {
-    console.log(`[Fast2SMS] OTP sent via low-cost OTP route (₹0.25) to ${phone}. Request ID: ${otpRes.data?.request_id}`);
+    console.log(`[Fast2SMS] OTP sent via OTP route (₹0.25) to ${phone}. Request ID: ${otpRes.data?.request_id}`);
     return true;
   }
 
-  console.warn(`[Fast2SMS] OTP route returned:`, otpRes.data);
-
-  // 2. Fallback to Quick SMS route only if OTP route is not yet verified on Fast2SMS
+  // 3. Fallback Route: Quick SMS
   const message = `Your UList verification code is ${otp}. Valid for 5 minutes. Please do not share this OTP with anyone. - UList Marketplace`;
   const fallbackUrl = `https://www.fast2sms.com/dev/bulkV2?authorization=${encodeURIComponent(apiKey)}&route=q&message=${encodeURIComponent(message)}&numbers=${phone}`;
-  const fallbackRes = await sendRequest(fallbackUrl);
+  const fallbackRes = await sendGetRequest(fallbackUrl);
   if (fallbackRes.success) {
-    console.log(`[Fast2SMS] SMS sent via Quick SMS route to ${phone}. Request ID: ${fallbackRes.data?.request_id}`);
+    console.log(`[Fast2SMS] SMS sent via Quick SMS fallback to ${phone}. Request ID: ${fallbackRes.data?.request_id}`);
     return true;
   }
 

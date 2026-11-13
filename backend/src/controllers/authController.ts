@@ -24,6 +24,7 @@ const otpStore = new Map<string, { otp: string; expiresAt: number }>();
 
 /**
  * Dispatch SMS OTP via Fast2SMS Gateway
+ * Attempts low-cost OTP route (25 paise) first; falls back to Quick SMS route if OTP route verification is pending.
  */
 const sendSmsOtp = async (phone: string, otp: string): Promise<boolean> => {
   const apiKey = process.env.FAST2SMS_API_KEY || 'rQDx1rNHHcW90dKTjB2G0ekTdqBNpMXE3AnYyxcmgiZHDve1PGBcyuS3g9Pqaf8oNWBAxgHK8JRh7x58';
@@ -32,32 +33,47 @@ const sendSmsOtp = async (phone: string, otp: string): Promise<boolean> => {
     return false;
   }
 
-  const message = `Your UList verification code is ${otp}. Valid for 5 minutes. Please do not share this OTP with anyone. - UList Marketplace`;
-  const url = `https://www.fast2sms.com/dev/bulkV2?authorization=${encodeURIComponent(apiKey)}&route=q&message=${encodeURIComponent(message)}&numbers=${phone}`;
+  // 1. Try cheap OTP Route first (~₹0.25 per SMS)
+  const otpUrl = `https://www.fast2sms.com/dev/bulkV2?authorization=${encodeURIComponent(apiKey)}&route=otp&variables_values=${encodeURIComponent(otp)}&numbers=${phone}`;
 
-  return new Promise((resolve) => {
-    https.get(url, (res) => {
-      let rawData = '';
-      res.on('data', chunk => rawData += chunk);
-      res.on('end', () => {
-        try {
-          const parsed = JSON.parse(rawData);
-          if (parsed.return) {
-            console.log(`[Fast2SMS] SMS sent successfully to ${phone}. Request ID: ${parsed.request_id}`);
-            resolve(true);
-          } else {
-            console.error(`[Fast2SMS] Error response:`, parsed);
-            resolve(false);
+  const sendRequest = (url: string): Promise<{ success: boolean; data: any }> => {
+    return new Promise((resolve) => {
+      https.get(url, (res) => {
+        let rawData = '';
+        res.on('data', chunk => rawData += chunk);
+        res.on('end', () => {
+          try {
+            const parsed = JSON.parse(rawData);
+            resolve({ success: !!parsed.return, data: parsed });
+          } catch {
+            resolve({ success: false, data: null });
           }
-        } catch {
-          resolve(false);
-        }
+        });
+      }).on('error', (err) => {
+        console.error(`[Fast2SMS] Network error:`, err.message);
+        resolve({ success: false, data: null });
       });
-    }).on('error', (err) => {
-      console.error(`[Fast2SMS] Network error:`, err.message);
-      resolve(false);
     });
-  });
+  };
+
+  const otpRes = await sendRequest(otpUrl);
+  if (otpRes.success) {
+    console.log(`[Fast2SMS] OTP sent via low-cost OTP route (₹0.25) to ${phone}. Request ID: ${otpRes.data?.request_id}`);
+    return true;
+  }
+
+  console.warn(`[Fast2SMS] OTP route returned:`, otpRes.data);
+
+  // 2. Fallback to Quick SMS route only if OTP route is not yet verified on Fast2SMS
+  const message = `Your UList verification code is ${otp}. Valid for 5 minutes. Please do not share this OTP with anyone. - UList Marketplace`;
+  const fallbackUrl = `https://www.fast2sms.com/dev/bulkV2?authorization=${encodeURIComponent(apiKey)}&route=q&message=${encodeURIComponent(message)}&numbers=${phone}`;
+  const fallbackRes = await sendRequest(fallbackUrl);
+  if (fallbackRes.success) {
+    console.log(`[Fast2SMS] SMS sent via Quick SMS route to ${phone}. Request ID: ${fallbackRes.data?.request_id}`);
+    return true;
+  }
+
+  return false;
 };
 
 export const sendOtp = async (req: Request, res: Response): Promise<void> => {

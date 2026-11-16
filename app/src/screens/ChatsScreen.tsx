@@ -39,19 +39,23 @@ export const ChatsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     );
   }
 
-  // Calculate unread counts per tab
-  const allUnreadCount = conversations.reduce((acc: number, c: any) => acc + (c.unreadCount || 0), 0);
-  const buyingUnreadCount = conversations
-    .filter((c: any) => !(c.ad?.user === user?._id || c.ad?.user?._id === user?._id))
-    .reduce((acc: number, c: any) => acc + (c.unreadCount || 0), 0);
-  const sellingUnreadCount = conversations
-    .filter((c: any) => (c.ad?.user === user?._id || c.ad?.user?._id === user?._id))
-    .reduce((acc: number, c: any) => acc + (c.unreadCount || 0), 0);
+  // Check if current user is Seller on this ad conversation
+  const isConversationForMyAd = (c: any): boolean => {
+    if (typeof c.isSeller === 'boolean') return c.isSeller;
+    const currentId = user?._id?.toString() || '';
+    const adOwnerId = c.ad?.user?._id ? c.ad.user._id.toString() : (c.ad?.user ? c.ad.user.toString() : '');
+    return !!(currentId && adOwnerId && currentId === adOwnerId);
+  };
 
-  // Filter conversations by All vs Buying (I am buyer) vs Selling (My Ad)
+  // Calculate counts per tab (Total conversations count as requested, matching OLX style)
+  const allCount = conversations.length;
+  const buyingCount = conversations.filter((c: any) => !isConversationForMyAd(c)).length;
+  const sellingCount = conversations.filter((c: any) => isConversationForMyAd(c)).length;
+
+  // Filter conversations by All vs Buying (I msg on other Ads) vs Selling (Msgs on my Ads)
   const filteredByTab = conversations.filter((c: any) => {
     if (activeTab === 'all') return true;
-    const isMyAd = c.ad?.user === user?._id || c.ad?.user?._id === user?._id;
+    const isMyAd = isConversationForMyAd(c);
     if (activeTab === 'selling') return isMyAd;
     return !isMyAd;
   });
@@ -70,7 +74,7 @@ export const ChatsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         <Text style={styles.headerTitle}>Chats</Text>
       </View>
 
-      {/* All / Buying / Selling Tabs with Unread Count Badges */}
+      {/* All / Buying / Selling Tabs with Count Badges */}
       <View style={styles.tabsRow}>
         <TouchableOpacity
           style={[styles.tabBtn, activeTab === 'all' && styles.tabBtnActive]}
@@ -81,10 +85,10 @@ export const ChatsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             <Text style={[styles.tabBtnText, activeTab === 'all' && styles.tabBtnTextActive]}>
               ALL
             </Text>
-            {allUnreadCount > 0 && (
+            {allCount > 0 && (
               <View style={[styles.tabBadge, activeTab === 'all' ? styles.tabBadgeActive : styles.tabBadgeInactive]}>
                 <Text style={styles.tabBadgeText}>
-                  {allUnreadCount > 99 ? '99+' : allUnreadCount}
+                  {allCount > 99 ? '99+' : allCount}
                 </Text>
               </View>
             )}
@@ -101,10 +105,10 @@ export const ChatsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             <Text style={[styles.tabBtnText, activeTab === 'buying' && styles.tabBtnTextActive]}>
               BUYING
             </Text>
-            {buyingUnreadCount > 0 && (
+            {buyingCount > 0 && (
               <View style={[styles.tabBadge, activeTab === 'buying' ? styles.tabBadgeActive : styles.tabBadgeInactive]}>
                 <Text style={styles.tabBadgeText}>
-                  {buyingUnreadCount > 99 ? '99+' : buyingUnreadCount}
+                  {buyingCount > 99 ? '99+' : buyingCount}
                 </Text>
               </View>
             )}
@@ -121,10 +125,10 @@ export const ChatsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             <Text style={[styles.tabBtnText, activeTab === 'selling' && styles.tabBtnTextActive]}>
               SELLING
             </Text>
-            {sellingUnreadCount > 0 && (
+            {sellingCount > 0 && (
               <View style={[styles.tabBadge, activeTab === 'selling' ? styles.tabBadgeActive : styles.tabBadgeInactive]}>
                 <Text style={styles.tabBadgeText}>
-                  {sellingUnreadCount > 99 ? '99+' : sellingUnreadCount}
+                  {sellingCount > 99 ? '99+' : sellingCount}
                 </Text>
               </View>
             )}

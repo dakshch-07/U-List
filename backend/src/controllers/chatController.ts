@@ -12,7 +12,7 @@ export const getConversations = async (req: AuthenticatedRequest, res: Response)
   try {
     const userId = req.user!._id;
     const convos = await Conversation.find({ participants: userId })
-      .populate('ad', 'title price images status')
+      .populate('ad', 'title price images status user')
       .populate('participants', 'name avatar lastSeen')
       .sort({ lastMessageAt: -1 });
 
@@ -25,6 +25,10 @@ export const getConversations = async (req: AuthenticatedRequest, res: Response)
         ? (c.unreadCount as any).get(userId.toString()) || 0
         : 0;
 
+      const adDoc: any = c.ad;
+      const adOwnerId = adDoc?.user?._id ? adDoc.user._id.toString() : (adDoc?.user ? adDoc.user.toString() : '');
+      const isSeller = adOwnerId ? adOwnerId === userId.toString() : false;
+
       return {
         _id: c._id,
         ad: c.ad,
@@ -32,6 +36,7 @@ export const getConversations = async (req: AuthenticatedRequest, res: Response)
         lastMessage: c.lastMessage,
         lastMessageAt: c.lastMessageAt,
         unreadCount: unread,
+        isSeller,
       };
     });
 
@@ -72,7 +77,7 @@ export const getOrCreateConversation = async (req: AuthenticatedRequest, res: Re
       ad: adId,
       participants: { $all: [userId, sellerId] },
     })
-      .populate('ad', 'title price images status')
+      .populate('ad', 'title price images status user')
       .populate('participants', 'name avatar lastSeen');
 
     if (!conversation) {
@@ -81,7 +86,7 @@ export const getOrCreateConversation = async (req: AuthenticatedRequest, res: Re
         participants: [userId, sellerId],
         unreadCount: {},
       });
-      await conversation.populate('ad', 'title price images status');
+      await conversation.populate('ad', 'title price images status user');
       await conversation.populate('participants', 'name avatar lastSeen');
     }
 

@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { User } from '../models/User';
 import { Ad } from '../models/Ad';
 import { Category } from '../models/Category';
-import { Report, City, Banner, Setting, ContactInquiry, Notification } from '../models/Extras';
+import { Report, City, Banner, Setting, ContactInquiry, Notification, Favorite, Conversation } from '../models/Extras';
 
 export const getDashboardStats = async (_req: Request, res: Response): Promise<void> => {
   try {
@@ -195,10 +195,17 @@ export const adminDeleteAd = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    ad.status = 'deleted';
-    await ad.save();
+    // Permanently remove the ad from database
+    await Ad.findByIdAndDelete(id);
 
-    res.json({ success: true, message: 'Ad deleted permanently by admin', data: ad });
+    // Clean up associated favorites, reports, and conversations
+    await Promise.all([
+      Favorite.deleteMany({ ad: id }).catch(() => {}),
+      Report.deleteMany({ ad: id }).catch(() => {}),
+      Conversation.deleteMany({ ad: id }).catch(() => {}),
+    ]);
+
+    res.json({ success: true, message: 'Ad deleted permanently from database by admin', data: { _id: id } });
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });
   }

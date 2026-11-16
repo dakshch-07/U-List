@@ -8,8 +8,8 @@ import { User } from '../models/User';
 
 // Initialize Razorpay client with production or test credentials
 const getRazorpayInstance = () => {
-  const key_id = process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder_key';
-  const key_secret = process.env.RAZORPAY_KEY_SECRET || 'rzp_test_placeholder_secret';
+  const key_id = process.env.RAZORPAY_KEY_ID || 'rzp_live_U0pE2MR2Vj0khF';
+  const key_secret = process.env.RAZORPAY_KEY_SECRET || 'lFHBGIL2RNBNIV68jeVKnIly';
   return new Razorpay({
     key_id,
     key_secret,
@@ -18,7 +18,7 @@ const getRazorpayInstance = () => {
 
 export const getPaymentConfig = async (_req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const key_id = process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder_key';
+    const key_id = process.env.RAZORPAY_KEY_ID || 'rzp_live_U0pE2MR2Vj0khF';
     res.json({
       success: true,
       data: {
@@ -68,8 +68,8 @@ export const createOrder = async (req: AuthenticatedRequest, res: Response): Pro
       }
     }
 
-    const key_id = process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder_key';
-    const key_secret = process.env.RAZORPAY_KEY_SECRET || 'rzp_test_placeholder_secret';
+    const key_id = process.env.RAZORPAY_KEY_ID || 'rzp_live_U0pE2MR2Vj0khF';
+    const key_secret = process.env.RAZORPAY_KEY_SECRET || 'lFHBGIL2RNBNIV68jeVKnIly';
 
     let orderId = `order_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
@@ -146,7 +146,7 @@ export const verifyPayment = async (req: AuthenticatedRequest, res: Response): P
       return;
     }
 
-    const key_secret = process.env.RAZORPAY_KEY_SECRET;
+    const key_secret = process.env.RAZORPAY_KEY_SECRET || 'lFHBGIL2RNBNIV68jeVKnIly';
 
     // Verify HMAC SHA256 signature if real key_secret is present
     if (key_secret && !key_secret.includes('placeholder')) {

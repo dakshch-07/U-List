@@ -72,6 +72,11 @@ export const PostAdScreen: React.FC<{ navigation: any; route?: any }> = ({ navig
   const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
   const [createdAdData, setCreatedAdData] = useState<any>(null);
   const [selectedHighlightPlan, setSelectedHighlightPlan] = useState<'30_days' | '15_days'>('30_days');
+  const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false);
+  const [paymentNoticeInfo, setPaymentNoticeInfo] = useState<{ activeCount: number; freeLimit: number }>({
+    activeCount: 5,
+    freeLimit: 5,
+  });
 
   // Pre-fill fields if in Edit mode, or ensure fresh blank slate if posting new ad
   useEffect(() => {
@@ -443,36 +448,11 @@ export const PostAdScreen: React.FC<{ navigation: any; route?: any }> = ({ navig
       setIsSuccessModalVisible(true);
     } catch (err: any) {
       if (err.response?.status === 402 || err.response?.data?.requiresPayment) {
-        // Free quota of 5 ads exceeded -> Prompt to pay ₹29 for 6th ad onwards
-        Alert.alert(
-          '5 Free Ads Limit Reached',
-          'You have posted 5 free ads. Additional listings are ₹29 per ad. Proceed to pay via Razorpay to post this ad?',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            {
-              text: 'Pay ₹29 Now',
-              onPress: () => {
-                initiateRazorpayPayment({
-                  type: 'extra_ad',
-                  userName: user?.name,
-                  userEmail: user?.email,
-                  userPhone: user?.phone,
-                  onSuccess: async () => {
-                    Alert.alert('Payment Successful!', '₹29 received. Your extra ad credit has been added. Submitting your ad now...');
-                    queryClient.invalidateQueries({ queryKey: ['myAds'] });
-                    // Automatically re-trigger ad submission now that credit is purchased
-                    handleSubmitAd();
-                  },
-                  onFailure: (pErr) => {
-                    if (pErr?.message !== 'Payment cancelled by user') {
-                      Alert.alert('Payment Incomplete', pErr?.message || 'Could not complete payment.');
-                    }
-                  },
-                });
-              },
-            },
-          ]
-        );
+        // Free quota of 5 ads exceeded -> Open explicit in-app modal to pay ₹29
+        const activeCount = err.response?.data?.activeCount || activeMyAdsCount || 5;
+        const freeLimit = err.response?.data?.freeLimit || 5;
+        setPaymentNoticeInfo({ activeCount, freeLimit });
+        setIsPaymentModalVisible(true);
         return;
       }
 
@@ -810,9 +790,20 @@ export const PostAdScreen: React.FC<{ navigation: any; route?: any }> = ({ navig
 
             {/* Free Ads usage badge below Post Ad Now */}
             <View style={styles.freeAdsCounterBox}>
-              <MaterialCommunityIcons name="tag-outline" size={14} color="#6B7280" />
-              <Text style={styles.freeAdsCounterText}>
-                {Math.min(activeMyAdsCount, 5)}/5 Free Ads
+              <MaterialCommunityIcons
+                name={activeMyAdsCount >= 5 ? 'alert-circle-outline' : 'tag-outline'}
+                size={14}
+                color={activeMyAdsCount >= 5 ? '#D9480F' : '#6B7280'}
+              />
+              <Text
+                style={[
+                  styles.freeAdsCounterText,
+                  activeMyAdsCount >= 5 && { color: '#D9480F', fontWeight: '700' },
+                ]}
+              >
+                {activeMyAdsCount >= 5
+                  ? `5/5 Free Ads Used • Additional Ad ₹29`
+                  : `${activeMyAdsCount}/5 Free Ads Used`}
               </Text>
             </View>
           </View>
@@ -1017,6 +1008,79 @@ export const PostAdScreen: React.FC<{ navigation: any; route?: any }> = ({ navig
               }}
             >
               <Text style={styles.sellFasterSkipBtnText}>Skip for now (Continue with Free Listing)</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* In-App 5 Free Ads Limit Exceeded Payment Modal (Works 100% on Web, Android & iOS) */}
+      {isPaymentModalVisible && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={[styles.modalSuccessIcon, { backgroundColor: '#FFF0F0' }]}>
+              <MaterialCommunityIcons name="alert-decagram" size={42} color="#D9480F" />
+            </View>
+
+            <Text style={styles.modalHeading}>5 Free Ads Limit Reached</Text>
+            <Text style={styles.modalSubheading}>
+              You have already posted {paymentNoticeInfo.activeCount} ads in this 30-day period. Your free quota allows up to {paymentNoticeInfo.freeLimit} free listings.
+            </Text>
+
+            <View style={styles.modalInfoBox}>
+              <View style={styles.modalInfoRow}>
+                <MaterialCommunityIcons name="check-circle" size={16} color="#1E8E3E" />
+                <Text style={styles.modalInfoText}>Pay only ₹29 for this ad</Text>
+              </View>
+              <View style={styles.modalInfoRow}>
+                <MaterialCommunityIcons name="clock-outline" size={16} color="#005CA8" />
+                <Text style={styles.modalInfoText}>Valid for 30 days active listing</Text>
+              </View>
+              <View style={styles.modalInfoRow}>
+                <MaterialCommunityIcons name="shield-check" size={16} color="#D9480F" />
+                <Text style={styles.modalInfoText}>Instant approval & live on Ulist</Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.modalPrimaryBtn, { backgroundColor: '#D9480F' }]}
+              onPress={() => {
+                setIsPaymentModalVisible(false);
+                initiateRazorpayPayment({
+                  type: 'extra_ad',
+                  userName: user?.name,
+                  userEmail: user?.email,
+                  userPhone: user?.phone,
+                  onSuccess: async () => {
+                    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                      window.alert('Payment Successful! ₹29 received. Posting your ad now...');
+                    } else {
+                      Alert.alert('Payment Successful!', '₹29 received. Posting your ad now...');
+                    }
+                    queryClient.invalidateQueries({ queryKey: ['myAds'] });
+                    queryClient.invalidateQueries({ queryKey: ['myAdsAllUser'] });
+                    // Automatically re-trigger submission with paid credit
+                    handleSubmitAd();
+                  },
+                  onFailure: (pErr) => {
+                    if (pErr?.message !== 'Payment cancelled by user') {
+                      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                        window.alert(`Payment Incomplete: ${pErr?.message || 'Could not complete payment.'}`);
+                      } else {
+                        Alert.alert('Payment Incomplete', pErr?.message || 'Could not complete payment.');
+                      }
+                    }
+                  },
+                });
+              }}
+            >
+              <Text style={styles.modalPrimaryBtnText}>Proceed to Pay ₹29 Now</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.modalSecondaryBtn}
+              onPress={() => setIsPaymentModalVisible(false)}
+            >
+              <Text style={styles.modalSecondaryBtnText}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>

@@ -764,6 +764,19 @@ async function startServer() {
     console.log('[Bootstrap] Admin password synced for:', adminEmail);
   }
 
+  // Ensure max_active_ads_per_user is strictly set to 5 in DB Settings
+  try {
+    const { Setting } = await import('./models/Extras');
+    await Setting.findOneAndUpdate(
+      { key: 'max_active_ads_per_user' },
+      { value: 5, description: 'Maximum free active listings per registered user in 30 days' },
+      { upsert: true }
+    );
+    console.log('[Bootstrap] Setting max_active_ads_per_user ensured at 5');
+  } catch (settingErr) {
+    console.warn('[Bootstrap] Could not sync max_active_ads_per_user setting:', settingErr);
+  }
+
   // Check if categories or baseline sample ads (4 per category = 48 total) are needed
   const { Category } = await import('./models/Category');
   const catCount = await Category.countDocuments();

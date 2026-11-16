@@ -176,9 +176,12 @@ export const createAd = async (req: AuthenticatedRequest, res: Response): Promis
   try {
     const userId = req.user!._id;
 
-    // Check max ads per user in current 30-day cycle (5 free ads total across active, pending, sold, rejected, deleted)
+    // Strict Free Quota: Exactly 5 free ads per 30-day period across all categories.
+    // Setting key 'max_active_ads_per_user' or default 5 (capped strictly to at most 5 if database has higher legacy seed)
     const maxAdsSetting = await Setting.findOne({ key: 'max_active_ads_per_user' });
-    const freeMaxAds = maxAdsSetting?.value ?? 5;
+    const configuredLimit = Number(maxAdsSetting?.value);
+    const freeMaxAds = (!isNaN(configuredLimit) && configuredLimit > 0 && configuredLimit <= 5) ? configuredLimit : 5;
+
     const userDoc = await import('../models/User').then((m) => m.User.findById(userId));
     const paidCredits = userDoc?.paidAdsCredits || 0;
     const allowedLimit = freeMaxAds + paidCredits;
@@ -196,9 +199,10 @@ export const createAd = async (req: AuthenticatedRequest, res: Response): Promis
         requiresPayment: true,
         extraAdPrice: 29,
         freeLimit: freeMaxAds,
+        paidCredits,
         totalAllowed: allowedLimit,
         activeCount: activeAdsCount,
-        message: `You have reached your limit of ${freeMaxAds} Ads for this 30-day period. Additional ads cost ₹29 per ad. Please pay to post this ad.`,
+        message: `You have reached your limit of ${freeMaxAds} Free Ads for this 30-day period. Additional ads cost ₹29 per ad. Please pay to post this ad.`,
       });
       return;
     }
@@ -373,7 +377,9 @@ export const renewAd = async (req: AuthenticatedRequest, res: Response): Promise
 
     // Check active limit when reactivating within cycle
     const maxAdsSetting = await Setting.findOne({ key: 'max_active_ads_per_user' });
-    const freeMaxAds = maxAdsSetting?.value ?? 5;
+    const configuredLimit = Number(maxAdsSetting?.value);
+    const freeMaxAds = (!isNaN(configuredLimit) && configuredLimit > 0 && configuredLimit <= 5) ? configuredLimit : 5;
+
     const userDoc = await import('../models/User').then((m) => m.User.findById(userId));
     const paidCredits = userDoc?.paidAdsCredits || 0;
     const allowedLimit = freeMaxAds + paidCredits;
@@ -391,9 +397,10 @@ export const renewAd = async (req: AuthenticatedRequest, res: Response): Promise
         requiresPayment: true,
         extraAdPrice: 29,
         freeLimit: freeMaxAds,
+        paidCredits,
         totalAllowed: allowedLimit,
         activeCount: activeAdsCount,
-        message: `You currently have ${activeAdsCount} ads counted in this 30-day cycle (${allowedLimit} allowed). Please upgrade to reactivate this ad.`,
+        message: `You currently have ${activeAdsCount} ads counted in this 30-day cycle (${allowedLimit} allowed). Additional ads cost ₹29 per ad. Please pay to reactivate this ad.`,
       });
       return;
     }

@@ -698,7 +698,7 @@ export async function runSeed(): Promise<void> {
   await Setting.insertMany([
     { key: 'auto_approve', value: true, description: 'Automatically approve newly submitted ads' },
     { key: 'ad_validity_days', value: 30, description: 'Validity duration in days before an ad expires' },
-    { key: 'max_active_ads_per_user', value: 15, description: 'Maximum active listings per registered user' },
+    { key: 'max_active_ads_per_user', value: 5, description: 'Maximum active listings per registered user' },
     { key: 'max_photos_per_ad', value: 8, description: 'Maximum photos per listing' },
     {
       key: 'prohibited_words',

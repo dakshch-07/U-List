@@ -57,34 +57,7 @@ export const initiateRazorpayPayment = async (options: RazorpayPaymentOptions): 
         throw new Error('Razorpay SDK failed to load. Please check your internet connection.');
       }
 
-      // Check if test placeholder keys are currently configured
-      const isPlaceholder = !keyId || keyId.includes('placeholder');
-
-      if (isPlaceholder) {
-        // Friendly Simulator for development & preview before live API key insertion
-        const confirmMsg =
-          options.type === 'extra_ad'
-            ? `[Razorpay Test Gateway]\n\nAmount: ₹${amount}\nPurpose: 6th Ad Onwards Fee (₹29)\n\nSimulate successful payment? (Real Razorpay keys can be plugged in anytime)`
-            : `[Razorpay Test Gateway]\n\nAmount: ₹${amount}\nPurpose: Highlighted Ad 30-Days (₹99)\n\nSimulate successful payment? (Real Razorpay keys can be plugged in anytime)`;
-
-        const confirmed = typeof window !== 'undefined' ? window.confirm(confirmMsg) : true;
-        if (confirmed) {
-          const verifyRes = await api.post('/payments/verify', {
-            razorpay_order_id: orderId,
-            razorpay_payment_id: `pay_sim_${Date.now()}`,
-            razorpay_signature: 'test_simulated_signature',
-            paymentDbId,
-          });
-          if (verifyRes.data.success) {
-            options.onSuccess(verifyRes.data);
-          } else {
-            throw new Error(verifyRes.data.message || 'Payment verification failed');
-          }
-        }
-        return;
-      }
-
-      // Live / Sandbox Razorpay Checkout Modal
+      // Live Razorpay Checkout Modal
       const rzpOptions = {
         key: keyId,
         amount: amount * 100, // in paise
@@ -95,14 +68,14 @@ export const initiateRazorpayPayment = async (options: RazorpayPaymentOptions): 
             ? '6th Ad Onwards Fee - ₹29'
             : 'Highlighted Ad Tag (30 Days) - ₹99',
         order_id: orderId,
-        image: 'https://u-list-app.vercel.app/favicon.svg',
+        image: 'https://www.ulist.in/favicon.ico',
         prefill: {
           name: options.userName || 'Ulist User',
-          email: options.userEmail || 'user@ulist.in',
+          email: options.userEmail || 'support@ulist.in',
           contact: options.userPhone || '',
         },
         theme: {
-          color: '#005CA8',
+          color: '#D9480F',
         },
         handler: async (response: any) => {
           try {
@@ -119,7 +92,11 @@ export const initiateRazorpayPayment = async (options: RazorpayPaymentOptions): 
             }
           } catch (vErr: any) {
             options.onFailure?.(vErr);
-            Alert.alert('Payment Error', vErr.message || 'Payment verification failed');
+            if (typeof window !== 'undefined' && window.alert) {
+              window.alert(vErr.message || 'Payment verification failed');
+            } else {
+              Alert.alert('Payment Error', vErr.message || 'Payment verification failed');
+            }
           }
         },
         modal: {

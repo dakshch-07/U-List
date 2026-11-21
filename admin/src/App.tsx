@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import logoImg from './assets/logo.png';
 
-const API_BASE = '/api/v1';
+const API_BASE = 'https://u-list-api.onrender.com/api/v1';
 
 export default function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem('ulist_admin_token'));
